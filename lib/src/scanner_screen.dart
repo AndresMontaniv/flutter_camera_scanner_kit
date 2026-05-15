@@ -5,6 +5,8 @@ import 'package:native_haptics_and_audio/native_haptics_and_audio.dart';
 import 'package:mobile_scanner/mobile_scanner.dart'
     show BarcodeFormat, MobileScannerController, MobileScannerState, TorchState, BarcodeCapture, CameraFacing, DetectionSpeed;
 
+import '_constants.dart';
+
 import 'scanner_view.dart';
 import 'scanner_overlay.dart';
 
@@ -403,7 +405,7 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
     if (toolbar == null || !toolbar.shouldBuild) return null;
     if (toolbar is BatchToolBar) {
       if (widget._mode == _ScanMode.single) {
-        debugPrint('Switching ToolBar to `StandardToolBar` for Single Scan');
+        debugPrint('$kTag Switching ToolBar to `StandardToolBar` for Single Scan');
         return _ScannerTopBar(
           toolBar: toolbar.toStandard(),
           controller: controller,

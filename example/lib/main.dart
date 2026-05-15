@@ -40,7 +40,7 @@ class TestMatrixScreen extends StatelessWidget {
                 MaterialPageRoute(
                   builder: (context) => PosBarcodeScannerScreen(
                     onScan: (barcode, qty) {
-                      debugPrint('This barcode x times: $barcode x $qty');
+                      debugPrint('[ScannerExample] This barcode x times: $barcode x $qty');
                       if (!context.mounted) return;
                       _showResult(context, 'This barcode x times: $barcode x $qty');
                     },
@@ -62,7 +62,7 @@ class TestMatrixScreen extends StatelessWidget {
             trailing: const Icon(Icons.qr_code),
             onTap: () async {
               final result = await scanQrCode(context, overlayStyle: const ScannerOverlayStyle(borderColor: Colors.blue));
-              debugPrint('✅ Single QR Result: $result');
+              debugPrint('[ScannerExample] ✅ Single QR Result: $result');
               if (!context.mounted) return;
               _showResult(context, 'Single QR: $result');
             },
@@ -72,7 +72,7 @@ class TestMatrixScreen extends StatelessWidget {
             trailing: const Icon(Icons.view_column),
             onTap: () async {
               final result = await scanBarcode(context, overlayStyle: const ScannerOverlayStyle(borderColor: Colors.pink));
-              debugPrint('✅ Single Barcode Result: $result');
+              debugPrint('[ScannerExample] ✅ Single Barcode Result: $result');
               if (!context.mounted) return;
               _showResult(context, 'Single Barcode: $result');
             },
@@ -86,7 +86,7 @@ class TestMatrixScreen extends StatelessWidget {
                 context,
                 scannerViewConfig: ScannerViewConfig(scanWindow: Rect.fromCenter(center: screenSize.center(Offset.zero), width: 200, height: 200)),
               );
-              debugPrint('✅ Single Custom Result: $result');
+              debugPrint('[ScannerExample] ✅ Single Custom Result: $result');
               if (!context.mounted) return;
               _showResult(context, 'Single Custom: $result');
             },
@@ -106,7 +106,7 @@ class TestMatrixScreen extends StatelessWidget {
             trailing: const Icon(Icons.qr_code),
             onTap: () async {
               final result = await scanQrCodeBatch(context, allowDuplicates: false);
-              debugPrint('🛒 Batch QR Result: $result');
+              debugPrint('[ScannerExample] 🛒 Batch QR Result: $result');
             },
           ),
           ListTile(
@@ -115,7 +115,7 @@ class TestMatrixScreen extends StatelessWidget {
             trailing: const Icon(Icons.view_column),
             onTap: () async {
               final result = await scanBarcodeBatch(context, allowDuplicates: true);
-              debugPrint('🛒 Batch Barcode Result: $result');
+              debugPrint('[ScannerExample] 🛒 Batch Barcode Result: $result');
             },
           ),
           ListTile(
@@ -131,7 +131,7 @@ class TestMatrixScreen extends StatelessWidget {
                   overlayStyle: const ScannerOverlayStyle(borderColor: Colors.yellow, borderRadius: 40.0),
                 ),
               );
-              debugPrint('🛒 Batch Custom Result: $result');
+              debugPrint('[ScannerExample] 🛒 Batch Custom Result: $result');
             },
           ),
 
@@ -151,7 +151,7 @@ class TestMatrixScreen extends StatelessWidget {
               await scanQrCodeStream(
                 context,
                 onCameraScan: (qrCode) {
-                  debugPrint('🌊 STREAM DETECTED: $qrCode');
+                  debugPrint('[ScannerExample] 🌊 STREAM DETECTED: $qrCode');
                   _showResult(context, 'Stream QR: $qrCode');
                 },
               );
@@ -166,7 +166,7 @@ class TestMatrixScreen extends StatelessWidget {
                 context,
                 allowDuplicates: false,
                 onCameraScan: (barcode) {
-                  debugPrint('🌊 STREAM DETECTED: $barcode');
+                  debugPrint('[ScannerExample] 🌊 STREAM DETECTED: $barcode');
                   _showResult(context, 'Stream Barcode: $barcode');
                 },
               );
@@ -179,7 +179,7 @@ class TestMatrixScreen extends StatelessWidget {
               await scanCustomStream(
                 context,
                 onCameraScan: (barcode) {
-                  debugPrint('🌊 STREAM DETECTED: $barcode');
+                  debugPrint('[ScannerExample] 🌊 STREAM DETECTED: $barcode');
                   _showResult(context, 'Stream Custom: $barcode');
                 },
               );

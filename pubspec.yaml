@@ -1,6 +1,6 @@
 name: camera_scanner_kit
 description: "A production-ready Flutter UI toolkit for barcode and QR scanning. Built on mobile_scanner, it offers 9 routing modes including single scan, batch accumulation, and a complete POS screen. Features hardware-safe tripwires, customizable toolbars, and dynamic overlays for enterprise apps."
-version: 0.0.1
+version: 0.0.0
 homepage:
 publish_to: 'none'
 

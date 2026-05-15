@@ -113,7 +113,7 @@ class _CircleCloseButton extends StatelessWidget {
             Navigator.of(context).pop();
           }
         } else {
-          debugPrint('CircleCloseButton: No routes to pop');
+          debugPrint('$kTag CircleCloseButton: No routes to pop');
         }
       },
     );
@@ -165,7 +165,7 @@ class _FlashToggleButton extends StatelessWidget {
             try {
               await controller?.toggleTorch();
             } catch (e) {
-              debugPrint('Scanner Package: Failed to toggle torch - $e');
+              debugPrint('$kTag Failed to toggle torch - $e');
               onError?.call(e);
             }
           },
@@ -202,7 +202,7 @@ class _SwitchCameraButton extends StatelessWidget {
             try {
               await controller?.switchCamera();
             } catch (e) {
-              debugPrint('Scanner Package: Failed to switch camera - $e');
+              debugPrint('$kTag Failed to switch camera - $e');
               onError?.call(e);
             }
           },

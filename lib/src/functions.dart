@@ -7,6 +7,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import '_constants.dart';
 import 'pos_barcode_scanner_screen.dart';
 import 'scanner_overlay.dart';
 import 'scanner_screen.dart';
@@ -37,12 +38,12 @@ Future<String?> scanCustom(
     );
 
     if (scannedItem != null) {
-      debugPrint('Successfully scanned: $scannedItem');
+      debugPrint('$kTag Successfully scanned: $scannedItem');
     }
 
     return scannedItem;
   } catch (e, stackTrace) {
-    debugPrint('Error on scanning: $e\n$stackTrace');
+    debugPrint('$kTag Error on scanning: $e\n$stackTrace');
     return null;
   }
 }
@@ -126,12 +127,12 @@ Future<List<String>?> scanCustomBatch(
     );
 
     if (scannedItems != null) {
-      debugPrint('Successfully scanned: $scannedItems');
+      debugPrint('$kTag Successfully scanned: $scannedItems');
     }
 
     return scannedItems;
   } catch (e, stackTrace) {
-    debugPrint('Error on scanning: $e\n$stackTrace');
+    debugPrint('$kTag Error on scanning: $e\n$stackTrace');
     return null;
   }
 }
@@ -229,7 +230,7 @@ Future<void> scanCustomStream(
       ),
     );
   } catch (e, stackTrace) {
-    debugPrint('Error on scanning: $e\n$stackTrace');
+    debugPrint('$kTag Error on scanning: $e\n$stackTrace');
   }
 }
 
