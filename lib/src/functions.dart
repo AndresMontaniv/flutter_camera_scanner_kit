@@ -295,21 +295,44 @@ Future<void> scanQrCodeStream(
   enableSoundAndVibration: enableSoundAndVibration,
 );
 
-
 /// Launches the Point of Sale (POS) Barcode Scanner.
-/// 
-/// The [onScan] callback is triggered every time a barcode is successfully
-/// scanned and its quantity is confirmed in the POS interface.
+///
+///  * The [onScan] callback is triggered every time a barcode is successfully
+///    scanned and its quantity is confirmed in the POS interface.
+///
+///  * [allowedFormats] limits the scanner to specific barcode types.
+///
+///  * [detectionTimeoutMs] specifies the delay between barcode detection attempts.
+///
+///  * [sameItemCooldownMs] sets the minimum time before the identical barcode can be scanned again.
+/// * [enableSoundAndVibration] controls whether haptic and audio feedback are triggered on success.
+/// * [offsetFromCenter] adjusts the physical center of the scanning window.
+/// * [overlayStyle] provides visual customization for the camera overlay UI.
 void showPosBarcodeScanner(
   BuildContext context, {
   required void Function(String barcode, int quantity) onScan,
-}) {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => PosBarcodeScannerScreen(
-        onScan: onScan,
+  List<BarcodeFormat> allowedFormats = const <BarcodeFormat>[],
+  int detectionTimeoutMs = 250,
+  int sameItemCooldownMs = 1500,
+  bool enableSoundAndVibration = true,
+  Offset? offsetFromCenter,
+  ScannerOverlayStyle? overlayStyle,
+}) async {
+  try {
+    await Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute(
+        builder: (_) => PosBarcodeScannerScreen(
+          onScan: onScan,
+          overlayStyle: overlayStyle,
+          allowedFormats: allowedFormats,
+          offsetFromCenter: offsetFromCenter,
+          detectionTimeoutMs: detectionTimeoutMs,
+          sameItemCooldownMs: sameItemCooldownMs,
+          enableSoundAndVibration: enableSoundAndVibration,
+        ),
       ),
-    ),
-  );
+    );
+  } catch (e, stackTrace) {
+    debugPrint('$kTag Error on pos barcode scanning: $e\n$stackTrace');
+  }
 }

@@ -35,17 +35,13 @@ class TestMatrixScreen extends StatelessWidget {
             title: const Text('0. POS with qty buttons'),
             trailing: const Icon(Icons.shopping_bag_outlined),
             onTap: () {
-              Navigator.push(
+              showPosBarcodeScanner(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => PosBarcodeScannerScreen(
-                    onScan: (barcode, qty) {
-                      debugPrint('[ScannerExample] This barcode x times: $barcode x $qty');
-                      if (!context.mounted) return;
-                      _showResult(context, 'This barcode x times: $barcode x $qty');
-                    },
-                  ),
-                ),
+                onScan: (barcode, qty) {
+                  debugPrint('[ScannerExample] This barcode x times: $barcode x $qty');
+                  if (!context.mounted) return;
+                  _showResult(context, 'This barcode x times: $barcode x $qty');
+                },
               );
             },
           ),
