@@ -6,6 +6,7 @@ import 'package:mobile_scanner/mobile_scanner.dart'
     show BarcodeFormat, MobileScannerController, MobileScannerState, TorchState, BarcodeCapture, CameraFacing, DetectionSpeed;
 
 import '_constants.dart';
+import 'action_button_theme.dart';
 
 import 'scanner_view.dart';
 import 'scanner_overlay.dart';
@@ -80,6 +81,10 @@ class ScannerScreen extends StatefulWidget {
 
   final bool enableSoundAndVibration;
 
+  /// The visual theme applied to the toolbar action buttons (close, flash,
+  /// switch camera). Defaults to [ActionButtonTheme.dark].
+  final ActionButtonTheme actionButtonTheme;
+
   /// Internal flag set by the named constructors.
   final _ScanMode _mode;
 
@@ -105,6 +110,7 @@ class ScannerScreen extends StatefulWidget {
     this.onScanRejected,
     this.scannerViewConfig,
     this.enableSoundAndVibration = true,
+    this.actionButtonTheme = ActionButtonTheme.dark,
   }) : _mode = _ScanMode.single,
        onCameraScan = null,
        allowDuplicates = false,
@@ -131,6 +137,7 @@ class ScannerScreen extends StatefulWidget {
     this.detectionTimeoutMs = 250,
     this.sameItemCooldownMs = 1500,
     this.enableSoundAndVibration = true,
+    this.actionButtonTheme = ActionButtonTheme.dark,
     void Function(String)? onScanRejected,
   }) : _mode = _ScanMode.multiscan,
        onScanRejected = !allowDuplicates ? onScanRejected : null;
@@ -410,6 +417,7 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
           toolBar: toolbar.toStandard(),
           controller: controller,
           popBackWithListResult: _popBack,
+          actionButtonTheme: widget.actionButtonTheme,
         );
       } else {
         return _ScannerBatchTopBar(
@@ -417,6 +425,7 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
           controller: controller,
           popBackWithListResult: _popBack,
           scannedItemsNotifier: scannedItemsNotifier,
+          actionButtonTheme: widget.actionButtonTheme,
         );
       }
     }
@@ -424,6 +433,7 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
       toolBar: toolbar,
       controller: controller,
       popBackWithListResult: _popBack,
+      actionButtonTheme: widget.actionButtonTheme,
     );
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
+import 'action_button_theme.dart';
 import 'scanner_overlay.dart';
 import 'scanner_screen.dart';
 
@@ -12,6 +13,7 @@ class PosBarcodeScannerScreen extends StatefulWidget {
   final bool enableSoundAndVibration;
   final Offset? offsetFromCenter;
   final ScannerOverlayStyle? overlayStyle;
+  final ActionButtonTheme actionButtonTheme;
 
   const PosBarcodeScannerScreen({
     super.key,
@@ -22,6 +24,7 @@ class PosBarcodeScannerScreen extends StatefulWidget {
     this.enableSoundAndVibration = true,
     this.offsetFromCenter,
     this.overlayStyle,
+    this.actionButtonTheme = ActionButtonTheme.dark,
   });
 
   @override
@@ -147,6 +150,7 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
       detectionTimeoutMs: widget.detectionTimeoutMs,
       sameItemCooldownMs: widget.sameItemCooldownMs,
       enableSoundAndVibration: widget.enableSoundAndVibration,
+      actionButtonTheme: widget.actionButtonTheme,
       scannerViewConfig: ScannerViewConfig.barcode(
         overlayStyle: widget.overlayStyle ?? const ScannerOverlayStyle(borderColor: Colors.blue),
         offsetFromCenter: widget.offsetFromCenter,
@@ -166,6 +170,7 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
                 children: [
                   _CircleButton(
                     icon: Icons.remove,
+                    actionButtonTheme: widget.actionButtonTheme,
                     onPressed: () {
                       if (qty > 1) qtyNotifier.value--;
                     },
@@ -176,6 +181,7 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
                   ),
                   _CircleButton(
                     icon: Icons.add,
+                    actionButtonTheme: widget.actionButtonTheme,
                     onPressed: () {
                       qtyNotifier.value++;
                     },
@@ -193,17 +199,16 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
 class _CircleButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onPressed;
+  final ActionButtonTheme actionButtonTheme;
 
-  const _CircleButton({required this.icon, this.onPressed});
+  const _CircleButton({required this.icon, this.onPressed, this.actionButtonTheme = ActionButtonTheme.dark});
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: const BoxDecoration(color: Colors.white54, shape: BoxShape.circle),
-      child: IconButton(
-        icon: Icon(icon, color: Colors.white, size: 35),
-        onPressed: onPressed,
-      ),
+    return IconButton(
+      icon: Icon(icon, size: 35),
+      style: actionButtonTheme.buttonStyle,
+      onPressed: onPressed,
     );
   }
 }

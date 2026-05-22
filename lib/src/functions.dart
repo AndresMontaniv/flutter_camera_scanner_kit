@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '_constants.dart';
+import 'action_button_theme.dart';
 import 'pos_barcode_scanner_screen.dart';
 import 'scanner_overlay.dart';
 import 'scanner_screen.dart';
@@ -122,6 +123,7 @@ Future<List<String>?> scanCustomBatch(
           sameItemCooldownMs: sameItemCooldownMs,
           scannerViewConfig: scannerViewConfig,
           enableSoundAndVibration: enableSoundAndVibration,
+          actionButtonTheme: ActionButtonTheme.light,
         ),
       ),
     );

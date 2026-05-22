@@ -5,30 +5,8 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import 'package:native_haptics_and_audio/native_haptics_and_audio.dart';
 
+import '../action_button_theme.dart';
 import 'barcode_scanner_controller.dart';
-
-// The Enhanced Theme Enum
-enum ActionButtonTheme {
-  light,
-  dark
-  ; // <-- Semicolon is required here before declaring methods
-
-  // Encapsulated const styling
-  ButtonStyle get buttonStyle {
-    switch (this) {
-      case ActionButtonTheme.light:
-        return const ButtonStyle(
-          backgroundColor: WidgetStatePropertyAll(Color(0xD9FFFFFF)), // 85% White
-          iconColor: WidgetStatePropertyAll(Colors.black54),
-        );
-      case ActionButtonTheme.dark:
-        return const ButtonStyle(
-          backgroundColor: WidgetStatePropertyAll(Colors.black54),
-          iconColor: WidgetStatePropertyAll(Color(0xD9FFFFFF)),
-        );
-    }
-  }
-}
 
 class BarcodeScannerView extends StatefulWidget {
   final double maxWidth;
@@ -49,11 +27,8 @@ class BarcodeScannerView extends StatefulWidget {
     this.idleTimeout = const Duration(seconds: 90),
     this.controller,
     this.showToggleButton = true,
-    this.actionButtonTheme = ActionButtonTheme.light,
-  }) : assert(
-         maxWidth >= 200.0 && maxWidth <= 600.0,
-         'BarcodeScannerView: maxWidth must be between 200.0 and 600.0 to ensure scanning performance.',
-       );
+    this.actionButtonTheme = ActionButtonTheme.dark,
+  }) : assert(maxWidth >= 200.0 && maxWidth <= 600.0, 'BarcodeScannerView: maxWidth must be between 200.0 and 600.0 to ensure scanning performance.');
 
   @override
   State<BarcodeScannerView> createState() => _BarcodeScannerViewState();
@@ -121,14 +96,8 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBin
   static const _animationDuration = Duration(milliseconds: 300);
 
   // Pre-compiled button styles (Finding #7 — avoid allocation on every rebuild)
-  static final _activeToggleStyle = ElevatedButton.styleFrom(
-    backgroundColor: Colors.red.shade700,
-    foregroundColor: Colors.white,
-  );
-  static final _inactiveToggleStyle = ElevatedButton.styleFrom(
-    backgroundColor: Colors.blue.shade700,
-    foregroundColor: Colors.white,
-  );
+  static final _activeToggleStyle = ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700, foregroundColor: Colors.white);
+  static final _inactiveToggleStyle = ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade700, foregroundColor: Colors.white);
 
   Future<void> _toggleCamera() async {
     if (_isTransitioning) return;
@@ -178,10 +147,7 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBin
 
     // Trigger Native Hardware Feedback
     if (widget.enableSoundAndVibration) {
-      Future.wait([
-        _effects.playHaptic(PosHaptic.success),
-        _effects.playSound(PosSound.scannerBeep),
-      ]);
+      Future.wait([_effects.playHaptic(PosHaptic.success), _effects.playSound(PosSound.scannerBeep)]);
     }
 
     _resetIdleTimer();
@@ -257,19 +223,13 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBin
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     // Close 'X' Button
-                                    IconButton(
-                                      icon: const Icon(Icons.close),
-                                      style: widget.actionButtonTheme.buttonStyle,
-                                      onPressed: _toggleCamera,
-                                    ),
+                                    IconButton(icon: const Icon(Icons.close), style: widget.actionButtonTheme.buttonStyle, onPressed: _toggleCamera),
                                     // Flashlight Toggle (Micro-rebuilds only when tapped)
                                     ValueListenableBuilder<MobileScannerState>(
                                       valueListenable: _controller,
                                       builder: (context, state, child) {
                                         return IconButton(
-                                          icon: Icon(
-                                            state.torchState == TorchState.on ? Icons.flash_on : Icons.flash_off,
-                                          ),
+                                          icon: Icon(state.torchState == TorchState.on ? Icons.flash_on : Icons.flash_off),
                                           style: widget.actionButtonTheme.buttonStyle,
                                           onPressed: () => _controller.toggleTorch(),
                                         );
@@ -294,11 +254,7 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBin
                       minimumSize: WidgetStatePropertyAll(Size(currentWidth, 48)),
                     ),
                     icon: _isTransitioning
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                          )
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                         : Icon(_isCameraActive ? Icons.stop : Icons.play_arrow),
                     label: _isTransitioning ? const SizedBox.shrink() : Text(_isCameraActive ? 'Stop Camera' : 'Start Camera'),
                     onPressed: _isTransitioning ? null : _toggleCamera,

@@ -7,11 +7,13 @@ class _ScannerTopBar extends StatelessWidget {
   final ScannerToolBar toolBar;
   final MobileScannerController? controller;
   final void Function()? popBackWithListResult;
+  final ActionButtonTheme actionButtonTheme;
 
   const _ScannerTopBar({
     required this.toolBar,
     this.controller,
     this.popBackWithListResult,
+    this.actionButtonTheme = ActionButtonTheme.dark,
   });
 
   @override
@@ -28,6 +30,7 @@ class _ScannerTopBar extends StatelessWidget {
           config: standard,
           controller: controller,
           popBackWithListResult: popBackWithListResult,
+          actionButtonTheme: actionButtonTheme,
         ),
       },
     );
@@ -39,12 +42,14 @@ class _ScannerBatchTopBar extends StatelessWidget {
   final ValueNotifier<List<String>> scannedItemsNotifier;
   final MobileScannerController? controller;
   final void Function()? popBackWithListResult;
+  final ActionButtonTheme actionButtonTheme;
 
   const _ScannerBatchTopBar({
     required this.toolBar,
     required this.scannedItemsNotifier,
     this.controller,
     this.popBackWithListResult,
+    this.actionButtonTheme = ActionButtonTheme.dark,
   });
 
   @override
@@ -55,6 +60,7 @@ class _ScannerBatchTopBar extends StatelessWidget {
         config: toolBar,
         controller: controller,
         popBackWithListResult: popBackWithListResult,
+        actionButtonTheme: actionButtonTheme,
         extraTrailingWidget: _SmartCartButton(toolBar: toolBar, notifier: scannedItemsNotifier),
       ),
     );
@@ -65,46 +71,37 @@ class _ScannerBatchTopBar extends StatelessWidget {
 
 class _CircleButton extends StatelessWidget {
   final IconData icon;
-  final Color iconColor;
-  final Color backgroundColor;
+  final ActionButtonTheme actionButtonTheme;
   final VoidCallback? onPressed;
 
   const _CircleButton({
     required this.icon,
-    required this.iconColor,
-    required this.backgroundColor,
+    this.actionButtonTheme = ActionButtonTheme.dark,
     this.onPressed,
   });
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        shape: BoxShape.circle,
+    return IconButton(
+      icon: Icon(icon, size: 28),
+      style: actionButtonTheme.buttonStyle.copyWith(
+        shape: const WidgetStatePropertyAll(CircleBorder()),
       ),
-      child: IconButton(
-        icon: Icon(
-          icon,
-          color: iconColor,
-          size: 28,
-        ),
-        onPressed: onPressed,
-      ),
+      onPressed: onPressed,
     );
   }
 }
 
 class _CircleCloseButton extends StatelessWidget {
   final void Function()? pop;
-  const _CircleCloseButton({this.pop});
+  final ActionButtonTheme actionButtonTheme;
+  const _CircleCloseButton({this.pop, this.actionButtonTheme = ActionButtonTheme.dark});
 
   @override
   Widget build(BuildContext context) {
     return _CircleButton(
       icon: Icons.close,
-      iconColor: Colors.white,
-      backgroundColor: Colors.black45,
+      actionButtonTheme: actionButtonTheme,
       onPressed: () {
         if (Navigator.of(context).canPop()) {
           if (pop != null) {
@@ -122,16 +119,15 @@ class _CircleCloseButton extends StatelessWidget {
 
 class _DisabledFlashButton extends StatelessWidget {
   final IconData icon;
-  const _DisabledFlashButton({required this.icon});
-  const _DisabledFlashButton.flash() : icon = Icons.flash_off;
-  const _DisabledFlashButton.camera() : icon = Icons.camera_alt_outlined;
+  final ActionButtonTheme actionButtonTheme;
+  const _DisabledFlashButton.flash({this.actionButtonTheme = ActionButtonTheme.dark}) : icon = Icons.flash_off;
+  const _DisabledFlashButton.camera({this.actionButtonTheme = ActionButtonTheme.dark}) : icon = Icons.camera_alt_outlined;
 
   @override
   Widget build(BuildContext context) {
     return _CircleButton(
       icon: icon,
-      iconColor: Colors.white24,
-      backgroundColor: Colors.black26,
+      actionButtonTheme: actionButtonTheme,
       onPressed: null,
     );
   }
@@ -140,12 +136,13 @@ class _DisabledFlashButton extends StatelessWidget {
 class _FlashToggleButton extends StatelessWidget {
   final MobileScannerController? controller;
   final void Function(Object error)? onError;
+  final ActionButtonTheme actionButtonTheme;
 
-  const _FlashToggleButton({this.controller, this.onError});
+  const _FlashToggleButton({this.controller, this.onError, this.actionButtonTheme = ActionButtonTheme.dark});
 
   @override
   Widget build(BuildContext context) {
-    const disableButton = _DisabledFlashButton.flash();
+    final disableButton = _DisabledFlashButton.flash(actionButtonTheme: actionButtonTheme);
     if (controller == null) {
       return disableButton;
     }
@@ -159,8 +156,7 @@ class _FlashToggleButton extends StatelessWidget {
         final isOn = state.torchState == TorchState.on;
         return _CircleButton(
           icon: isOn ? Icons.flash_on : Icons.flash_off,
-          iconColor: isOn ? Colors.black : Colors.white,
-          backgroundColor: isOn ? Colors.white : Colors.black45,
+          actionButtonTheme: actionButtonTheme,
           onPressed: () async {
             try {
               await controller?.toggleTorch();
@@ -178,12 +174,13 @@ class _FlashToggleButton extends StatelessWidget {
 class _SwitchCameraButton extends StatelessWidget {
   final MobileScannerController? controller;
   final void Function(Object error)? onError;
+  final ActionButtonTheme actionButtonTheme;
 
-  const _SwitchCameraButton({this.controller, this.onError});
+  const _SwitchCameraButton({this.controller, this.onError, this.actionButtonTheme = ActionButtonTheme.dark});
 
   @override
   Widget build(BuildContext context) {
-    const disableButton = _DisabledFlashButton.camera();
+    final disableButton = _DisabledFlashButton.camera(actionButtonTheme: actionButtonTheme);
     if (controller == null) {
       return disableButton;
     }
@@ -196,8 +193,7 @@ class _SwitchCameraButton extends StatelessWidget {
         final isBack = state.cameraDirection == CameraFacing.back;
         return _CircleButton(
           icon: isBack ? Icons.camera_front : Icons.cameraswitch_outlined,
-          iconColor: Colors.white,
-          backgroundColor: Colors.black45,
+          actionButtonTheme: actionButtonTheme,
           onPressed: () async {
             try {
               await controller?.switchCamera();
@@ -269,12 +265,14 @@ class _SharedButtonsRow extends StatelessWidget {
   final MobileScannerController? controller;
   final Widget? extraTrailingWidget;
   final void Function()? popBackWithListResult;
+  final ActionButtonTheme actionButtonTheme;
 
   const _SharedButtonsRow({
     required this.config,
     this.controller,
     this.extraTrailingWidget,
     this.popBackWithListResult,
+    this.actionButtonTheme = ActionButtonTheme.dark,
   });
 
   @override
@@ -285,7 +283,7 @@ class _SharedButtonsRow extends StatelessWidget {
       children: [
         Visibility(
           visible: config.showCloseButton,
-          child: _CircleCloseButton(pop: popBackWithListResult),
+          child: _CircleCloseButton(pop: popBackWithListResult, actionButtonTheme: actionButtonTheme),
         ),
         if (config.showFlashButton || config.showSwitchCameraButton || extraTrailingWidget != null)
           Flexible(
@@ -294,8 +292,10 @@ class _SharedButtonsRow extends StatelessWidget {
               spacing: 12.0,
               runSpacing: 12.0,
               children: [
-                if (config.showFlashButton) _FlashToggleButton(controller: controller, onError: config.onActionButtonError),
-                if (config.showSwitchCameraButton) _SwitchCameraButton(controller: controller, onError: config.onActionButtonError),
+                if (config.showFlashButton)
+                  _FlashToggleButton(controller: controller, onError: config.onActionButtonError, actionButtonTheme: actionButtonTheme),
+                if (config.showSwitchCameraButton)
+                  _SwitchCameraButton(controller: controller, onError: config.onActionButtonError, actionButtonTheme: actionButtonTheme),
                 ?extraTrailingWidget,
                 ...?config.trailing,
               ],
