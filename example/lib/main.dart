@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:camera_scanner_kit/camera_scanner_kit.dart';
+import 'inline_scanner_example.dart';
 
 void main() {
   runApp(const MyApp());
@@ -179,6 +180,22 @@ class TestMatrixScreen extends StatelessWidget {
                   _showResult(context, 'Stream Custom: $barcode');
                 },
               );
+            },
+          ),
+          const Divider(),
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text(
+              '4. INLINE SCANNER',
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
+            ),
+          ),
+          ListTile(
+            title: const Text('Test Inline Scanner (Controller Demo)'),
+            subtitle: const Text('Embeddable view with external toggle'),
+            trailing: const Icon(Icons.crop_free),
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const InlineScannerExample()));
             },
           ),
         ],

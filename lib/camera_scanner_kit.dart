@@ -15,3 +15,6 @@ export 'src/functions.dart';
 // Expose only the public styling class; the internal overlay widget
 // and painter remain hidden.
 export 'src/scanner_overlay.dart' show ScannerOverlayStyle;
+
+// Inline scanner module: embeddable scanner view with controller architecture.
+export 'src/inline_scanner/inline_scanner.dart';
