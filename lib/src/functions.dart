@@ -337,6 +337,7 @@ void showPosBarcodeScanner(
   ScannerOverlayStyle? overlayStyle,
   bool useDarkModeButtonTheme = true,
   double qtyButtonsBottomPadding = 230,
+  String? closeButtonLabel,
 }) async {
   try {
     await Navigator.of(context, rootNavigator: true).push(
@@ -345,6 +346,7 @@ void showPosBarcodeScanner(
           onScan: onScan,
           overlayStyle: overlayStyle,
           allowedFormats: allowedFormats,
+          closeButtonLabel: closeButtonLabel,
           offsetFromCenter: offsetFromCenter,
           detectionTimeoutMs: detectionTimeoutMs,
           sameItemCooldownMs: sameItemCooldownMs,

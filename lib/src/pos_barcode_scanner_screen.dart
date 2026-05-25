@@ -6,6 +6,7 @@ import 'scanner_overlay.dart';
 import 'scanner_screen.dart';
 
 const _defaultBorderColor = Colors.blue;
+const _defaultCloseButtonLabel = 'Close Camera';
 
 class PosBarcodeScannerScreen extends StatefulWidget {
   final void Function(String barcode, int qty) onScan;
@@ -17,6 +18,7 @@ class PosBarcodeScannerScreen extends StatefulWidget {
   final ScannerOverlayStyle? overlayStyle;
   final bool useDarkModeButtonTheme;
   final double qtyButtonsBottomPadding;
+  final String? closeButtonLabel;
 
   const PosBarcodeScannerScreen({
     super.key,
@@ -27,6 +29,7 @@ class PosBarcodeScannerScreen extends StatefulWidget {
     this.enableSoundAndVibration = true,
     this.offsetFromCenter,
     this.overlayStyle,
+    this.closeButtonLabel,
     this.useDarkModeButtonTheme = true,
     this.qtyButtonsBottomPadding = 230,
   }) : assert(qtyButtonsBottomPadding > 0, 'qtyButtonsBottomPadding must be greater than 0');
@@ -136,6 +139,37 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
     );
   }
 
+  Widget _buildCloseCameraTextButton() {
+    final actionButtonTheme = widget.useDarkModeButtonTheme ? ActionButtonTheme.dark : ActionButtonTheme.light;
+    return Align(
+      alignment: Alignment.bottomCenter,
+      child: SafeArea(
+        bottom: true,
+        top: false,
+        right: false,
+        left: false,
+        minimum: const EdgeInsets.only(bottom: 100),
+        child: TextButton(
+          onPressed: () {},
+          style: actionButtonTheme.buttonStyle.copyWith(
+            shape: WidgetStatePropertyAll(
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: Colors.white),
+              ),
+            ),
+          ),
+          child: Text(
+            widget.closeButtonLabel ?? _defaultCloseButtonLabel,
+            style: TextStyle(
+              color: widget.useDarkModeButtonTheme ? Colors.white : Colors.black87,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _onCameraScan(String barcode) {
     final qty = qtyNotifier.value;
     widget.onScan(barcode, qty);
@@ -203,6 +237,7 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
             },
           ),
         ),
+        _buildCloseCameraTextButton(),
       ],
     );
   }
