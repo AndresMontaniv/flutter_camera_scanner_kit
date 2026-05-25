@@ -1,25 +1,33 @@
 import 'package:flutter/material.dart';
 
+const _lightForegroundColor = Colors.black87;
+const _darkBgColor = Colors.black54;
+const _darkForegroundColor = Colors.white;
+const _white85 = Color(0xD9FFFFFF);
+const _grey60 = Color(0x999E9E9E);
+
 enum ActionButtonTheme {
   light,
   dark
   ;
 
+  Color get borderColor => this == ActionButtonTheme.dark ? _white85 : _grey60;
+
   ButtonStyle get buttonStyle {
     switch (this) {
       case ActionButtonTheme.light:
         return const ButtonStyle(
-          backgroundColor: WidgetStatePropertyAll(Color(0xD9FFFFFF)),
-          iconColor: WidgetStatePropertyAll(Colors.black87),
-          foregroundColor: WidgetStatePropertyAll(Colors.black87),
-          shape: WidgetStatePropertyAll(CircleBorder(side: BorderSide(color: Color(0x999E9E9E)))),
+          backgroundColor: WidgetStatePropertyAll(_white85),
+          iconColor: WidgetStatePropertyAll(_lightForegroundColor),
+          foregroundColor: WidgetStatePropertyAll(_lightForegroundColor),
+          shape: WidgetStatePropertyAll(CircleBorder(side: BorderSide(color: _grey60))),
         );
       case ActionButtonTheme.dark:
         return const ButtonStyle(
-          backgroundColor: WidgetStatePropertyAll(Colors.black54),
-          iconColor: WidgetStatePropertyAll(Colors.white),
-          foregroundColor: WidgetStatePropertyAll(Colors.white),
-          shape: WidgetStatePropertyAll(CircleBorder(side: BorderSide(color: Color(0xD9FFFFFF)))),
+          backgroundColor: WidgetStatePropertyAll(_darkBgColor),
+          iconColor: WidgetStatePropertyAll(_darkForegroundColor),
+          foregroundColor: WidgetStatePropertyAll(_darkForegroundColor),
+          shape: WidgetStatePropertyAll(CircleBorder(side: BorderSide(color: _white85))),
         );
     }
   }

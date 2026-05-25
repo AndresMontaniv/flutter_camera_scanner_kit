@@ -140,6 +140,7 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
 
   Widget _buildCloseCameraTextButton() {
     final actionButtonTheme = widget.useDarkModeButtonTheme ? ActionButtonTheme.dark : ActionButtonTheme.light;
+    final borderColor = actionButtonTheme.borderColor;
     return Align(
       alignment: Alignment.bottomCenter,
       child: SafeArea(
@@ -154,7 +155,7 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
             shape: WidgetStatePropertyAll(
               RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: const BorderSide(color: Colors.white),
+                side: BorderSide(color: borderColor),
               ),
             ),
           ),
