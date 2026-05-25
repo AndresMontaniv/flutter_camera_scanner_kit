@@ -124,16 +124,15 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
             fixedSize: const WidgetStatePropertyAll(Size(55, 55)),
             padding: const WidgetStatePropertyAll(EdgeInsets.zero),
             shape: WidgetStatePropertyAll(CircleBorder(side: BorderSide(color: borderColor, width: 2.0))),
-          ),
-          icon: Text(
-            total.toString(),
-            style: TextStyle(
-              fontSize: 22.0,
-              fontWeight: FontWeight.bold,
-              height: 1.0,
-              color: widget.useDarkModeButtonTheme ? Colors.white : Colors.black87,
+            textStyle: const WidgetStatePropertyAll(
+              TextStyle(
+                fontSize: 22.0,
+                fontWeight: FontWeight.bold,
+                height: 1.0,
+              ),
             ),
           ),
+          icon: Text(total.toString()),
         );
       },
     );
@@ -150,7 +149,7 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
         left: false,
         minimum: const EdgeInsets.only(bottom: 100),
         child: TextButton(
-          onPressed: () {},
+          onPressed: () => Navigator.of(context).pop(),
           style: actionButtonTheme.buttonStyle.copyWith(
             shape: WidgetStatePropertyAll(
               RoundedRectangleBorder(
@@ -159,12 +158,7 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
               ),
             ),
           ),
-          child: Text(
-            widget.closeButtonLabel ?? _defaultCloseButtonLabel,
-            style: TextStyle(
-              color: widget.useDarkModeButtonTheme ? Colors.white : Colors.black87,
-            ),
-          ),
+          child: Text(widget.closeButtonLabel ?? _defaultCloseButtonLabel),
         ),
       ),
     );

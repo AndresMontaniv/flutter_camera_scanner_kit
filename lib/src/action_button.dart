@@ -11,12 +11,14 @@ enum ActionButtonTheme {
         return const ButtonStyle(
           backgroundColor: WidgetStatePropertyAll(Color(0xD9FFFFFF)),
           iconColor: WidgetStatePropertyAll(Colors.black87),
+          foregroundColor: WidgetStatePropertyAll(Colors.black87),
           shape: WidgetStatePropertyAll(CircleBorder(side: BorderSide(color: Color(0x999E9E9E)))),
         );
       case ActionButtonTheme.dark:
         return const ButtonStyle(
           backgroundColor: WidgetStatePropertyAll(Colors.black54),
           iconColor: WidgetStatePropertyAll(Colors.white),
+          foregroundColor: WidgetStatePropertyAll(Colors.white),
           shape: WidgetStatePropertyAll(CircleBorder(side: BorderSide(color: Color(0xD9FFFFFF)))),
         );
     }

@@ -38,7 +38,7 @@ class TestMatrixScreen extends StatelessWidget {
             onTap: () {
               showPosBarcodeScanner(
                 context,
-                useDarkModeButtonTheme: true,
+                useDarkModeButtonTheme: false,
                 closeButtonLabel: 'Cerrar Cámara',
                 onScan: (barcode, qty) {
                   debugPrint('[ScannerExample] This barcode x times: $barcode x $qty');
