@@ -5,6 +5,8 @@ import 'action_button.dart';
 import 'scanner_overlay.dart';
 import 'scanner_screen.dart';
 
+const _defaultBorderColor = Colors.blue;
+
 class PosBarcodeScannerScreen extends StatefulWidget {
   final void Function(String barcode, int qty) onScan;
   final List<BarcodeFormat> allowedFormats;
@@ -14,6 +16,7 @@ class PosBarcodeScannerScreen extends StatefulWidget {
   final Offset? offsetFromCenter;
   final ScannerOverlayStyle? overlayStyle;
   final bool useDarkModeButtonTheme;
+  final double qtyButtonsBottomPadding;
 
   const PosBarcodeScannerScreen({
     super.key,
@@ -25,7 +28,8 @@ class PosBarcodeScannerScreen extends StatefulWidget {
     this.offsetFromCenter,
     this.overlayStyle,
     this.useDarkModeButtonTheme = true,
-  });
+    this.qtyButtonsBottomPadding = 230,
+  }) : assert(qtyButtonsBottomPadding > 0, 'qtyButtonsBottomPadding must be greater than 0');
 
   @override
   State<PosBarcodeScannerScreen> createState() => _PosBarcodeScannerScreenState();
@@ -106,19 +110,25 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
   }
 
   Widget _buildScanListButton() {
+    final actionButtonTheme = widget.useDarkModeButtonTheme ? ActionButtonTheme.dark : ActionButtonTheme.light;
+    final borderColor = widget.overlayStyle?.borderColor ?? _defaultBorderColor;
     return ValueListenableBuilder<int>(
       valueListenable: totalItemsNotifier,
       builder: (ctx, total, _) {
-        return Badge(
-          label: Text(total.toString()),
-          isLabelVisible: total > 0,
-          textStyle: const TextStyle(fontSize: 14.0),
-          padding: const EdgeInsets.all(1.5),
-          child: DecoratedBox(
-            decoration: const BoxDecoration(color: Colors.black45, shape: BoxShape.circle),
-            child: IconButton(
-              onPressed: _onShowScanListPressed,
-              icon: const Icon(Icons.shopping_cart_checkout_outlined, color: Colors.white, size: 28),
+        return IconButton(
+          onPressed: _onShowScanListPressed,
+          style: actionButtonTheme.buttonStyle.copyWith(
+            fixedSize: const WidgetStatePropertyAll(Size(55, 55)),
+            padding: const WidgetStatePropertyAll(EdgeInsets.zero),
+            shape: WidgetStatePropertyAll(CircleBorder(side: BorderSide(color: borderColor, width: 2.0))),
+          ),
+          icon: Text(
+            total.toString(),
+            style: TextStyle(
+              fontSize: 22.0,
+              fontWeight: FontWeight.bold,
+              height: 1.0,
+              color: widget.useDarkModeButtonTheme ? Colors.white : Colors.black87,
             ),
           ),
         );
@@ -152,14 +162,14 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
       enableSoundAndVibration: widget.enableSoundAndVibration,
       useDarkModeButtonTheme: widget.useDarkModeButtonTheme,
       scannerViewConfig: ScannerViewConfig.barcode(
-        overlayStyle: widget.overlayStyle ?? const ScannerOverlayStyle(borderColor: Colors.blue),
+        overlayStyle: widget.overlayStyle ?? const ScannerOverlayStyle(borderColor: _defaultBorderColor),
         offsetFromCenter: widget.offsetFromCenter,
         allowedFormats: widget.allowedFormats,
       ),
       onCameraScan: _onCameraScan,
       stackChildren: [
         Positioned(
-          bottom: MediaQuery.of(context).padding.bottom + 230,
+          bottom: MediaQuery.of(context).padding.bottom + widget.qtyButtonsBottomPadding,
           left: 0,
           right: 0,
           child: ValueListenableBuilder<int>(

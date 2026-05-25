@@ -262,7 +262,7 @@ class _SharedButtonsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Visibility(
           visible: config.showCloseButton,
@@ -272,6 +272,7 @@ class _SharedButtonsRow extends StatelessWidget {
           Flexible(
             child: Wrap(
               alignment: WrapAlignment.end,
+              crossAxisAlignment: WrapCrossAlignment.center,
               spacing: 12.0,
               runSpacing: 12.0,
               children: [

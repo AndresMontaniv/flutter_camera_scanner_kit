@@ -333,9 +333,10 @@ void showPosBarcodeScanner(
   int detectionTimeoutMs = 250,
   int sameItemCooldownMs = 1500,
   bool enableSoundAndVibration = true,
-  Offset? offsetFromCenter,
+  Offset offsetFromCenter = const Offset(0, -180),
   ScannerOverlayStyle? overlayStyle,
   bool useDarkModeButtonTheme = true,
+  double qtyButtonsBottomPadding = 230,
 }) async {
   try {
     await Navigator.of(context, rootNavigator: true).push(
@@ -349,6 +350,7 @@ void showPosBarcodeScanner(
           sameItemCooldownMs: sameItemCooldownMs,
           enableSoundAndVibration: enableSoundAndVibration,
           useDarkModeButtonTheme: useDarkModeButtonTheme,
+          qtyButtonsBottomPadding: qtyButtonsBottomPadding,
         ),
       ),
     );
