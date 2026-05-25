@@ -44,8 +44,6 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
   Map<String, int> scannedBarcodes = {};
 
   void _onShowScanListPressed() {
-    final length = totalItemsNotifier.value;
-    final list = scannedBarcodes.entries.toList();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -58,53 +56,63 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
           maxChildSize: 0.9,
           expand: false,
           builder: (context, scrollController) {
-            return Column(
-              children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Scanned Barcodes ($length)',
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+            return ValueListenableBuilder<int>(
+              valueListenable: totalItemsNotifier,
+              builder: (context, totalLength, _) {
+                final list = scannedBarcodes.entries.toList();
+                return Column(
+                  children: [
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Scanned Barcodes ($totalLength)',
+                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.black54),
+                            onPressed: () => Navigator.of(ctx).pop(),
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Colors.black54),
-                        onPressed: () => Navigator.of(ctx).pop(),
-                      ),
-                    ],
-                  ),
-                ),
-                const Divider(height: 1),
+                    ),
+                    const Divider(height: 1),
 
-                // Empty State (Just in case)
-                if (list.isEmpty)
-                  const Expanded(
-                    child: Center(
-                      child: Text('No items scanned yet.', style: TextStyle(fontSize: 16, color: Colors.black54)),
-                    ),
-                  )
-                // Scrollable List
-                else
-                  Expanded(
-                    child: ListView.separated(
-                      controller: scrollController,
-                      itemCount: scannedBarcodes.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
-                      itemBuilder: (context, index) {
-                        final item = list[index];
-                        final qty = item.value;
-                        final barcode = item.key;
-                        return ListTile(
-                          leading: CircleAvatar(backgroundColor: Colors.blue.shade100, foregroundColor: Colors.blue.shade900, child: Text('$qty x')),
-                          title: Text(barcode, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
-                        );
-                      },
-                    ),
-                  ),
-              ],
+                    // Empty State (Just in case)
+                    if (list.isEmpty)
+                      const Expanded(
+                        child: Center(
+                          child: Text('No items scanned yet.', style: TextStyle(fontSize: 16, color: Colors.black54)),
+                        ),
+                      )
+                    // Scrollable List
+                    else
+                      Expanded(
+                        child: ListView.separated(
+                          controller: scrollController,
+                          itemCount: scannedBarcodes.length,
+                          separatorBuilder: (_, _) => const Divider(height: 1),
+                          itemBuilder: (context, index) {
+                            final item = list[index];
+                            final qty = item.value;
+                            final barcode = item.key;
+                            return ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: Colors.blue.shade100,
+                                foregroundColor: Colors.blue.shade900,
+                                child: Text('$qty x'),
+                              ),
+                              title: Text(barcode, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                );
+              },
             );
           },
         );
