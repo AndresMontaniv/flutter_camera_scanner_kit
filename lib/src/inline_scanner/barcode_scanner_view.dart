@@ -5,8 +5,10 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import 'package:native_haptics_and_audio/native_haptics_and_audio.dart';
 
-import '../action_button_theme.dart';
+import '../action_button.dart';
 import 'barcode_scanner_controller.dart';
+
+const assetMessage = 'BarcodeScannerView: maxWidth must be between 200.0 and 600.0 to ensure scanning performance.';
 
 class BarcodeScannerView extends StatefulWidget {
   final double maxWidth;
@@ -16,7 +18,7 @@ class BarcodeScannerView extends StatefulWidget {
   final Duration idleTimeout;
   final BarcodeScannerController? controller;
   final bool showToggleButton;
-  final ActionButtonTheme actionButtonTheme;
+  final bool useDarkModeButtonTheme;
 
   const BarcodeScannerView({
     super.key,
@@ -27,8 +29,8 @@ class BarcodeScannerView extends StatefulWidget {
     this.idleTimeout = const Duration(seconds: 90),
     this.controller,
     this.showToggleButton = true,
-    this.actionButtonTheme = ActionButtonTheme.dark,
-  }) : assert(maxWidth >= 200.0 && maxWidth <= 600.0, 'BarcodeScannerView: maxWidth must be between 200.0 and 600.0 to ensure scanning performance.');
+    this.useDarkModeButtonTheme = true,
+  }) : assert(maxWidth >= 200.0 && maxWidth <= 600.0, assetMessage);
 
   @override
   State<BarcodeScannerView> createState() => _BarcodeScannerViewState();
@@ -223,14 +225,20 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBin
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     // Close 'X' Button
-                                    IconButton(icon: const Icon(Icons.close), style: widget.actionButtonTheme.buttonStyle, onPressed: _toggleCamera),
+                                    CircleButton(
+                                      icon: Icons.close,
+                                      size: 25,
+                                      darkMode: widget.useDarkModeButtonTheme,
+                                      onPressed: _toggleCamera,
+                                    ),
                                     // Flashlight Toggle (Micro-rebuilds only when tapped)
                                     ValueListenableBuilder<MobileScannerState>(
                                       valueListenable: _controller,
                                       builder: (context, state, child) {
-                                        return IconButton(
-                                          icon: Icon(state.torchState == TorchState.on ? Icons.flash_on : Icons.flash_off),
-                                          style: widget.actionButtonTheme.buttonStyle,
+                                        return CircleButton(
+                                          icon: state.torchState == TorchState.on ? Icons.flash_on : Icons.flash_off,
+                                          size: 25,
+                                          darkMode: widget.useDarkModeButtonTheme,
                                           onPressed: () => _controller.toggleTorch(),
                                         );
                                       },

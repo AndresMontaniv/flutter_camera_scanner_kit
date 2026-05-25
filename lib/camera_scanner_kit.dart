@@ -11,7 +11,6 @@ library;
 export 'src/scanner_screen.dart';
 export 'src/pos_barcode_scanner_screen.dart';
 export 'src/functions.dart';
-export 'src/action_button_theme.dart';
 
 // Expose only the public styling class; the internal overlay widget
 // and painter remain hidden.

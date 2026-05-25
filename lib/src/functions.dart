@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '_constants.dart';
-import 'action_button_theme.dart';
 import 'pos_barcode_scanner_screen.dart';
 import 'scanner_overlay.dart';
 import 'scanner_screen.dart';
@@ -24,6 +23,7 @@ Future<String?> scanCustom(
   void Function(String)? onScanRejected,
   ScannerViewConfig? scannerViewConfig,
   bool enableSoundAndVibration = true,
+  bool useDarkModeButtonTheme = true,
 }) async {
   try {
     final String? scannedItem = await Navigator.of(context, rootNavigator: true).push(
@@ -34,6 +34,7 @@ Future<String?> scanCustom(
           onScanRejected: onScanRejected,
           scannerViewConfig: scannerViewConfig,
           enableSoundAndVibration: enableSoundAndVibration,
+          useDarkModeButtonTheme: useDarkModeButtonTheme,
         ),
       ),
     );
@@ -62,6 +63,7 @@ Future<String?> scanBarcode(
   ScannerToolBar? toolBar = const StandardToolBar(),
   List<BarcodeFormat> allowedFormats = const [],
   bool enableSoundAndVibration = true,
+  bool useDarkModeButtonTheme = true,
 }) async {
   return scanCustom(
     context,
@@ -70,6 +72,7 @@ Future<String?> scanBarcode(
     onScanRejected: onScanRejected,
     scannerViewConfig: ScannerViewConfig.barcode(overlayStyle: overlayStyle, offsetFromCenter: offsetFromCenter, allowedFormats: allowedFormats),
     enableSoundAndVibration: enableSoundAndVibration,
+    useDarkModeButtonTheme: useDarkModeButtonTheme,
   );
 }
 
@@ -85,6 +88,7 @@ Future<String?> scanQrCode(
   Offset? offsetFromCenter,
   ScannerToolBar? toolBar = const StandardToolBar(),
   bool enableSoundAndVibration = true,
+  bool useDarkModeButtonTheme = true,
 }) async {
   return scanCustom(
     context,
@@ -93,6 +97,7 @@ Future<String?> scanQrCode(
     onScanRejected: onScanRejected,
     scannerViewConfig: ScannerViewConfig.qrCode(overlayStyle: overlayStyle, offsetFromCenter: offsetFromCenter),
     enableSoundAndVibration: enableSoundAndVibration,
+    useDarkModeButtonTheme: useDarkModeButtonTheme,
   );
 }
 
@@ -110,6 +115,7 @@ Future<List<String>?> scanCustomBatch(
   int sameItemCooldownMs = 1500,
   bool enableSoundAndVibration = true,
   void Function(String)? onScanRejected,
+  bool useDarkModeButtonTheme = true,
 }) async {
   try {
     final List<String>? scannedItems = await Navigator.of(context, rootNavigator: true).push(
@@ -123,7 +129,7 @@ Future<List<String>?> scanCustomBatch(
           sameItemCooldownMs: sameItemCooldownMs,
           scannerViewConfig: scannerViewConfig,
           enableSoundAndVibration: enableSoundAndVibration,
-          actionButtonTheme: ActionButtonTheme.light,
+          useDarkModeButtonTheme: useDarkModeButtonTheme,
         ),
       ),
     );
@@ -155,6 +161,7 @@ Future<List<String>?> scanBarcodeBatch(
   Offset? offsetFromCenter,
   ScannerOverlayStyle? overlayStyle,
   List<BarcodeFormat> allowedFormats = const [],
+  bool useDarkModeButtonTheme = true,
 }) async {
   return scanCustomBatch(
     context,
@@ -166,6 +173,7 @@ Future<List<String>?> scanBarcodeBatch(
     toolBar: toolBar,
     scannerViewConfig: ScannerViewConfig.barcode(overlayStyle: overlayStyle, offsetFromCenter: offsetFromCenter, allowedFormats: allowedFormats),
     enableSoundAndVibration: enableSoundAndVibration,
+    useDarkModeButtonTheme: useDarkModeButtonTheme,
   );
 }
 
@@ -184,6 +192,7 @@ Future<List<String>?> scanQrCodeBatch(
   void Function(String)? onScanRejected,
   Offset? offsetFromCenter,
   ScannerOverlayStyle? overlayStyle,
+  bool useDarkModeButtonTheme = true,
 }) async {
   return scanCustomBatch(
     context,
@@ -195,6 +204,7 @@ Future<List<String>?> scanQrCodeBatch(
     toolBar: toolBar,
     scannerViewConfig: ScannerViewConfig.qrCode(overlayStyle: overlayStyle, offsetFromCenter: offsetFromCenter),
     enableSoundAndVibration: enableSoundAndVibration,
+    useDarkModeButtonTheme: useDarkModeButtonTheme,
   );
 }
 
@@ -214,6 +224,7 @@ Future<void> scanCustomStream(
   int sameItemCooldownMs = 1500,
   bool enableSoundAndVibration = true,
   void Function(String)? onScanRejected,
+  bool useDarkModeButtonTheme = true,
 }) async {
   try {
     await Navigator.of(context, rootNavigator: true).push(
@@ -228,6 +239,7 @@ Future<void> scanCustomStream(
           sameItemCooldownMs: sameItemCooldownMs,
           scannerViewConfig: scannerViewConfig,
           enableSoundAndVibration: enableSoundAndVibration,
+          useDarkModeButtonTheme: useDarkModeButtonTheme,
         ),
       ),
     );
@@ -254,6 +266,7 @@ Future<void> scanBarcodeStream(
   ScannerOverlayStyle? overlayStyle,
   Offset? offsetFromCenter,
   List<BarcodeFormat> allowedFormats = const [],
+  bool useDarkModeButtonTheme = true,
 }) async => scanCustomStream(
   context,
   stackChildren: stackChildren,
@@ -265,6 +278,7 @@ Future<void> scanBarcodeStream(
   scannerViewConfig: ScannerViewConfig.barcode(overlayStyle: overlayStyle, offsetFromCenter: offsetFromCenter, allowedFormats: allowedFormats),
   toolBar: toolBar,
   enableSoundAndVibration: enableSoundAndVibration,
+  useDarkModeButtonTheme: useDarkModeButtonTheme,
 );
 
 /// Opens the scanner in **Stream** mode optimized for QR Codes.
@@ -284,6 +298,7 @@ Future<void> scanQrCodeStream(
   void Function(String)? onScanRejected,
   ScannerOverlayStyle? overlayStyle,
   Offset? offsetFromCenter,
+  bool useDarkModeButtonTheme = true,
 }) async => scanCustomStream(
   context,
   stackChildren: stackChildren,
@@ -295,6 +310,7 @@ Future<void> scanQrCodeStream(
   scannerViewConfig: ScannerViewConfig.qrCode(overlayStyle: overlayStyle, offsetFromCenter: offsetFromCenter),
   toolBar: toolBar,
   enableSoundAndVibration: enableSoundAndVibration,
+  useDarkModeButtonTheme: useDarkModeButtonTheme,
 );
 
 /// Launches the Point of Sale (POS) Barcode Scanner.
@@ -319,6 +335,7 @@ void showPosBarcodeScanner(
   bool enableSoundAndVibration = true,
   Offset? offsetFromCenter,
   ScannerOverlayStyle? overlayStyle,
+  bool useDarkModeButtonTheme = true,
 }) async {
   try {
     await Navigator.of(context, rootNavigator: true).push(
@@ -331,6 +348,7 @@ void showPosBarcodeScanner(
           detectionTimeoutMs: detectionTimeoutMs,
           sameItemCooldownMs: sameItemCooldownMs,
           enableSoundAndVibration: enableSoundAndVibration,
+          useDarkModeButtonTheme: useDarkModeButtonTheme,
         ),
       ),
     );

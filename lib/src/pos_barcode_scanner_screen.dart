@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
-import 'action_button_theme.dart';
+import 'action_button.dart';
 import 'scanner_overlay.dart';
 import 'scanner_screen.dart';
 
@@ -13,7 +13,7 @@ class PosBarcodeScannerScreen extends StatefulWidget {
   final bool enableSoundAndVibration;
   final Offset? offsetFromCenter;
   final ScannerOverlayStyle? overlayStyle;
-  final ActionButtonTheme actionButtonTheme;
+  final bool useDarkModeButtonTheme;
 
   const PosBarcodeScannerScreen({
     super.key,
@@ -24,7 +24,7 @@ class PosBarcodeScannerScreen extends StatefulWidget {
     this.enableSoundAndVibration = true,
     this.offsetFromCenter,
     this.overlayStyle,
-    this.actionButtonTheme = ActionButtonTheme.dark,
+    this.useDarkModeButtonTheme = true,
   });
 
   @override
@@ -150,7 +150,7 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
       detectionTimeoutMs: widget.detectionTimeoutMs,
       sameItemCooldownMs: widget.sameItemCooldownMs,
       enableSoundAndVibration: widget.enableSoundAndVibration,
-      actionButtonTheme: widget.actionButtonTheme,
+      useDarkModeButtonTheme: widget.useDarkModeButtonTheme,
       scannerViewConfig: ScannerViewConfig.barcode(
         overlayStyle: widget.overlayStyle ?? const ScannerOverlayStyle(borderColor: Colors.blue),
         offsetFromCenter: widget.offsetFromCenter,
@@ -159,7 +159,7 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
       onCameraScan: _onCameraScan,
       stackChildren: [
         Positioned(
-          bottom: MediaQuery.of(context).padding.bottom + 100,
+          bottom: MediaQuery.of(context).padding.bottom + 230,
           left: 0,
           right: 0,
           child: ValueListenableBuilder<int>(
@@ -168,9 +168,10 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
               return Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _CircleButton(
+                  CircleButton(
                     icon: Icons.remove,
-                    actionButtonTheme: widget.actionButtonTheme,
+                    size: 35,
+                    darkMode: widget.useDarkModeButtonTheme,
                     onPressed: () {
                       if (qty > 1) qtyNotifier.value--;
                     },
@@ -179,9 +180,10 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
                     qty.toString(),
                     style: const TextStyle(fontSize: 40, color: Colors.white, fontWeight: FontWeight.bold),
                   ),
-                  _CircleButton(
+                  CircleButton(
                     icon: Icons.add,
-                    actionButtonTheme: widget.actionButtonTheme,
+                    size: 35,
+                    darkMode: widget.useDarkModeButtonTheme,
                     onPressed: () {
                       qtyNotifier.value++;
                     },
@@ -192,23 +194,6 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _CircleButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback? onPressed;
-  final ActionButtonTheme actionButtonTheme;
-
-  const _CircleButton({required this.icon, this.onPressed, this.actionButtonTheme = ActionButtonTheme.dark});
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      icon: Icon(icon, size: 35),
-      style: actionButtonTheme.buttonStyle,
-      onPressed: onPressed,
     );
   }
 }

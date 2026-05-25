@@ -7,13 +7,13 @@ class _ScannerTopBar extends StatelessWidget {
   final ScannerToolBar toolBar;
   final MobileScannerController? controller;
   final void Function()? popBackWithListResult;
-  final ActionButtonTheme actionButtonTheme;
+  final bool useDarkModeButtonTheme;
 
   const _ScannerTopBar({
     required this.toolBar,
+    required this.useDarkModeButtonTheme,
     this.controller,
     this.popBackWithListResult,
-    this.actionButtonTheme = ActionButtonTheme.dark,
   });
 
   @override
@@ -30,7 +30,7 @@ class _ScannerTopBar extends StatelessWidget {
           config: standard,
           controller: controller,
           popBackWithListResult: popBackWithListResult,
-          actionButtonTheme: actionButtonTheme,
+          useDarkModeButtonTheme: useDarkModeButtonTheme,
         ),
       },
     );
@@ -42,14 +42,14 @@ class _ScannerBatchTopBar extends StatelessWidget {
   final ValueNotifier<List<String>> scannedItemsNotifier;
   final MobileScannerController? controller;
   final void Function()? popBackWithListResult;
-  final ActionButtonTheme actionButtonTheme;
+  final bool useDarkModeButtonTheme;
 
   const _ScannerBatchTopBar({
     required this.toolBar,
     required this.scannedItemsNotifier,
+    required this.useDarkModeButtonTheme,
     this.controller,
     this.popBackWithListResult,
-    this.actionButtonTheme = ActionButtonTheme.dark,
   });
 
   @override
@@ -60,8 +60,12 @@ class _ScannerBatchTopBar extends StatelessWidget {
         config: toolBar,
         controller: controller,
         popBackWithListResult: popBackWithListResult,
-        actionButtonTheme: actionButtonTheme,
-        extraTrailingWidget: _SmartCartButton(toolBar: toolBar, notifier: scannedItemsNotifier),
+        useDarkModeButtonTheme: useDarkModeButtonTheme,
+        extraTrailingWidget: _SmartCartButton(
+          toolBar: toolBar,
+          notifier: scannedItemsNotifier,
+          useDarkModeButtonTheme: useDarkModeButtonTheme,
+        ),
       ),
     );
   }
@@ -69,39 +73,17 @@ class _ScannerBatchTopBar extends StatelessWidget {
 
 // ─── Private Toolbar Buttons ────────────────────────────────────────────────
 
-class _CircleButton extends StatelessWidget {
-  final IconData icon;
-  final ActionButtonTheme actionButtonTheme;
-  final VoidCallback? onPressed;
-
-  const _CircleButton({
-    required this.icon,
-    this.actionButtonTheme = ActionButtonTheme.dark,
-    this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      icon: Icon(icon, size: 28),
-      style: actionButtonTheme.buttonStyle.copyWith(
-        shape: const WidgetStatePropertyAll(CircleBorder()),
-      ),
-      onPressed: onPressed,
-    );
-  }
-}
-
 class _CircleCloseButton extends StatelessWidget {
   final void Function()? pop;
-  final ActionButtonTheme actionButtonTheme;
-  const _CircleCloseButton({this.pop, this.actionButtonTheme = ActionButtonTheme.dark});
+  final bool useDarkModeButtonTheme;
+  const _CircleCloseButton({this.pop, this.useDarkModeButtonTheme = true});
 
   @override
   Widget build(BuildContext context) {
-    return _CircleButton(
+    return CircleButton(
       icon: Icons.close,
-      actionButtonTheme: actionButtonTheme,
+      size: 28,
+      darkMode: useDarkModeButtonTheme,
       onPressed: () {
         if (Navigator.of(context).canPop()) {
           if (pop != null) {
@@ -117,17 +99,18 @@ class _CircleCloseButton extends StatelessWidget {
   }
 }
 
-class _DisabledFlashButton extends StatelessWidget {
+class _DisabledButton extends StatelessWidget {
   final IconData icon;
-  final ActionButtonTheme actionButtonTheme;
-  const _DisabledFlashButton.flash({this.actionButtonTheme = ActionButtonTheme.dark}) : icon = Icons.flash_off;
-  const _DisabledFlashButton.camera({this.actionButtonTheme = ActionButtonTheme.dark}) : icon = Icons.camera_alt_outlined;
+  final bool useDarkModeButtonTheme;
+  const _DisabledButton.flash({this.useDarkModeButtonTheme = true}) : icon = Icons.flash_off;
+  const _DisabledButton.camera({this.useDarkModeButtonTheme = true}) : icon = Icons.camera_alt_outlined;
 
   @override
   Widget build(BuildContext context) {
-    return _CircleButton(
+    return CircleButton(
       icon: icon,
-      actionButtonTheme: actionButtonTheme,
+      size: 28,
+      darkMode: useDarkModeButtonTheme,
       onPressed: null,
     );
   }
@@ -136,13 +119,13 @@ class _DisabledFlashButton extends StatelessWidget {
 class _FlashToggleButton extends StatelessWidget {
   final MobileScannerController? controller;
   final void Function(Object error)? onError;
-  final ActionButtonTheme actionButtonTheme;
+  final bool useDarkModeButtonTheme;
 
-  const _FlashToggleButton({this.controller, this.onError, this.actionButtonTheme = ActionButtonTheme.dark});
+  const _FlashToggleButton({this.controller, this.onError, this.useDarkModeButtonTheme = true});
 
   @override
   Widget build(BuildContext context) {
-    final disableButton = _DisabledFlashButton.flash(actionButtonTheme: actionButtonTheme);
+    final disableButton = _DisabledButton.flash(useDarkModeButtonTheme: useDarkModeButtonTheme);
     if (controller == null) {
       return disableButton;
     }
@@ -154,9 +137,10 @@ class _FlashToggleButton extends StatelessWidget {
           return disableButton;
         }
         final isOn = state.torchState == TorchState.on;
-        return _CircleButton(
+        return CircleButton(
           icon: isOn ? Icons.flash_on : Icons.flash_off,
-          actionButtonTheme: actionButtonTheme,
+          size: 28,
+          darkMode: useDarkModeButtonTheme,
           onPressed: () async {
             try {
               await controller?.toggleTorch();
@@ -174,13 +158,13 @@ class _FlashToggleButton extends StatelessWidget {
 class _SwitchCameraButton extends StatelessWidget {
   final MobileScannerController? controller;
   final void Function(Object error)? onError;
-  final ActionButtonTheme actionButtonTheme;
+  final bool useDarkModeButtonTheme;
 
-  const _SwitchCameraButton({this.controller, this.onError, this.actionButtonTheme = ActionButtonTheme.dark});
+  const _SwitchCameraButton({this.controller, this.onError, this.useDarkModeButtonTheme = true});
 
   @override
   Widget build(BuildContext context) {
-    final disableButton = _DisabledFlashButton.camera(actionButtonTheme: actionButtonTheme);
+    final disableButton = _DisabledButton.camera(useDarkModeButtonTheme: useDarkModeButtonTheme);
     if (controller == null) {
       return disableButton;
     }
@@ -191,9 +175,10 @@ class _SwitchCameraButton extends StatelessWidget {
           return disableButton;
         }
         final isBack = state.cameraDirection == CameraFacing.back;
-        return _CircleButton(
+        return CircleButton(
           icon: isBack ? Icons.camera_front : Icons.cameraswitch_outlined,
-          actionButtonTheme: actionButtonTheme,
+          size: 28,
+          darkMode: useDarkModeButtonTheme,
           onPressed: () async {
             try {
               await controller?.switchCamera();
@@ -210,11 +195,13 @@ class _SwitchCameraButton extends StatelessWidget {
 
 class _ScannedItemsButton extends StatelessWidget {
   final int total;
+  final bool useDarkModeButtonTheme;
   final void Function() onPressed;
 
   const _ScannedItemsButton({
     required this.total,
     required this.onPressed,
+    required this.useDarkModeButtonTheme,
   });
 
   @override
@@ -224,15 +211,11 @@ class _ScannedItemsButton extends StatelessWidget {
       isLabelVisible: total > 0,
       textStyle: const TextStyle(fontSize: 14.0),
       padding: const EdgeInsets.all(1.5),
-      child: DecoratedBox(
-        decoration: const BoxDecoration(
-          color: Colors.black45,
-          shape: BoxShape.circle,
-        ),
-        child: IconButton(
-          onPressed: onPressed,
-          icon: const Icon(Icons.list, color: Colors.white, size: 28),
-        ),
+      child: CircleButton(
+        size: 28,
+        darkMode: useDarkModeButtonTheme,
+        icon: Icons.list,
+        onPressed: onPressed,
       ),
     );
   }
@@ -265,14 +248,14 @@ class _SharedButtonsRow extends StatelessWidget {
   final MobileScannerController? controller;
   final Widget? extraTrailingWidget;
   final void Function()? popBackWithListResult;
-  final ActionButtonTheme actionButtonTheme;
+  final bool useDarkModeButtonTheme;
 
   const _SharedButtonsRow({
     required this.config,
     this.controller,
     this.extraTrailingWidget,
     this.popBackWithListResult,
-    this.actionButtonTheme = ActionButtonTheme.dark,
+    this.useDarkModeButtonTheme = true,
   });
 
   @override
@@ -283,7 +266,7 @@ class _SharedButtonsRow extends StatelessWidget {
       children: [
         Visibility(
           visible: config.showCloseButton,
-          child: _CircleCloseButton(pop: popBackWithListResult, actionButtonTheme: actionButtonTheme),
+          child: _CircleCloseButton(pop: popBackWithListResult, useDarkModeButtonTheme: useDarkModeButtonTheme),
         ),
         if (config.showFlashButton || config.showSwitchCameraButton || extraTrailingWidget != null)
           Flexible(
@@ -293,9 +276,17 @@ class _SharedButtonsRow extends StatelessWidget {
               runSpacing: 12.0,
               children: [
                 if (config.showFlashButton)
-                  _FlashToggleButton(controller: controller, onError: config.onActionButtonError, actionButtonTheme: actionButtonTheme),
+                  _FlashToggleButton(
+                    controller: controller,
+                    onError: config.onActionButtonError,
+                    useDarkModeButtonTheme: useDarkModeButtonTheme,
+                  ),
                 if (config.showSwitchCameraButton)
-                  _SwitchCameraButton(controller: controller, onError: config.onActionButtonError, actionButtonTheme: actionButtonTheme),
+                  _SwitchCameraButton(
+                    controller: controller,
+                    onError: config.onActionButtonError,
+                    useDarkModeButtonTheme: useDarkModeButtonTheme,
+                  ),
                 ?extraTrailingWidget,
                 ...?config.trailing,
               ],
@@ -309,10 +300,11 @@ class _SharedButtonsRow extends StatelessWidget {
 class _SmartCartButton extends StatelessWidget {
   final BatchToolBar toolBar;
   final ValueNotifier<List<String>> notifier;
-
+  final bool useDarkModeButtonTheme;
   const _SmartCartButton({
     required this.toolBar,
     required this.notifier,
+    required this.useDarkModeButtonTheme,
   });
 
   @override
@@ -332,6 +324,7 @@ class _SmartCartButton extends StatelessWidget {
         // 4. Fallback to our native badge button
         return _ScannedItemsButton(
           total: scannedItems.length,
+          useDarkModeButtonTheme: useDarkModeButtonTheme,
           onPressed: () {
             if (toolBar.onShowScannedListPressed != null) {
               // Custom bottom sheet / routing

@@ -30,12 +30,12 @@ class _InlineScannerExampleState extends State<InlineScannerExample> {
             // 1. The Embedded Scanner View
             BarcodeScannerView(
               controller: _scannerController,
-              showToggleButton: false, // Hidden! Controlled externally.
-              actionButtonTheme: ActionButtonTheme.light,
+              showToggleButton: false,
+              useDarkModeButtonTheme: false,
               onBarcodeScanned: _onScanned,
             ),
             const SizedBox(height: 20),
-            
+
             // 2. External Controls (Simulating a Search Bar)
             Row(
               children: [
@@ -50,7 +50,7 @@ class _InlineScannerExampleState extends State<InlineScannerExample> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                
+
                 // The Reactive Toggle Button
                 ListenableBuilder(
                   listenable: _scannerController,
@@ -70,9 +70,7 @@ class _InlineScannerExampleState extends State<InlineScannerExample> {
                             borderRadius: BorderRadius.circular(10.0),
                           ),
                         ),
-                        backgroundColor: WidgetStatePropertyAll(
-                          isActive ? Colors.red.shade100 : Colors.white,
-                        ),
+                        backgroundColor: WidgetStatePropertyAll(isActive ? Colors.red.shade100 : Colors.white),
                       ),
                     );
                   },
@@ -80,7 +78,7 @@ class _InlineScannerExampleState extends State<InlineScannerExample> {
               ],
             ),
             const Divider(height: 40),
-            
+
             // 3. Results List
             Text('Scanned Codes: ${_scannedItems.length}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             Expanded(
