@@ -404,8 +404,8 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
   void _playRejectedFeedback() {
     if (!widget.enableSoundAndVibration) return;
     _effects
-      ..playHaptic(PosHaptic.success)
-      ..playSound(PosSound.scannerBeep);
+      ..playHaptic(PosHaptic.error)
+      ..playSound(PosSound.warningBeep);
   }
 
   Widget? _buildToolBarUI() {
