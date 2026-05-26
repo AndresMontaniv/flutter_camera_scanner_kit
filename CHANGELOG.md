@@ -1,3 +1,6 @@
+## 1.0.1
+* Fix pub.dev description length warning to improve search engine SEO and package scoring.
+
 # 1.0.0
 
 - **Initial Stable Release** of `camera_scanner_kit`.
