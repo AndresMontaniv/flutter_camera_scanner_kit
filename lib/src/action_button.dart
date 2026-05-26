@@ -20,14 +20,18 @@ enum ActionButtonTheme {
           backgroundColor: WidgetStatePropertyAll(_white85),
           iconColor: WidgetStatePropertyAll(_lightForegroundColor),
           foregroundColor: WidgetStatePropertyAll(_lightForegroundColor),
-          shape: WidgetStatePropertyAll(CircleBorder(side: BorderSide(color: _grey60))),
+          shape: WidgetStatePropertyAll(
+            CircleBorder(side: BorderSide(color: _grey60)),
+          ),
         );
       case ActionButtonTheme.dark:
         return const ButtonStyle(
           backgroundColor: WidgetStatePropertyAll(_darkBgColor),
           iconColor: WidgetStatePropertyAll(_darkForegroundColor),
           foregroundColor: WidgetStatePropertyAll(_darkForegroundColor),
-          shape: WidgetStatePropertyAll(CircleBorder(side: BorderSide(color: _white85))),
+          shape: WidgetStatePropertyAll(
+            CircleBorder(side: BorderSide(color: _white85)),
+          ),
         );
     }
   }

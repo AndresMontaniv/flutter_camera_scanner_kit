@@ -3,7 +3,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class InlineScannerExample extends StatefulWidget {
-  const InlineScannerExample({super.key});
+  final bool useDarkMode;
+  const InlineScannerExample({super.key, required this.useDarkMode});
 
   @override
   State<InlineScannerExample> createState() => _InlineScannerExampleState();
@@ -31,7 +32,7 @@ class _InlineScannerExampleState extends State<InlineScannerExample> {
             BarcodeScannerView(
               controller: _scannerController,
               showToggleButton: false,
-              useDarkModeButtonTheme: false,
+              useDarkModeButtonTheme: widget.useDarkMode,
               onBarcodeScanned: _onScanned,
             ),
             const SizedBox(height: 20),
@@ -61,7 +62,11 @@ class _InlineScannerExampleState extends State<InlineScannerExample> {
                     return IconButton(
                       onPressed: isTransitioning ? null : _scannerController.toggle,
                       icon: isTransitioning
-                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
                           : Icon(isActive ? Icons.close : Icons.barcode_reader),
                       style: ButtonStyle(
                         shape: WidgetStatePropertyAll(
@@ -70,7 +75,9 @@ class _InlineScannerExampleState extends State<InlineScannerExample> {
                             borderRadius: BorderRadius.circular(10.0),
                           ),
                         ),
-                        backgroundColor: WidgetStatePropertyAll(isActive ? Colors.red.shade100 : Colors.white),
+                        backgroundColor: WidgetStatePropertyAll(
+                          isActive ? Colors.red.shade100 : Colors.white,
+                        ),
                       ),
                     );
                   },
@@ -80,13 +87,19 @@ class _InlineScannerExampleState extends State<InlineScannerExample> {
             const Divider(height: 40),
 
             // 3. Results List
-            Text('Scanned Codes: ${_scannedItems.length}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              'Scanned Codes: ${_scannedItems.length}',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             Expanded(
               child: ListView.builder(
                 itemCount: _scannedItems.length,
                 itemBuilder: (context, index) {
                   return ListTile(
-                    leading: const Icon(Icons.check_circle, color: Colors.green),
+                    leading: const Icon(
+                      Icons.check_circle,
+                      color: Colors.green,
+                    ),
                     title: Text(_scannedItems[index]),
                   );
                 },

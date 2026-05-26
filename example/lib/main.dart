@@ -19,11 +19,20 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class TestMatrixScreen extends StatelessWidget {
+class TestMatrixScreen extends StatefulWidget {
   const TestMatrixScreen({super.key});
 
+  @override
+  State<TestMatrixScreen> createState() => _TestMatrixScreenState();
+}
+
+class _TestMatrixScreenState extends State<TestMatrixScreen> {
+  bool _useDarkModeButtonTheme = true;
+
   void _showResult(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -32,16 +41,49 @@ class TestMatrixScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Camera Scanner Sandbox')),
       body: ListView(
         children: [
+          CheckboxListTile(
+            value: _useDarkModeButtonTheme,
+            title: const Text('Use darkMode theme on Action Buttons'),
+            onChanged: (value) {
+              setState(() {
+                _useDarkModeButtonTheme = value ?? true;
+              });
+            },
+          ),
+          const Divider(),
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text(
+              '0. TEST THIS FEATURES',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.orange,
+              ),
+            ),
+          ),
           ListTile(
-            title: const Text('0. POS with qty buttons'),
+            title: const Text('Test Inline Scanner (Controller Demo)'),
+            subtitle: const Text('Embeddable view with external toggle'),
+            trailing: const Icon(Icons.crop_free),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => InlineScannerExample(useDarkMode: _useDarkModeButtonTheme)),
+              );
+            },
+          ),
+          ListTile(
+            title: const Text('POS with qty buttons'),
             trailing: const Icon(Icons.shopping_bag_outlined),
             onTap: () {
               showPosBarcodeScanner(
                 context,
-                useDarkModeButtonTheme: false,
+                useDarkModeButtonTheme: _useDarkModeButtonTheme,
                 closeButtonLabel: 'Cerrar Cámara',
                 onScan: (barcode, qty) {
-                  debugPrint('[ScannerExample] This barcode x times: $barcode x $qty');
+                  debugPrint(
+                    '[ScannerExample] This barcode x times: $barcode x $qty',
+                  );
                   if (!context.mounted) return;
                   _showResult(context, 'This barcode x times: $barcode x $qty');
                 },
@@ -60,7 +102,13 @@ class TestMatrixScreen extends StatelessWidget {
             title: const Text('Single + QR Code'),
             trailing: const Icon(Icons.qr_code),
             onTap: () async {
-              final result = await scanQrCode(context, overlayStyle: const ScannerOverlayStyle(borderColor: Colors.blue));
+              final result = await scanQrCode(
+                context,
+                useDarkModeButtonTheme: _useDarkModeButtonTheme,
+                overlayStyle: const ScannerOverlayStyle(
+                  borderColor: Colors.blue,
+                ),
+              );
               debugPrint('[ScannerExample] ✅ Single QR Result: $result');
               if (!context.mounted) return;
               _showResult(context, 'Single QR: $result');
@@ -70,7 +118,13 @@ class TestMatrixScreen extends StatelessWidget {
             title: const Text('Single + Barcode'),
             trailing: const Icon(Icons.view_column),
             onTap: () async {
-              final result = await scanBarcode(context, overlayStyle: const ScannerOverlayStyle(borderColor: Colors.pink));
+              final result = await scanBarcode(
+                context,
+                useDarkModeButtonTheme: _useDarkModeButtonTheme,
+                overlayStyle: const ScannerOverlayStyle(
+                  borderColor: Colors.pink,
+                ),
+              );
               debugPrint('[ScannerExample] ✅ Single Barcode Result: $result');
               if (!context.mounted) return;
               _showResult(context, 'Single Barcode: $result');
@@ -83,7 +137,14 @@ class TestMatrixScreen extends StatelessWidget {
               final screenSize = MediaQuery.sizeOf(context);
               final result = await scanCustom(
                 context,
-                scannerViewConfig: ScannerViewConfig(scanWindow: Rect.fromCenter(center: screenSize.center(Offset.zero), width: 200, height: 200)),
+                useDarkModeButtonTheme: _useDarkModeButtonTheme,
+                scannerViewConfig: ScannerViewConfig(
+                  scanWindow: Rect.fromCenter(
+                    center: screenSize.center(Offset.zero),
+                    width: 200,
+                    height: 200,
+                  ),
+                ),
               );
               debugPrint('[ScannerExample] ✅ Single Custom Result: $result');
               if (!context.mounted) return;
@@ -96,7 +157,10 @@ class TestMatrixScreen extends StatelessWidget {
             padding: EdgeInsets.all(8.0),
             child: Text(
               '2. BATCH POP MODE',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.purple),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.purple,
+              ),
             ),
           ),
           ListTile(
@@ -104,7 +168,11 @@ class TestMatrixScreen extends StatelessWidget {
             subtitle: const Text('Test cart list button'),
             trailing: const Icon(Icons.qr_code),
             onTap: () async {
-              final result = await scanQrCodeBatch(context, allowDuplicates: false);
+              final result = await scanQrCodeBatch(
+                context,
+                useDarkModeButtonTheme: _useDarkModeButtonTheme,
+                allowDuplicates: false,
+              );
               debugPrint('[ScannerExample] 🛒 Batch QR Result: $result');
             },
           ),
@@ -113,7 +181,11 @@ class TestMatrixScreen extends StatelessWidget {
             subtitle: const Text('Scan same item twice to test'),
             trailing: const Icon(Icons.view_column),
             onTap: () async {
-              final result = await scanBarcodeBatch(context, allowDuplicates: true);
+              final result = await scanBarcodeBatch(
+                context,
+                useDarkModeButtonTheme: _useDarkModeButtonTheme,
+                allowDuplicates: true,
+              );
               debugPrint('[ScannerExample] 🛒 Batch Barcode Result: $result');
             },
           ),
@@ -124,10 +196,18 @@ class TestMatrixScreen extends StatelessWidget {
               final screenSize = MediaQuery.sizeOf(context);
               final result = await scanCustomBatch(
                 context,
+                useDarkModeButtonTheme: _useDarkModeButtonTheme,
                 toolBar: const BatchToolBar(),
                 scannerViewConfig: ScannerViewConfig(
-                  scanWindow: Rect.fromCenter(center: screenSize.center(Offset.zero), width: 80, height: 300),
-                  overlayStyle: const ScannerOverlayStyle(borderColor: Colors.yellow, borderRadius: 40.0),
+                  scanWindow: Rect.fromCenter(
+                    center: screenSize.center(Offset.zero),
+                    width: 80,
+                    height: 300,
+                  ),
+                  overlayStyle: const ScannerOverlayStyle(
+                    borderColor: Colors.yellow,
+                    borderRadius: 40.0,
+                  ),
                 ),
               );
               debugPrint('[ScannerExample] 🛒 Batch Custom Result: $result');
@@ -139,7 +219,10 @@ class TestMatrixScreen extends StatelessWidget {
             padding: EdgeInsets.all(8.0),
             child: Text(
               '3. CALLBACK STREAM MODE',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
             ),
           ),
           ListTile(
@@ -149,6 +232,7 @@ class TestMatrixScreen extends StatelessWidget {
             onTap: () async {
               await scanQrCodeStream(
                 context,
+                useDarkModeButtonTheme: _useDarkModeButtonTheme,
                 onCameraScan: (qrCode) {
                   debugPrint('[ScannerExample] 🌊 STREAM DETECTED: $qrCode');
                   _showResult(context, 'Stream QR: $qrCode');
@@ -163,6 +247,7 @@ class TestMatrixScreen extends StatelessWidget {
             onTap: () async {
               await scanBarcodeStream(
                 context,
+                useDarkModeButtonTheme: _useDarkModeButtonTheme,
                 allowDuplicates: false,
                 onCameraScan: (barcode) {
                   debugPrint('[ScannerExample] 🌊 STREAM DETECTED: $barcode');
@@ -177,27 +262,12 @@ class TestMatrixScreen extends StatelessWidget {
             onTap: () async {
               await scanCustomStream(
                 context,
+                useDarkModeButtonTheme: _useDarkModeButtonTheme,
                 onCameraScan: (barcode) {
                   debugPrint('[ScannerExample] 🌊 STREAM DETECTED: $barcode');
                   _showResult(context, 'Stream Custom: $barcode');
                 },
               );
-            },
-          ),
-          const Divider(),
-          const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Text(
-              '4. INLINE SCANNER',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
-            ),
-          ),
-          ListTile(
-            title: const Text('Test Inline Scanner (Controller Demo)'),
-            subtitle: const Text('Embeddable view with external toggle'),
-            trailing: const Icon(Icons.crop_free),
-            onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const InlineScannerExample()));
             },
           ),
         ],

@@ -324,7 +324,10 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
         }
 
         _playSuccessFeedback();
-        scannedItemsNotifier.value = List<String>.from([...scannedItemsNotifier.value, rawValue]);
+        scannedItemsNotifier.value = List<String>.from([
+          ...scannedItemsNotifier.value,
+          rawValue,
+        ]);
         widget.onCameraScan?.call(rawValue);
         break;
     }
@@ -412,7 +415,9 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
     if (toolbar == null || !toolbar.shouldBuild) return null;
     if (toolbar is BatchToolBar) {
       if (widget._mode == _ScanMode.single) {
-        debugPrint('$kTag Switching ToolBar to `StandardToolBar` for Single Scan');
+        debugPrint(
+          '$kTag Switching ToolBar to `StandardToolBar` for Single Scan',
+        );
         return _ScannerTopBar(
           toolBar: toolbar.toStandard(),
           controller: controller,

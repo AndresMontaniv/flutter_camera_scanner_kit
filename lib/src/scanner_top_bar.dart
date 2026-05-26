@@ -121,11 +121,17 @@ class _FlashToggleButton extends StatelessWidget {
   final void Function(Object error)? onError;
   final bool useDarkModeButtonTheme;
 
-  const _FlashToggleButton({this.controller, this.onError, this.useDarkModeButtonTheme = true});
+  const _FlashToggleButton({
+    this.controller,
+    this.onError,
+    this.useDarkModeButtonTheme = true,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final disableButton = _DisabledButton.flash(useDarkModeButtonTheme: useDarkModeButtonTheme);
+    final disableButton = _DisabledButton.flash(
+      useDarkModeButtonTheme: useDarkModeButtonTheme,
+    );
     if (controller == null) {
       return disableButton;
     }
@@ -160,11 +166,17 @@ class _SwitchCameraButton extends StatelessWidget {
   final void Function(Object error)? onError;
   final bool useDarkModeButtonTheme;
 
-  const _SwitchCameraButton({this.controller, this.onError, this.useDarkModeButtonTheme = true});
+  const _SwitchCameraButton({
+    this.controller,
+    this.onError,
+    this.useDarkModeButtonTheme = true,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final disableButton = _DisabledButton.camera(useDarkModeButtonTheme: useDarkModeButtonTheme);
+    final disableButton = _DisabledButton.camera(
+      useDarkModeButtonTheme: useDarkModeButtonTheme,
+    );
     if (controller == null) {
       return disableButton;
     }
@@ -266,7 +278,10 @@ class _SharedButtonsRow extends StatelessWidget {
       children: [
         Visibility(
           visible: config.showCloseButton,
-          child: _CircleCloseButton(pop: popBackWithListResult, useDarkModeButtonTheme: useDarkModeButtonTheme),
+          child: _CircleCloseButton(
+            pop: popBackWithListResult,
+            useDarkModeButtonTheme: useDarkModeButtonTheme,
+          ),
         ),
         if (config.showFlashButton || config.showSwitchCameraButton || extraTrailingWidget != null)
           Flexible(
@@ -340,7 +355,10 @@ class _SmartCartButton extends StatelessWidget {
     );
   }
 
-  void _showDefaultBottomSheet(BuildContext context, List<String> scannedItems) {
+  void _showDefaultBottomSheet(
+    BuildContext context,
+    List<String> scannedItems,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
