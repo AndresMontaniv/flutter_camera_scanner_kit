@@ -9,19 +9,47 @@ const _defaultBorderColor = Colors.blue;
 const _defaultPulseColor = Colors.cyanAccent;
 const _defaultCloseButtonLabel = 'Close Camera';
 
+/// A full-screen barcode scanner optimized for Point of Sale (POS) environments.
+///
+/// Provides a dedicated overlay containing quantity control buttons (+ / -),
+/// real-time haptic/audio success feedback, and a reactive badge that shows the
+/// list of scanned items in a modal bottom sheet.
 class PosBarcodeScannerScreen extends StatefulWidget {
+  /// Callback triggered when a barcode is scanned, providing the raw code
+  /// and the quantity selected by the user.
   final void Function(String barcode, int qty) onScan;
+
+  /// The active set of barcode formats to restrict scan detection to.
   final List<BarcodeFormat> allowedFormats;
+
+  /// The minimum delay in milliseconds before a new barcode can be scanned.
   final int detectionTimeoutMs;
+
+  /// The minimum time in milliseconds before the same barcode can be scanned again.
   final int sameItemCooldownMs;
+
+  /// Whether to play haptic vibrations and sound effects on successful scans.
   final bool enableSoundAndVibration;
+
+  /// Optional offset to shift the vertical alignment of the scan window cutout.
   final Offset? offsetFromCenter;
+
+  /// Custom visual overlay styling (e.g. border color, line thickness).
   final ScannerOverlayStyle? overlayStyle;
+
+  /// Whether to render the control buttons with dark backgrounds.
   final bool useDarkModeButtonTheme;
+
+  /// The bottom padding for placing the quantity adjustment buttons.
   final double qtyButtonsBottomPadding;
+
+  /// Optional custom label text to display on the close button.
   final String? closeButtonLabel;
+
+  /// The background pulse color flashed upon a successful scan.
   final Color? successPulseColor;
 
+  /// Creates a [PosBarcodeScannerScreen] instance.
   const PosBarcodeScannerScreen({
     super.key,
     required this.onScan,

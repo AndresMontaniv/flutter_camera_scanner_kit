@@ -23,7 +23,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "0.0.0"
+    version: "1.0.0"
   characters:
     dependency: transitive
     description:
@@ -146,12 +146,11 @@ packages:
   native_haptics_and_audio:
     dependency: transitive
     description:
-      path: "."
-      ref: HEAD
-      resolved-ref: "7088d53291558c96cde4ee014c4cfcad42caa2a3"
-      url: "https://github.com/AndresMontaniv/native_haptics_and_audio.git"
-    source: git
-    version: "1.0.0"
+      name: native_haptics_and_audio
+      sha256: fea73663e40baeed68217e679004449c0b521cb3f4e6ff012787484859c72fe4
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   path:
     dependency: transitive
     description:

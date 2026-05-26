@@ -34,25 +34,46 @@ const List<BarcodeFormat> _horizontal1DFormats = [
 /// route scanned data (pop a single value, accumulate a batch, or stream).
 enum _ScanMode { single, multiscan }
 
+/// Base class for configuring the overlay toolbar.
 sealed class ScannerToolBar {
+  /// Padding around the toolbar items inside the overlay.
   final EdgeInsetsGeometry padding;
+
+  /// Alignment of the toolbar relative to the scanner screen overlay bounds.
+  /// Defaults to [Alignment.topCenter].
   final AlignmentGeometry alignment;
 
+  /// Creates a [ScannerToolBar] configuration instance.
   const ScannerToolBar({
     this.alignment = Alignment.topCenter,
     this.padding = const EdgeInsets.all(16.0),
   });
 
+  /// Returns `true` if the toolbar contains at least one visible element
+  /// that needs to be laid out and rendered.
   bool get shouldBuild;
 }
 
+/// A standard toolbar configuration containing action buttons for flash, close,
+/// and camera-switching, along with space for custom trailing widgets.
 class StandardToolBar extends ScannerToolBar {
+  /// Whether to display the toggle flashlight button.
   final bool showFlashButton;
+
+  /// Whether to display the close/back button.
   final bool showCloseButton;
+
+  /// Whether to display the camera toggle/switch button.
   final bool showSwitchCameraButton;
+
+  /// Optional list of widgets to place at the end/trailing side of the toolbar.
   final List<Widget>? trailing;
+
+  /// Callback triggered if an error occurs when executing any action button
+  /// operations (e.g., failed to switch camera).
   final void Function(Object error)? onActionButtonError;
 
+  /// Creates a standard toolbar config.
   const StandardToolBar({
     this.showCloseButton = true,
     this.showFlashButton = true,
@@ -67,11 +88,21 @@ class StandardToolBar extends ScannerToolBar {
   bool get shouldBuild => showFlashButton || showCloseButton || showSwitchCameraButton;
 }
 
+/// An extension of [StandardToolBar] that adds support for batch-scanning workflows,
+/// including a button or badge showing the count of scanned items.
 class BatchToolBar extends StandardToolBar {
+  /// Whether to show the scanned item list button/badge in the toolbar.
   final bool showScannedListButton;
+
+  /// Callback triggered when the scanned list button is pressed.
+  /// If provided, this overrides the default bottom-sheet modal launcher.
   final void Function(BuildContext, List<String>)? onShowScannedListPressed;
+
+  /// A custom builder function for rendering the list button widget.
+  /// Receives the build context and current list of accumulated barcode values.
   final Widget Function(BuildContext, List<String>)? listButtonBuilder;
 
+  /// Creates a batch toolbar config.
   const BatchToolBar({
     this.showScannedListButton = true,
     this.onShowScannedListPressed,
@@ -88,6 +119,8 @@ class BatchToolBar extends StandardToolBar {
   @override
   bool get shouldBuild => showFlashButton || showCloseButton || showSwitchCameraButton || showScannedListButton;
 
+  /// Helper to convert this [BatchToolBar] configuration into a [StandardToolBar]
+  /// configuration (stripping batch-specific visual components like list button).
   StandardToolBar toStandard() => StandardToolBar(
     showFlashButton: showFlashButton,
     showCloseButton: showCloseButton,
@@ -99,9 +132,14 @@ class BatchToolBar extends StandardToolBar {
   );
 }
 
+/// A fully custom toolbar configuration which lets you build the entire toolbar
+/// widget hierarchy manually.
 class CustomToolBar extends ScannerToolBar {
+  /// Builder function providing the active [MobileScannerController] to build
+  /// customized controls.
   final Widget Function(BuildContext, MobileScannerController?) toolbarBuilder;
 
+  /// Creates a custom toolbar config.
   const CustomToolBar({
     required this.toolbarBuilder,
     super.alignment,

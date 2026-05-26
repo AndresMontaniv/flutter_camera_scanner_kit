@@ -16,6 +16,16 @@ import 'scanner_screen.dart';
 ///
 /// Locks the camera hardware immediately after the first successful read
 /// and returns the scanned value as a `String?`. Returns `null` if canceled.
+///
+/// ### Example Usage
+/// ```dart
+/// final barcode = await scanCustom(
+///   context,
+///   scannerViewConfig: ScannerViewConfig(
+///     scanWindow: Rect.fromLTWH(50, 100, 200, 200),
+///   ),
+/// );
+/// ```
 Future<String?> scanCustom(
   BuildContext context, {
   List<Widget>? stackChildren,
@@ -54,6 +64,14 @@ Future<String?> scanCustom(
 ///
 /// Locks the camera hardware immediately after the first successful read
 /// and returns the scanned value as a `String?`. Returns `null` if canceled.
+///
+/// ### Example Usage
+/// ```dart
+/// final barcode = await scanBarcode(
+///   context,
+///   allowedFormats: [BarcodeFormat.ean13, BarcodeFormat.code128],
+/// );
+/// ```
 Future<String?> scanBarcode(
   BuildContext context, {
   List<Widget>? stackChildren,
@@ -84,6 +102,11 @@ Future<String?> scanBarcode(
 ///
 /// Locks the camera hardware immediately after the first successful read
 /// and returns the scanned value as a `String?`. Returns `null` if canceled.
+///
+/// ### Example Usage
+/// ```dart
+/// final qrCode = await scanQrCode(context);
+/// ```
 Future<String?> scanQrCode(
   BuildContext context, {
   List<Widget>? stackChildren,
@@ -112,6 +135,14 @@ Future<String?> scanQrCode(
 ///
 /// Acts as a shopping cart: the user can scan multiple items. When the
 /// user closes the screen, it returns the accumulated `List<String>?`.
+///
+/// ### Example Usage
+/// ```dart
+/// final items = await scanCustomBatch(
+///   context,
+///   allowDuplicates: false,
+/// );
+/// ```
 Future<List<String>?> scanCustomBatch(
   BuildContext context, {
   List<Widget>? stackChildren,
@@ -156,6 +187,14 @@ Future<List<String>?> scanCustomBatch(
 ///
 /// Acts as a shopping cart: the user can scan multiple items. When the
 /// user closes the screen, it returns the accumulated `List<String>?`.
+///
+/// ### Example Usage
+/// ```dart
+/// final barcodes = await scanBarcodeBatch(
+///   context,
+///   allowDuplicates: false,
+/// );
+/// ```
 Future<List<String>?> scanBarcodeBatch(
   BuildContext context, {
   List<Widget>? stackChildren,
@@ -192,6 +231,11 @@ Future<List<String>?> scanBarcodeBatch(
 ///
 /// Acts as a shopping cart: the user can scan multiple items. When the
 /// user closes the screen, it returns the accumulated `List<String>?`.
+///
+/// ### Example Usage
+/// ```dart
+/// final qrCodes = await scanQrCodeBatch(context);
+/// ```
 Future<List<String>?> scanQrCodeBatch(
   BuildContext context, {
   List<Widget>? stackChildren,
@@ -227,6 +271,16 @@ Future<List<String>?> scanQrCodeBatch(
 /// Streams real-time data to the [onCameraScan] callback as each item is
 /// successfully scanned. The `Future<void>` completes when the user closes
 /// the scanner screen.
+///
+/// ### Example Usage
+/// ```dart
+/// await scanCustomStream(
+///   context,
+///   onCameraScan: (code) {
+///     print('Scanned: $code');
+///   },
+/// );
+/// ```
 Future<void> scanCustomStream(
   BuildContext context, {
   required void Function(String) onCameraScan,
@@ -267,6 +321,16 @@ Future<void> scanCustomStream(
 /// Streams real-time data to the [onCameraScan] callback as each item is
 /// successfully scanned. The `Future<void>` completes when the user closes
 /// the scanner screen.
+///
+/// ### Example Usage
+/// ```dart
+/// await scanBarcodeStream(
+///   context,
+///   onCameraScan: (code) {
+///     print('Scanned: $code');
+///   },
+/// );
+/// ```
 Future<void> scanBarcodeStream(
   BuildContext context, {
   required void Function(String) onCameraScan,
@@ -304,6 +368,16 @@ Future<void> scanBarcodeStream(
 /// Streams real-time data to the [onCameraScan] callback as each item is
 /// successfully scanned. The `Future<void>` completes when the user closes
 /// the scanner screen.
+///
+/// ### Example Usage
+/// ```dart
+/// await scanQrCodeStream(
+///   context,
+///   onCameraScan: (code) {
+///     print('Scanned: $code');
+///   },
+/// );
+/// ```
 Future<void> scanQrCodeStream(
   BuildContext context, {
   required void Function(String) onCameraScan,
@@ -347,6 +421,16 @@ Future<void> scanQrCodeStream(
 /// * [enableSoundAndVibration] controls whether haptic and audio feedback are triggered on success.
 /// * [offsetFromCenter] adjusts the physical center of the scanning window.
 /// * [overlayStyle] provides visual customization for the camera overlay UI.
+///
+/// ### Example Usage
+/// ```dart
+/// showPosBarcodeScanner(
+///   context,
+///   onScan: (barcode, quantity) {
+///     print('Added $quantity of $barcode to cart');
+///   },
+/// );
+/// ```
 void showPosBarcodeScanner(
   BuildContext context, {
   required void Function(String barcode, int quantity) onScan,

@@ -1,12 +1,31 @@
 import 'package:flutter/material.dart';
 
+/// Visual styling configurations for the camera overlay.
+///
+/// Allows customizing the background dimming, border color, corner radius,
+/// and line thickness of the scanner's cut-out region.
 class ScannerOverlayStyle {
+  /// The opacity of the background dimming overlay (ranges from 0.0 to 1.0).
+  /// Defaults to `0.5`.
   final double opacity;
+
+  /// The color of the border bounding the cutout region.
+  /// Defaults to [Colors.white].
   final Color borderColor;
+
+  /// The base color of the background overlay (which will be dimmed via [opacity]).
+  /// Defaults to [Colors.black].
   final Color opacityColor;
+
+  /// The stroke width of the cutout border.
+  /// Defaults to `2.5`.
   final double borderWidth;
+
+  /// The corner radius of the cutout region.
+  /// Defaults to `12.0`.
   final double borderRadius;
 
+  /// Creates a style instance for customizing the scan window overlay.
   const ScannerOverlayStyle({
     double? opacity,
     Color? borderColor,
@@ -18,6 +37,26 @@ class ScannerOverlayStyle {
        borderRadius = borderRadius ?? 12.0,
        borderColor = borderColor ?? Colors.white,
        opacityColor = opacityColor ?? Colors.black;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ScannerOverlayStyle &&
+          runtimeType == other.runtimeType &&
+          opacity == other.opacity &&
+          borderColor == other.borderColor &&
+          opacityColor == other.opacityColor &&
+          borderWidth == other.borderWidth &&
+          borderRadius == other.borderRadius;
+
+  @override
+  int get hashCode => Object.hash(
+        opacity,
+        borderColor,
+        opacityColor,
+        borderWidth,
+        borderRadius,
+      );
 }
 
 class ScannerOverlay extends StatelessWidget {

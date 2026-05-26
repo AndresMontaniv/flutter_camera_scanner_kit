@@ -167,10 +167,9 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBin
 
     // Trigger Native Hardware Feedback
     if (widget.enableSoundAndVibration) {
-      Future.wait([
-        _effects.playHaptic(PosHaptic.success),
-        _effects.playSound(PosSound.scannerBeep),
-      ]);
+      _effects
+        ..playHaptic(PosHaptic.success)
+        ..playSound(PosSound.scannerBeep);
     }
 
     _resetIdleTimer();

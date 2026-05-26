@@ -394,20 +394,18 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
     _popBack();
   }
 
-  Future<void> _playSuccessFeedback() async {
+  void _playSuccessFeedback() {
     if (!widget.enableSoundAndVibration) return;
-    await Future.wait([
-      _effects.playHaptic(PosHaptic.success),
-      _effects.playSound(PosSound.scannerBeep),
-    ]);
+    _effects
+      ..playHaptic(PosHaptic.success)
+      ..playSound(PosSound.scannerBeep);
   }
 
-  Future<void> _playRejectedFeedback() async {
+  void _playRejectedFeedback() {
     if (!widget.enableSoundAndVibration) return;
-    await Future.wait([
-      _effects.playHaptic(PosHaptic.error),
-      _effects.playSound(PosSound.warningBeep),
-    ]);
+    _effects
+      ..playHaptic(PosHaptic.success)
+      ..playSound(PosSound.scannerBeep);
   }
 
   Widget? _buildToolBarUI() {

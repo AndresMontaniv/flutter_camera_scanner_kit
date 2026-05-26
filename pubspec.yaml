@@ -1,8 +1,13 @@
 name: camera_scanner_kit
 description: "A production-ready Flutter UI toolkit for barcode and QR scanning. Built on mobile_scanner, it offers 9 routing modes including single scan, batch accumulation, and a complete POS screen. Features hardware-safe tripwires, customizable toolbars, and dynamic overlays for enterprise apps."
-version: 0.0.0
-homepage:
-publish_to: 'none'
+version: 1.0.0
+repository: https://github.com/AndresMontaniv/flutter_camera_scanner_kit
+topics:
+  - scanner
+  - barcode
+  - pos
+  - camera
+  - qr
 
 environment:
   sdk: ^3.11.4
@@ -11,10 +16,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  native_haptics_and_audio:
-    git:
-      url: https://github.com/AndresMontaniv/native_haptics_and_audio.git
   mobile_scanner: ^7.2.0
+  native_haptics_and_audio: ^1.0.1
 
 dev_dependencies:
   flutter_test:

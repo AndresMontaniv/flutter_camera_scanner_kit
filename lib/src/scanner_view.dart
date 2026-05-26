@@ -110,8 +110,7 @@ class ScannerView extends StatelessWidget {
 
   /// Internal function reference used by named constructors to calculate a
   /// responsive scan window at build time.
-  final Rect Function(BuildContext, {Offset? offsetFromCenter})?
-  _calculateScanWindow;
+  final Rect Function(BuildContext, {Offset? offsetFromCenter})? _calculateScanWindow;
 
   /// Creates a fully custom, unopinionated scanner layout.
   ///
@@ -207,10 +206,8 @@ class ScannerView extends StatelessWidget {
             scanWindow: overlayRect,
             useAppLifecycleState: useAppLifecycleState,
             scanWindowUpdateThreshold: scanWindowUpdateThreshold,
-            placeholderBuilder:
-                placeholderBuilder ?? (_) => const _DefaultScannerPlaceholder(),
-            errorBuilder:
-                errorBuilder ?? (_, error) => _ScannerErrorWidget(error: error),
+            placeholderBuilder: placeholderBuilder ?? (_) => const _DefaultScannerPlaceholder(),
+            errorBuilder: errorBuilder ?? (_, error) => _ScannerErrorWidget(error: error),
             overlayBuilder:
                 overlayBuilder ??
                 (overlayRect == null || !autoDrawOverlay
