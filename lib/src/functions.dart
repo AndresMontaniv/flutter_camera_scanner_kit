@@ -70,7 +70,11 @@ Future<String?> scanBarcode(
     toolBar: toolBar,
     stackChildren: stackChildren,
     onScanRejected: onScanRejected,
-    scannerViewConfig: ScannerViewConfig.barcode(overlayStyle: overlayStyle, offsetFromCenter: offsetFromCenter, allowedFormats: allowedFormats),
+    scannerViewConfig: ScannerViewConfig.barcode(
+      overlayStyle: overlayStyle,
+      offsetFromCenter: offsetFromCenter,
+      allowedFormats: allowedFormats,
+    ),
     enableSoundAndVibration: enableSoundAndVibration,
     useDarkModeButtonTheme: useDarkModeButtonTheme,
   );
@@ -95,7 +99,10 @@ Future<String?> scanQrCode(
     toolBar: toolBar,
     stackChildren: stackChildren,
     onScanRejected: onScanRejected,
-    scannerViewConfig: ScannerViewConfig.qrCode(overlayStyle: overlayStyle, offsetFromCenter: offsetFromCenter),
+    scannerViewConfig: ScannerViewConfig.qrCode(
+      overlayStyle: overlayStyle,
+      offsetFromCenter: offsetFromCenter,
+    ),
     enableSoundAndVibration: enableSoundAndVibration,
     useDarkModeButtonTheme: useDarkModeButtonTheme,
   );
@@ -171,7 +178,11 @@ Future<List<String>?> scanBarcodeBatch(
     sameItemCooldownMs: sameItemCooldownMs,
     onScanRejected: onScanRejected,
     toolBar: toolBar,
-    scannerViewConfig: ScannerViewConfig.barcode(overlayStyle: overlayStyle, offsetFromCenter: offsetFromCenter, allowedFormats: allowedFormats),
+    scannerViewConfig: ScannerViewConfig.barcode(
+      overlayStyle: overlayStyle,
+      offsetFromCenter: offsetFromCenter,
+      allowedFormats: allowedFormats,
+    ),
     enableSoundAndVibration: enableSoundAndVibration,
     useDarkModeButtonTheme: useDarkModeButtonTheme,
   );
@@ -202,7 +213,10 @@ Future<List<String>?> scanQrCodeBatch(
     sameItemCooldownMs: sameItemCooldownMs,
     onScanRejected: onScanRejected,
     toolBar: toolBar,
-    scannerViewConfig: ScannerViewConfig.qrCode(overlayStyle: overlayStyle, offsetFromCenter: offsetFromCenter),
+    scannerViewConfig: ScannerViewConfig.qrCode(
+      overlayStyle: overlayStyle,
+      offsetFromCenter: offsetFromCenter,
+    ),
     enableSoundAndVibration: enableSoundAndVibration,
     useDarkModeButtonTheme: useDarkModeButtonTheme,
   );
@@ -275,7 +289,11 @@ Future<void> scanBarcodeStream(
   allowDuplicates: allowDuplicates,
   detectionTimeoutMs: detectionTimeoutMs,
   sameItemCooldownMs: sameItemCooldownMs,
-  scannerViewConfig: ScannerViewConfig.barcode(overlayStyle: overlayStyle, offsetFromCenter: offsetFromCenter, allowedFormats: allowedFormats),
+  scannerViewConfig: ScannerViewConfig.barcode(
+    overlayStyle: overlayStyle,
+    offsetFromCenter: offsetFromCenter,
+    allowedFormats: allowedFormats,
+  ),
   toolBar: toolBar,
   enableSoundAndVibration: enableSoundAndVibration,
   useDarkModeButtonTheme: useDarkModeButtonTheme,
@@ -307,7 +325,10 @@ Future<void> scanQrCodeStream(
   allowDuplicates: allowDuplicates,
   detectionTimeoutMs: detectionTimeoutMs,
   sameItemCooldownMs: sameItemCooldownMs,
-  scannerViewConfig: ScannerViewConfig.qrCode(overlayStyle: overlayStyle, offsetFromCenter: offsetFromCenter),
+  scannerViewConfig: ScannerViewConfig.qrCode(
+    overlayStyle: overlayStyle,
+    offsetFromCenter: offsetFromCenter,
+  ),
   toolBar: toolBar,
   enableSoundAndVibration: enableSoundAndVibration,
   useDarkModeButtonTheme: useDarkModeButtonTheme,
@@ -338,6 +359,7 @@ void showPosBarcodeScanner(
   bool useDarkModeButtonTheme = true,
   double qtyButtonsBottomPadding = 230,
   String? closeButtonLabel,
+  Color? successPulseColor,
 }) async {
   try {
     await Navigator.of(context, rootNavigator: true).push(
@@ -353,6 +375,7 @@ void showPosBarcodeScanner(
           enableSoundAndVibration: enableSoundAndVibration,
           useDarkModeButtonTheme: useDarkModeButtonTheme,
           qtyButtonsBottomPadding: qtyButtonsBottomPadding,
+          successPulseColor: successPulseColor,
         ),
       ),
     );

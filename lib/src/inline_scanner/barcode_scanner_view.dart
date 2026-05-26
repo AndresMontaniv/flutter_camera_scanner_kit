@@ -98,19 +98,30 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBin
   static const _animationDuration = Duration(milliseconds: 300);
 
   // Pre-compiled button styles (Finding #7 — avoid allocation on every rebuild)
-  static final _activeToggleStyle = ElevatedButton.styleFrom(backgroundColor: Colors.red.shade700, foregroundColor: Colors.white);
-  static final _inactiveToggleStyle = ElevatedButton.styleFrom(backgroundColor: Colors.blue.shade700, foregroundColor: Colors.white);
+  static final _activeToggleStyle = ElevatedButton.styleFrom(
+    backgroundColor: Colors.red.shade700,
+    foregroundColor: Colors.white,
+  );
+  static final _inactiveToggleStyle = ElevatedButton.styleFrom(
+    backgroundColor: Colors.blue.shade700,
+    foregroundColor: Colors.white,
+  );
 
   Future<void> _toggleCamera() async {
     if (_isTransitioning) return;
     setState(() => _isTransitioning = true);
-    widget.controller?.updateState(active: _isCameraActive, transitioning: true);
+    widget.controller?.updateState(
+      active: _isCameraActive,
+      transitioning: true,
+    );
 
     if (_isCameraActive) {
       // Shutting down
       setState(() => _isCameraActive = false);
       widget.controller?.updateState(active: false, transitioning: true);
-      await Future.delayed(_animationDuration); // Wait for window blind to close
+      await Future.delayed(
+        _animationDuration,
+      ); // Wait for window blind to close
 
       if (!mounted) return; // Guard: Did user leave screen during animation?
       await _controller.stop();
@@ -119,7 +130,9 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBin
       // Starting up
       await _controller.start();
 
-      if (!mounted) return; // Guard: Did user leave screen while hardware booted?
+      if (!mounted) {
+        return; // Guard: Did user leave screen while hardware booted?
+      }
       setState(() => _isCameraActive = true);
       widget.controller?.updateState(active: true, transitioning: true);
       _resetIdleTimer();
@@ -127,7 +140,10 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBin
 
     if (mounted) {
       setState(() => _isTransitioning = false);
-      await widget.controller?.updateState(active: _isCameraActive, transitioning: false);
+      await widget.controller?.updateState(
+        active: _isCameraActive,
+        transitioning: false,
+      );
     }
   }
 
@@ -139,7 +155,9 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBin
 
     // Stream Cooldown Logic (prevents rapid-fire duplicate scans of the same item)
     if (rawValue == _lastScannedCode && _cooldownWatch.isRunning) {
-      if (_cooldownWatch.elapsedMilliseconds < widget.sameItemCooldownMs) return;
+      if (_cooldownWatch.elapsedMilliseconds < widget.sameItemCooldownMs) {
+        return;
+      }
     }
 
     _lastScannedCode = rawValue;
@@ -149,7 +167,10 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBin
 
     // Trigger Native Hardware Feedback
     if (widget.enableSoundAndVibration) {
-      Future.wait([_effects.playHaptic(PosHaptic.success), _effects.playSound(PosSound.scannerBeep)]);
+      Future.wait([
+        _effects.playHaptic(PosHaptic.success),
+        _effects.playSound(PosSound.scannerBeep),
+      ]);
     }
 
     _resetIdleTimer();
@@ -206,7 +227,12 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBin
                                 fit: BoxFit.cover,
                                 controller: _controller,
                                 useAppLifecycleState: false,
-                                scanWindow: Rect.fromLTWH(0, 0, currentWidth, cameraHeight),
+                                scanWindow: Rect.fromLTWH(
+                                  0,
+                                  0,
+                                  currentWidth,
+                                  cameraHeight,
+                                ),
                               ),
                             ),
                           ),
@@ -259,12 +285,25 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBin
                   // 2. The External Control Layer
                   ElevatedButton.icon(
                     style: (_isCameraActive ? _activeToggleStyle : _inactiveToggleStyle).copyWith(
-                      minimumSize: WidgetStatePropertyAll(Size(currentWidth, 48)),
+                      minimumSize: WidgetStatePropertyAll(
+                        Size(currentWidth, 48),
+                      ),
                     ),
                     icon: _isTransitioning
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
                         : Icon(_isCameraActive ? Icons.stop : Icons.play_arrow),
-                    label: _isTransitioning ? const SizedBox.shrink() : Text(_isCameraActive ? 'Stop Camera' : 'Start Camera'),
+                    label: _isTransitioning
+                        ? const SizedBox.shrink()
+                        : Text(
+                            _isCameraActive ? 'Stop Camera' : 'Start Camera',
+                          ),
                     onPressed: _isTransitioning ? null : _toggleCamera,
                   ),
                 ],

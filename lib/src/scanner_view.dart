@@ -110,7 +110,8 @@ class ScannerView extends StatelessWidget {
 
   /// Internal function reference used by named constructors to calculate a
   /// responsive scan window at build time.
-  final Rect Function(BuildContext, {Offset? offsetFromCenter})? _calculateScanWindow;
+  final Rect Function(BuildContext, {Offset? offsetFromCenter})?
+  _calculateScanWindow;
 
   /// Creates a fully custom, unopinionated scanner layout.
   ///
@@ -188,7 +189,12 @@ class ScannerView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final overlayRect = _calculateScanWindow?.call(context, offsetFromCenter: offsetFromCenter) ?? scanWindow;
+    final overlayRect =
+        _calculateScanWindow?.call(
+          context,
+          offsetFromCenter: offsetFromCenter,
+        ) ??
+        scanWindow;
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
@@ -201,8 +207,10 @@ class ScannerView extends StatelessWidget {
             scanWindow: overlayRect,
             useAppLifecycleState: useAppLifecycleState,
             scanWindowUpdateThreshold: scanWindowUpdateThreshold,
-            placeholderBuilder: placeholderBuilder ?? (_) => const _DefaultScannerPlaceholder(),
-            errorBuilder: errorBuilder ?? (_, error) => _ScannerErrorWidget(error: error),
+            placeholderBuilder:
+                placeholderBuilder ?? (_) => const _DefaultScannerPlaceholder(),
+            errorBuilder:
+                errorBuilder ?? (_, error) => _ScannerErrorWidget(error: error),
             overlayBuilder:
                 overlayBuilder ??
                 (overlayRect == null || !autoDrawOverlay
@@ -247,7 +255,10 @@ const double _barcodeHeight = 130.0;
 // scales proportionally across phones and tablets, and then clamped to
 // [_qrMinSize, _qrMaxSize] to prevent it from becoming too small on compact
 // devices or unnecessarily large on tablets.
-Rect _calculateQrCodeScanWindow(BuildContext context, {Offset? offsetFromCenter}) {
+Rect _calculateQrCodeScanWindow(
+  BuildContext context, {
+  Offset? offsetFromCenter,
+}) {
   final offset = offsetFromCenter ?? Offset.zero;
   final screenSize = MediaQuery.sizeOf(context);
   final double baseSize = screenSize.shortestSide * _qrSizeRatio;
@@ -265,7 +276,10 @@ Rect _calculateQrCodeScanWindow(BuildContext context, {Offset? offsetFromCenter}
 // [_barcodeMinWidth, _barcodeMaxWidth]. Height is fixed at [_barcodeHeight]
 // so the guide stays narrow, encouraging the user to align the barcode
 // horizontally.
-Rect _calculateBarcodeScanWindow(BuildContext context, {Offset? offsetFromCenter}) {
+Rect _calculateBarcodeScanWindow(
+  BuildContext context, {
+  Offset? offsetFromCenter,
+}) {
   final offset = offsetFromCenter ?? Offset.zero;
   final screenSize = MediaQuery.sizeOf(context);
   final double baseWidth = screenSize.shortestSide * _barcodeWidthRatio;
@@ -302,4 +316,3 @@ class _DefaultScannerPlaceholder extends StatelessWidget {
     );
   }
 }
-

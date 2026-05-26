@@ -6,6 +6,7 @@ import 'scanner_overlay.dart';
 import 'scanner_screen.dart';
 
 const _defaultBorderColor = Colors.blue;
+const _defaultPulseColor = Colors.cyanAccent;
 const _defaultCloseButtonLabel = 'Close Camera';
 
 class PosBarcodeScannerScreen extends StatefulWidget {
@@ -19,6 +20,7 @@ class PosBarcodeScannerScreen extends StatefulWidget {
   final bool useDarkModeButtonTheme;
   final double qtyButtonsBottomPadding;
   final String? closeButtonLabel;
+  final Color? successPulseColor;
 
   const PosBarcodeScannerScreen({
     super.key,
@@ -30,25 +32,56 @@ class PosBarcodeScannerScreen extends StatefulWidget {
     this.offsetFromCenter,
     this.overlayStyle,
     this.closeButtonLabel,
+    this.successPulseColor,
     this.useDarkModeButtonTheme = true,
     this.qtyButtonsBottomPadding = 230,
-  }) : assert(qtyButtonsBottomPadding > 0, 'qtyButtonsBottomPadding must be greater than 0');
+  }) : assert(
+         qtyButtonsBottomPadding > 0,
+         'qtyButtonsBottomPadding must be greater than 0',
+       );
 
   @override
   State<PosBarcodeScannerScreen> createState() => _PosBarcodeScannerScreenState();
 }
 
-class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
+class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> with SingleTickerProviderStateMixin {
   final ValueNotifier<int> qtyNotifier = ValueNotifier<int>(1);
   final ValueNotifier<int> totalItemsNotifier = ValueNotifier<int>(0);
   Map<String, int> scannedBarcodes = {};
+
+  late final AnimationController _feedbackController;
+  late final Animation<double> _pulseOpacity;
+  late final Animation<double> _buttonScale;
+
+  @override
+  void initState() {
+    super.initState();
+    // The Controller (Fast 150ms trigger)
+    _feedbackController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+      reverseDuration: const Duration(milliseconds: 250),
+    );
+
+    // The Ghost Pulse (Fades from 0.0 to 0.25 opacity)
+    _pulseOpacity = Tween<double>(begin: 0.0, end: 0.25).animate(
+      CurvedAnimation(parent: _feedbackController, curve: Curves.easeOut),
+    );
+
+    // The Button Bounce (Scales from 100% to 125% size)
+    _buttonScale = Tween<double>(begin: 1.0, end: 1.25).animate(
+      CurvedAnimation(parent: _feedbackController, curve: Curves.easeOutBack),
+    );
+  }
 
   void _onShowScanListPressed() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (ctx) {
         return DraggableScrollableSheet(
           initialChildSize: 0.5,
@@ -70,10 +103,17 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
                         children: [
                           Text(
                             'Scanned Barcodes ($totalLength)',
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.close, color: Colors.black54),
+                            icon: const Icon(
+                              Icons.close,
+                              color: Colors.black54,
+                            ),
                             onPressed: () => Navigator.of(ctx).pop(),
                           ),
                         ],
@@ -85,7 +125,13 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
                     if (list.isEmpty)
                       const Expanded(
                         child: Center(
-                          child: Text('No items scanned yet.', style: TextStyle(fontSize: 16, color: Colors.black54)),
+                          child: Text(
+                            'No items scanned yet.',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.black54,
+                            ),
+                          ),
                         ),
                       )
                     // Scrollable List
@@ -105,7 +151,13 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
                                 foregroundColor: Colors.blue.shade900,
                                 child: Text('$qty x'),
                               ),
-                              title: Text(barcode, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                              title: Text(
+                                barcode,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                             );
                           },
                         ),
@@ -126,21 +178,26 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
     return ValueListenableBuilder<int>(
       valueListenable: totalItemsNotifier,
       builder: (ctx, total, _) {
-        return IconButton(
-          onPressed: _onShowScanListPressed,
-          style: actionButtonTheme.buttonStyle.copyWith(
-            fixedSize: const WidgetStatePropertyAll(Size(55, 55)),
-            padding: const WidgetStatePropertyAll(EdgeInsets.zero),
-            shape: WidgetStatePropertyAll(CircleBorder(side: BorderSide(color: borderColor, width: 2.0))),
-            textStyle: const WidgetStatePropertyAll(
-              TextStyle(
-                fontSize: 22.0,
-                fontWeight: FontWeight.bold,
-                height: 1.0,
+        return ScaleTransition(
+          scale: _buttonScale,
+          child: IconButton(
+            onPressed: _onShowScanListPressed,
+            style: actionButtonTheme.buttonStyle.copyWith(
+              fixedSize: const WidgetStatePropertyAll(Size(55, 55)),
+              padding: const WidgetStatePropertyAll(EdgeInsets.zero),
+              shape: WidgetStatePropertyAll(
+                CircleBorder(side: BorderSide(color: borderColor, width: 2.0)),
+              ),
+              textStyle: const WidgetStatePropertyAll(
+                TextStyle(
+                  fontSize: 22.0,
+                  fontWeight: FontWeight.bold,
+                  height: 1.0,
+                ),
               ),
             ),
+            icon: Text(total.toString()),
           ),
-          icon: Text(total.toString()),
         );
       },
     );
@@ -178,6 +235,12 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
     widget.onScan(barcode, qty);
     scannedBarcodes[barcode] = (scannedBarcodes[barcode] ?? 0) + qty;
     totalItemsNotifier.value += qty;
+
+    // Trigger the Ghost Pulse and Button Bounce
+    _feedbackController.forward(from: 0.0).then((_) {
+      if (mounted) _feedbackController.reverse();
+    });
+
     // After scan reset qty to 1
     qtyNotifier.value = 1;
   }
@@ -186,13 +249,17 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
   void dispose() {
     qtyNotifier.dispose();
     totalItemsNotifier.dispose();
+    _feedbackController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return ScannerScreen.multiscan(
-      toolBar: StandardToolBar(showSwitchCameraButton: false, trailing: [_buildScanListButton()]),
+      toolBar: StandardToolBar(
+        showSwitchCameraButton: false,
+        trailing: [_buildScanListButton()],
+      ),
       allowDuplicates: true,
       detectionTimeoutMs: widget.detectionTimeoutMs,
       sameItemCooldownMs: widget.sameItemCooldownMs,
@@ -205,6 +272,17 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
       ),
       onCameraScan: _onCameraScan,
       stackChildren: [
+        // Ghost Pulse overlay
+        Positioned.fill(
+          child: IgnorePointer(
+            child: FadeTransition(
+              opacity: _pulseOpacity,
+              child: Container(
+                color: widget.successPulseColor ?? _defaultPulseColor,
+              ),
+            ),
+          ),
+        ),
         Positioned(
           bottom: MediaQuery.of(context).padding.bottom + widget.qtyButtonsBottomPadding,
           left: 0,
@@ -225,7 +303,11 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> {
                   ),
                   Text(
                     qty.toString(),
-                    style: const TextStyle(fontSize: 40, color: Colors.white, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 40,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   CircleButton(
                     icon: Icons.add,
