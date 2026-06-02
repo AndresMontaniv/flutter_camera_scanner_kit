@@ -185,6 +185,23 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
   // first and returns immediately if it's `true`.
   bool _isPopping = false;
 
+  // ── Hardware Safety Shield ────────────────────────────────────────────
+  // `_isCameraReady` is a boot-gate flag that starts `false` and is set
+  // to `true` ONLY after `_bootCameraSafely` successfully completes
+  // `controller.start()` for the very first time.
+  //
+  // WHY: On a fresh install, the OS shows the Camera Permission Dialog
+  // the instant we call `controller.start()`.  This forces the app into
+  // `AppLifecycleState.inactive`.  Without this flag, `didChangeApp-
+  // LifecycleState` would call `controller.stop()` while the camera is
+  // still allocating memory on the native thread — causing a microtask
+  // collision that crashes or hits a breakpoint in debug mode.
+  //
+  // By gating the lifecycle observer behind this flag, we guarantee that
+  // no lifecycle event can interfere with the camera until the hardware
+  // has fully initialized and is safe to pause/resume.
+  bool _isCameraReady = false;
+
   /// Resolves the effective barcode format list for the controller.
   ///
   /// * **Barcode mode with empty allow-list:** returns [_horizontal1DFormats].
@@ -202,12 +219,38 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
     return allowedFormats;
   }
 
+  /// Safely starts the camera hardware and lowers the [_isCameraReady]
+  /// shield on success.
+  ///
+  /// Wraps `controller.start()` in a try/catch to intercept the microtask
+  /// exception thrown when the OS interrupts the native thread to show the
+  /// Camera Permission Dialog.  If the boot completes without interruption
+  /// and the widget is still [mounted], the shield is lowered (`true`),
+  /// allowing [didChangeAppLifecycleState] to manage the camera from that
+  /// point forward.
+  ///
+  /// If the OS *does* interrupt (permission dialog, etc.), the catch block
+  /// swallows the error gracefully — `mobile_scanner` auto-recovers once
+  /// the user taps "Allow".
+  Future<void> _bootCameraSafely() async {
+    try {
+      await controller.start();
+      if (mounted) {
+        // Lower the shield so the lifecycle observer can take over
+        _isCameraReady = true;
+      }
+    } catch (e) {
+      debugPrint('[camera_scanner_kit] Camera boot intercepted (likely OS permissions): $e');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _effects.initialize();
     controller = MobileScannerController(
+      autoStart: false,
       torchEnabled: false,
       facing: CameraFacing.back,
       detectionSpeed: DetectionSpeed.normal,
@@ -216,6 +259,11 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
     );
 
     _subscribeToBarcodes();
+
+    // 2. BOOT THE CAMERA MANUALLY AFTER THE FIRST FRAME
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _bootCameraSafely();
+    });
   }
 
   // ── App Lifecycle Management ──────────────────────────────────────────
@@ -225,8 +273,16 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
   //   2. On some Android OEMs the camera stays locked, blocking other apps.
   //
   // On resume we re-acquire the camera and unpause the barcode stream.
+  //
+  // SHIELD GATE: The `_isCameraReady` check at the top ensures this
+  // method is completely inert until the camera has successfully booted
+  // for the first time.  This prevents the Permission Dialog lifecycle
+  // bounce (inactive → resumed) from colliding with the boot sequence.
+  // See the `_isCameraReady` comment block above for the full rationale.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!_isCameraReady) return;
+
     switch (state) {
       case AppLifecycleState.detached:
       case AppLifecycleState.hidden:
@@ -237,8 +293,10 @@ class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserv
         controller.stop();
         break;
       case AppLifecycleState.resumed:
-        // Re-acquire camera and resume the barcode stream.
-        controller.start();
+        // Re-acquire camera safely
+        controller.start().catchError((e) {
+          debugPrint('[camera_scanner_kit] Error resuming camera: $e');
+        });
         _subscription?.resume();
         break;
     }
