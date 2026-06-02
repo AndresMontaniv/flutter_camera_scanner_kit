@@ -25,11 +25,13 @@ class _InlineScannerExampleState extends State<InlineScannerExample> {
     return Scaffold(
       appBar: AppBar(title: const Text('Inline Scanner Demo')),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(0.0),
         child: Column(
           children: [
             // 1. The Embedded Scanner View
             BarcodeScannerView(
+              borderRadius: BorderRadius.zero,
+               
               controller: _scannerController,
               showToggleButton: false,
               useDarkModeButtonTheme: widget.useDarkMode,

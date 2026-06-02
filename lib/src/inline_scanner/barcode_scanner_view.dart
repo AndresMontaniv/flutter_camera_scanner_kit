@@ -19,6 +19,7 @@ class BarcodeScannerView extends StatefulWidget {
   final BarcodeScannerController? controller;
   final bool showToggleButton;
   final bool useDarkModeButtonTheme;
+  final BorderRadiusGeometry borderRadius;
 
   const BarcodeScannerView({
     super.key,
@@ -30,6 +31,7 @@ class BarcodeScannerView extends StatefulWidget {
     this.controller,
     this.showToggleButton = true,
     this.useDarkModeButtonTheme = true,
+    this.borderRadius = const BorderRadius.all(Radius.circular(12)),
   }) : assert(maxWidth >= 200.0 && maxWidth <= 600.0, assetMessage);
 
   @override
@@ -204,9 +206,8 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBin
                 // 1. The Camera Window – expands from 0 → cameraHeight
                 // MARK: - Camera Window
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: ClipRect(
-                    child: AnimatedContainer(
+                  borderRadius: widget.borderRadius,
+                  child: AnimatedContainer(
                       duration: _animationDuration,
                       curve: Curves.easeInOut,
                       height: _isCameraActive ? cameraHeight : 0,
@@ -276,7 +277,6 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBin
                         ],
                       ),
                     ),
-                  ),
                 ),
 
                 if (widget.showToggleButton) ...[
