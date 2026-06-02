@@ -11,7 +11,8 @@ class InlineScannerExample extends StatefulWidget {
 }
 
 class _InlineScannerExampleState extends State<InlineScannerExample> {
-  final BarcodeScannerController _scannerController = BarcodeScannerController();
+  final BarcodeScannerController _scannerController =
+      BarcodeScannerController();
   final List<String> _scannedItems = [];
 
   void _onScanned(String barcode) {
@@ -31,7 +32,7 @@ class _InlineScannerExampleState extends State<InlineScannerExample> {
             // 1. The Embedded Scanner View
             BarcodeScannerView(
               borderRadius: BorderRadius.zero,
-               
+
               controller: _scannerController,
               showToggleButton: false,
               useDarkModeButtonTheme: widget.useDarkMode,
@@ -62,7 +63,9 @@ class _InlineScannerExampleState extends State<InlineScannerExample> {
                     final isTransitioning = _scannerController.isTransitioning;
 
                     return IconButton(
-                      onPressed: isTransitioning ? null : _scannerController.toggle,
+                      onPressed: isTransitioning
+                          ? null
+                          : _scannerController.toggle,
                       icon: isTransitioning
                           ? const SizedBox(
                               width: 16,

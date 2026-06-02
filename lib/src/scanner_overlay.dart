@@ -51,12 +51,12 @@ class ScannerOverlayStyle {
 
   @override
   int get hashCode => Object.hash(
-        opacity,
-        borderColor,
-        opacityColor,
-        borderWidth,
-        borderRadius,
-      );
+    opacity,
+    borderColor,
+    opacityColor,
+    borderWidth,
+    borderRadius,
+  );
 }
 
 class ScannerOverlay extends StatelessWidget {
@@ -103,7 +103,8 @@ class _OverlayPainter extends CustomPainter {
       ..color = style.opacityColor.withValues(alpha: style.opacity)
       ..style = PaintingStyle.fill;
 
-    final backgroundPath = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
+    final backgroundPath = Path()
+      ..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
 
     // We use your exact scanWindow Rect here
     final scanRRect = RRect.fromRectAndRadius(

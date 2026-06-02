@@ -26,7 +26,7 @@ Add `camera_scanner_kit` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  camera_scanner_kit: ^1.0.0
+  camera_scanner_kit: ^1.0.2
 ```
 
 ### Platform Setup
@@ -113,6 +113,8 @@ class MyInlineForm extends StatelessWidget {
   }
 }
 ```
+
+> **💡 Programmatic Control (v1.0.2+):** In addition to `toggle()`, you can call `_controller.start()` and `_controller.stop()` for explicit, idempotent control. Both are safe to call repeatedly — calling `start()` on an already-active camera (or `stop()` on an already-stopped one) is a no-op.
 
 ---
 

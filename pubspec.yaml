@@ -1,6 +1,6 @@
 name: camera_scanner_kit
 description: A production-grade Flutter UI toolkit for high-speed POS barcode scanning, featuring native haptics, zero-latency audio, and inline routing.
-version: 1.0.1
+version: 1.0.2
 repository: https://github.com/AndresMontaniv/flutter_camera_scanner_kit
 topics:
   - scanner

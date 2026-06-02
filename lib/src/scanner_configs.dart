@@ -85,7 +85,8 @@ class StandardToolBar extends ScannerToolBar {
   });
 
   @override
-  bool get shouldBuild => showFlashButton || showCloseButton || showSwitchCameraButton;
+  bool get shouldBuild =>
+      showFlashButton || showCloseButton || showSwitchCameraButton;
 }
 
 /// An extension of [StandardToolBar] that adds support for batch-scanning workflows,
@@ -117,7 +118,11 @@ class BatchToolBar extends StandardToolBar {
   });
 
   @override
-  bool get shouldBuild => showFlashButton || showCloseButton || showSwitchCameraButton || showScannedListButton;
+  bool get shouldBuild =>
+      showFlashButton ||
+      showCloseButton ||
+      showSwitchCameraButton ||
+      showScannedListButton;
 
   /// Helper to convert this [BatchToolBar] configuration into a [StandardToolBar]
   /// configuration (stripping batch-specific visual components like list button).

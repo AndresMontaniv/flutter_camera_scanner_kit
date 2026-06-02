@@ -68,7 +68,11 @@ class _TestMatrixScreenState extends State<TestMatrixScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => InlineScannerExample(useDarkMode: _useDarkModeButtonTheme)),
+                MaterialPageRoute(
+                  builder: (_) => InlineScannerExample(
+                    useDarkMode: _useDarkModeButtonTheme,
+                  ),
+                ),
               );
             },
           ),

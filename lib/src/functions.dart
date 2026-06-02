@@ -36,18 +36,19 @@ Future<String?> scanCustom(
   bool useDarkModeButtonTheme = true,
 }) async {
   try {
-    final String? scannedItem = await Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute(
-        builder: (_) => ScannerScreen.singleScan(
-          toolBar: toolBar,
-          stackChildren: stackChildren,
-          onScanRejected: onScanRejected,
-          scannerViewConfig: scannerViewConfig,
-          enableSoundAndVibration: enableSoundAndVibration,
-          useDarkModeButtonTheme: useDarkModeButtonTheme,
-        ),
-      ),
-    );
+    final String? scannedItem = await Navigator.of(context, rootNavigator: true)
+        .push(
+          MaterialPageRoute(
+            builder: (_) => ScannerScreen.singleScan(
+              toolBar: toolBar,
+              stackChildren: stackChildren,
+              onScanRejected: onScanRejected,
+              scannerViewConfig: scannerViewConfig,
+              enableSoundAndVibration: enableSoundAndVibration,
+              useDarkModeButtonTheme: useDarkModeButtonTheme,
+            ),
+          ),
+        );
 
     if (scannedItem != null) {
       debugPrint('$kTag Successfully scanned: $scannedItem');
@@ -156,21 +157,22 @@ Future<List<String>?> scanCustomBatch(
   bool useDarkModeButtonTheme = true,
 }) async {
   try {
-    final List<String>? scannedItems = await Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute(
-        builder: (_) => ScannerScreen.multiscan(
-          toolBar: toolBar,
-          stackChildren: stackChildren,
-          onScanRejected: onScanRejected,
-          allowDuplicates: allowDuplicates,
-          detectionTimeoutMs: detectionTimeoutMs,
-          sameItemCooldownMs: sameItemCooldownMs,
-          scannerViewConfig: scannerViewConfig,
-          enableSoundAndVibration: enableSoundAndVibration,
-          useDarkModeButtonTheme: useDarkModeButtonTheme,
-        ),
-      ),
-    );
+    final List<String>? scannedItems =
+        await Navigator.of(context, rootNavigator: true).push(
+          MaterialPageRoute(
+            builder: (_) => ScannerScreen.multiscan(
+              toolBar: toolBar,
+              stackChildren: stackChildren,
+              onScanRejected: onScanRejected,
+              allowDuplicates: allowDuplicates,
+              detectionTimeoutMs: detectionTimeoutMs,
+              sameItemCooldownMs: sameItemCooldownMs,
+              scannerViewConfig: scannerViewConfig,
+              enableSoundAndVibration: enableSoundAndVibration,
+              useDarkModeButtonTheme: useDarkModeButtonTheme,
+            ),
+          ),
+        );
 
     if (scannedItems != null) {
       debugPrint('$kTag Successfully scanned: $scannedItems');

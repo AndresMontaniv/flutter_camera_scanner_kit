@@ -1,3 +1,10 @@
+## 1.0.2
+
+* **Feature:** Added idempotent `start()` and `stop()` methods to `BarcodeScannerController` for safer programmatic lifecycle control.
+* **Fix:** Resolved a microtask collision and debug-mode breakpoint caused by OS Camera Permission dialogs interrupting the camera boot sequence.
+* **UI Refactor:** Generalized `BarcodeScannerView`. Replaced hardcoded UI constraints by exposing `borderRadius`, removing redundant clipping masks, and enforcing compositional padding.
+* **Polish:** Upgraded internal logs to strict enterprise format and improved public API DartDocs.
+
 ## 1.0.1
 * Fix pub.dev description length warning to improve search engine SEO and package scoring.
 

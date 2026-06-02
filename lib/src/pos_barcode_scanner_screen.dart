@@ -69,10 +69,12 @@ class PosBarcodeScannerScreen extends StatefulWidget {
        );
 
   @override
-  State<PosBarcodeScannerScreen> createState() => _PosBarcodeScannerScreenState();
+  State<PosBarcodeScannerScreen> createState() =>
+      _PosBarcodeScannerScreenState();
 }
 
-class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> with SingleTickerProviderStateMixin {
+class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
+    with SingleTickerProviderStateMixin {
   final ValueNotifier<int> qtyNotifier = ValueNotifier<int>(1);
   final ValueNotifier<int> totalItemsNotifier = ValueNotifier<int>(0);
   Map<String, int> scannedBarcodes = {};
@@ -201,7 +203,9 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> with 
   }
 
   Widget _buildScanListButton() {
-    final actionButtonTheme = widget.useDarkModeButtonTheme ? ActionButtonTheme.dark : ActionButtonTheme.light;
+    final actionButtonTheme = widget.useDarkModeButtonTheme
+        ? ActionButtonTheme.dark
+        : ActionButtonTheme.light;
     final borderColor = widget.overlayStyle?.borderColor ?? _defaultBorderColor;
     return ValueListenableBuilder<int>(
       valueListenable: totalItemsNotifier,
@@ -232,7 +236,9 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> with 
   }
 
   Widget _buildCloseCameraTextButton() {
-    final actionButtonTheme = widget.useDarkModeButtonTheme ? ActionButtonTheme.dark : ActionButtonTheme.light;
+    final actionButtonTheme = widget.useDarkModeButtonTheme
+        ? ActionButtonTheme.dark
+        : ActionButtonTheme.light;
     final borderColor = actionButtonTheme.borderColor;
     return Align(
       alignment: Alignment.bottomCenter,
@@ -294,7 +300,9 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> with 
       enableSoundAndVibration: widget.enableSoundAndVibration,
       useDarkModeButtonTheme: widget.useDarkModeButtonTheme,
       scannerViewConfig: ScannerViewConfig.barcode(
-        overlayStyle: widget.overlayStyle ?? const ScannerOverlayStyle(borderColor: _defaultBorderColor),
+        overlayStyle:
+            widget.overlayStyle ??
+            const ScannerOverlayStyle(borderColor: _defaultBorderColor),
         offsetFromCenter: widget.offsetFromCenter,
         allowedFormats: widget.allowedFormats,
       ),
@@ -312,7 +320,9 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> with 
           ),
         ),
         Positioned(
-          bottom: MediaQuery.of(context).padding.bottom + widget.qtyButtonsBottomPadding,
+          bottom:
+              MediaQuery.of(context).padding.bottom +
+              widget.qtyButtonsBottomPadding,
           left: 0,
           right: 0,
           child: ValueListenableBuilder<int>(

@@ -102,8 +102,10 @@ class _CircleCloseButton extends StatelessWidget {
 class _DisabledButton extends StatelessWidget {
   final IconData icon;
   final bool useDarkModeButtonTheme;
-  const _DisabledButton.flash({this.useDarkModeButtonTheme = true}) : icon = Icons.flash_off;
-  const _DisabledButton.camera({this.useDarkModeButtonTheme = true}) : icon = Icons.camera_alt_outlined;
+  const _DisabledButton.flash({this.useDarkModeButtonTheme = true})
+    : icon = Icons.flash_off;
+  const _DisabledButton.camera({this.useDarkModeButtonTheme = true})
+    : icon = Icons.camera_alt_outlined;
 
   @override
   Widget build(BuildContext context) {
@@ -283,7 +285,9 @@ class _SharedButtonsRow extends StatelessWidget {
             useDarkModeButtonTheme: useDarkModeButtonTheme,
           ),
         ),
-        if (config.showFlashButton || config.showSwitchCameraButton || extraTrailingWidget != null)
+        if (config.showFlashButton ||
+            config.showSwitchCameraButton ||
+            extraTrailingWidget != null)
           Flexible(
             child: Wrap(
               alignment: WrapAlignment.end,

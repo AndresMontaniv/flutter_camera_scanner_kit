@@ -8,7 +8,8 @@ import 'package:native_haptics_and_audio/native_haptics_and_audio.dart';
 import '../action_button.dart';
 import 'barcode_scanner_controller.dart';
 
-const assetMessage = 'BarcodeScannerView: maxWidth must be between 200.0 and 600.0 to ensure scanning performance.';
+const assetMessage =
+    'BarcodeScannerView: maxWidth must be between 200.0 and 600.0 to ensure scanning performance.';
 
 class BarcodeScannerView extends StatefulWidget {
   final double maxWidth;
@@ -38,7 +39,8 @@ class BarcodeScannerView extends StatefulWidget {
   State<BarcodeScannerView> createState() => _BarcodeScannerViewState();
 }
 
-class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBindingObserver {
+class _BarcodeScannerViewState extends State<BarcodeScannerView>
+    with WidgetsBindingObserver {
   final MobileScannerController _controller = MobileScannerController(
     facing: CameraFacing.back,
     autoStart: false,
@@ -208,86 +210,96 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBin
                 ClipRRect(
                   borderRadius: widget.borderRadius,
                   child: AnimatedContainer(
-                      duration: _animationDuration,
-                      curve: Curves.easeInOut,
-                      height: _isCameraActive ? cameraHeight : 0,
-                      width: currentWidth,
-                      // OverflowBox prevents the camera feed from squishing during the animation.
-                      // It acts like a window blind smoothly revealing the full-size feed.
-                      child: Stack(
-                        children: [
-                          // 1. The Camera Hardware (Pushed to background)
-                          Positioned.fill(
-                            child: OverflowBox(
-                              minHeight: cameraHeight,
-                              maxHeight: cameraHeight,
-                              alignment: Alignment.topCenter,
-                              child: MobileScanner(
-                                key: const ValueKey('scanner'),
-                                fit: BoxFit.cover,
-                                controller: _controller,
-                                useAppLifecycleState: false,
-                                scanWindow: Rect.fromLTWH(
-                                  0,
-                                  0,
-                                  currentWidth,
-                                  cameraHeight,
-                                ),
+                    duration: _animationDuration,
+                    curve: Curves.easeInOut,
+                    height: _isCameraActive ? cameraHeight : 0,
+                    width: currentWidth,
+                    // OverflowBox prevents the camera feed from squishing during the animation.
+                    // It acts like a window blind smoothly revealing the full-size feed.
+                    child: Stack(
+                      children: [
+                        // 1. The Camera Hardware (Pushed to background)
+                        Positioned.fill(
+                          child: OverflowBox(
+                            minHeight: cameraHeight,
+                            maxHeight: cameraHeight,
+                            alignment: Alignment.topCenter,
+                            child: MobileScanner(
+                              key: const ValueKey('scanner'),
+                              fit: BoxFit.cover,
+                              controller: _controller,
+                              useAppLifecycleState: false,
+                              scanWindow: Rect.fromLTWH(
+                                0,
+                                0,
+                                currentWidth,
+                                cameraHeight,
                               ),
                             ),
                           ),
+                        ),
 
-                          // 2. The Minimalist Overlay
-                          Positioned(
-                            top: 8,
-                            left: 8,
-                            right: 8,
-                            child: AnimatedOpacity(
-                              opacity: (_isCameraActive && !_isTransitioning) ? 1.0 : 0.0,
-                              duration: const Duration(milliseconds: 150),
-                              child: IgnorePointer(
-                                ignoring: !_isCameraActive || _isTransitioning,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    // Close 'X' Button
-                                    CircleButton(
-                                      icon: Icons.close,
-                                      size: 25,
-                                      darkMode: widget.useDarkModeButtonTheme,
-                                      onPressed: _toggleCamera,
-                                    ),
-                                    // Flashlight Toggle (Micro-rebuilds only when tapped)
-                                    ValueListenableBuilder<MobileScannerState>(
-                                      valueListenable: _controller,
-                                      builder: (context, state, child) {
-                                        return CircleButton(
-                                          icon: state.torchState == TorchState.on ? Icons.flash_on : Icons.flash_off,
-                                          size: 25,
-                                          darkMode: widget.useDarkModeButtonTheme,
-                                          onPressed: () => _controller.toggleTorch(),
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                ),
+                        // 2. The Minimalist Overlay
+                        Positioned(
+                          top: 8,
+                          left: 8,
+                          right: 8,
+                          child: AnimatedOpacity(
+                            opacity: (_isCameraActive && !_isTransitioning)
+                                ? 1.0
+                                : 0.0,
+                            duration: const Duration(milliseconds: 150),
+                            child: IgnorePointer(
+                              ignoring: !_isCameraActive || _isTransitioning,
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  // Close 'X' Button
+                                  CircleButton(
+                                    icon: Icons.close,
+                                    size: 25,
+                                    darkMode: widget.useDarkModeButtonTheme,
+                                    onPressed: _toggleCamera,
+                                  ),
+                                  // Flashlight Toggle (Micro-rebuilds only when tapped)
+                                  ValueListenableBuilder<MobileScannerState>(
+                                    valueListenable: _controller,
+                                    builder: (context, state, child) {
+                                      return CircleButton(
+                                        icon: state.torchState == TorchState.on
+                                            ? Icons.flash_on
+                                            : Icons.flash_off,
+                                        size: 25,
+                                        darkMode: widget.useDarkModeButtonTheme,
+                                        onPressed: () =>
+                                            _controller.toggleTorch(),
+                                      );
+                                    },
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
+                  ),
                 ),
 
                 if (widget.showToggleButton) ...[
                   const SizedBox(height: 12),
                   // 2. The External Control Layer
                   ElevatedButton.icon(
-                    style: (_isCameraActive ? _activeToggleStyle : _inactiveToggleStyle).copyWith(
-                      minimumSize: WidgetStatePropertyAll(
-                        Size(currentWidth, 48),
-                      ),
-                    ),
+                    style:
+                        (_isCameraActive
+                                ? _activeToggleStyle
+                                : _inactiveToggleStyle)
+                            .copyWith(
+                              minimumSize: WidgetStatePropertyAll(
+                                Size(currentWidth, 48),
+                              ),
+                            ),
                     icon: _isTransitioning
                         ? const SizedBox(
                             width: 20,

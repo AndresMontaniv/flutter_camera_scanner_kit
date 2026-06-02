@@ -53,7 +53,9 @@ class CircleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final actionButtonTheme = darkMode ? ActionButtonTheme.dark : ActionButtonTheme.light;
+    final actionButtonTheme = darkMode
+        ? ActionButtonTheme.dark
+        : ActionButtonTheme.light;
     return IconButton(
       icon: Icon(icon, size: size),
       style: actionButtonTheme.buttonStyle,

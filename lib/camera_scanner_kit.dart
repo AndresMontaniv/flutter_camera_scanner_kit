@@ -17,4 +17,5 @@ export 'src/functions.dart';
 export 'src/scanner_overlay.dart' show ScannerOverlayStyle;
 
 // Inline scanner module: embeddable scanner view with controller architecture.
-export 'src/inline_scanner/inline_scanner.dart' show BarcodeScannerView, BarcodeScannerController;
+export 'src/inline_scanner/inline_scanner.dart'
+    show BarcodeScannerView, BarcodeScannerController;

@@ -31,7 +31,10 @@ class BarcodeScannerController extends ChangeNotifier {
   /// Updates the controller's internal state.
   /// Intended for internal use by the [BarcodeScannerView] to synchronize
   /// its hardware state to external listeners.
-  Future<void> updateState({required bool active, required bool transitioning}) async {
+  Future<void> updateState({
+    required bool active,
+    required bool transitioning,
+  }) async {
     _isCameraActive = active;
 
     if (transitioning) {
@@ -65,12 +68,16 @@ class BarcodeScannerController extends ChangeNotifier {
   /// a transition is in progress.
   Future<void> toggle() async {
     if (_toggleCallback == null) {
-      debugPrint('[camera_scanner_kit] WARN: Cannot toggle. BarcodeScannerController is not attached to a BarcodeScannerView.');
+      debugPrint(
+        '[camera_scanner_kit] WARN: Cannot toggle. BarcodeScannerController is not attached to a BarcodeScannerView.',
+      );
       return;
     }
 
     if (_isTransitioning) {
-      debugPrint('[camera_scanner_kit] INFO: Camera is currently transitioning. Ignoring toggle request.');
+      debugPrint(
+        '[camera_scanner_kit] INFO: Camera is currently transitioning. Ignoring toggle request.',
+      );
       return;
     }
 
@@ -84,7 +91,9 @@ class BarcodeScannerController extends ChangeNotifier {
   /// safely do nothing.
   Future<void> start() async {
     if (_isCameraActive) {
-      debugPrint('[camera_scanner_kit] INFO: Camera is already active. Ignoring start().');
+      debugPrint(
+        '[camera_scanner_kit] INFO: Camera is already active. Ignoring start().',
+      );
       return;
     }
 
@@ -98,7 +107,9 @@ class BarcodeScannerController extends ChangeNotifier {
   /// safely do nothing.
   Future<void> stop() async {
     if (!_isCameraActive) {
-      debugPrint('[camera_scanner_kit] INFO: Camera is already stopped. Ignoring stop().');
+      debugPrint(
+        '[camera_scanner_kit] INFO: Camera is already stopped. Ignoring stop().',
+      );
       return;
     }
 
