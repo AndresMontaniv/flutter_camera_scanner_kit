@@ -64,9 +64,45 @@ class BarcodeScannerController extends ChangeNotifier {
   /// Safe to call repeatedly; double-taps are blocked internally while
   /// a transition is in progress.
   Future<void> toggle() async {
-    // Prevent double-calls while already transitioning
-    if (_toggleCallback != null && !_isTransitioning) {
-      await _toggleCallback!();
+    if (_toggleCallback == null) {
+      debugPrint('[camera_scanner_kit] WARN: Cannot toggle. BarcodeScannerController is not attached to a BarcodeScannerView.');
+      return;
     }
+
+    if (_isTransitioning) {
+      debugPrint('[camera_scanner_kit] INFO: Camera is currently transitioning. Ignoring toggle request.');
+      return;
+    }
+
+    debugPrint('[camera_scanner_kit] INFO: Toggling camera state.');
+    await _toggleCallback!();
+  }
+
+  /// Programmatically starts the camera feed.
+  ///
+  /// This method is idempotent. If the camera is already active, it will
+  /// safely do nothing.
+  Future<void> start() async {
+    if (_isCameraActive) {
+      debugPrint('[camera_scanner_kit] INFO: Camera is already active. Ignoring start().');
+      return;
+    }
+
+    debugPrint('[camera_scanner_kit] INFO: Programmatically starting camera.');
+    await toggle();
+  }
+
+  /// Programmatically stops the camera feed.
+  ///
+  /// This method is idempotent. If the camera is already stopped, it will
+  /// safely do nothing.
+  Future<void> stop() async {
+    if (!_isCameraActive) {
+      debugPrint('[camera_scanner_kit] INFO: Camera is already stopped. Ignoring stop().');
+      return;
+    }
+
+    debugPrint('[camera_scanner_kit] INFO: Programmatically stopping camera.');
+    await toggle();
   }
 }
