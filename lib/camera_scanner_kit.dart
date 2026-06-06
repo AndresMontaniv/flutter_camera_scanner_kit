@@ -8,6 +8,7 @@ library;
 
 // scanner_screen.dart already includes scanner_configs.dart and
 // scanner_top_bar.dart via `part` directives.
+export 'src/scanner_lens_type.dart';
 export 'src/scanner_screen.dart';
 export 'src/pos_barcode_scanner_screen.dart';
 export 'src/functions.dart';

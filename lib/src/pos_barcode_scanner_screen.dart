@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import 'action_button.dart';
+import 'scanner_lens_type.dart';
 import 'scanner_overlay.dart';
 import 'scanner_screen.dart';
 
@@ -49,6 +50,9 @@ class PosBarcodeScannerScreen extends StatefulWidget {
   /// The background pulse color flashed upon a successful scan.
   final Color? successPulseColor;
 
+  /// The physical camera lens to use. Defaults to [ScannerLensType.any].
+  final ScannerLensType lensType;
+
   /// Creates a [PosBarcodeScannerScreen] instance.
   const PosBarcodeScannerScreen({
     super.key,
@@ -63,6 +67,7 @@ class PosBarcodeScannerScreen extends StatefulWidget {
     this.successPulseColor,
     this.useDarkModeButtonTheme = true,
     this.qtyButtonsBottomPadding = 230,
+    this.lensType = ScannerLensType.any,
   }) : assert(
          qtyButtonsBottomPadding > 0,
          'qtyButtonsBottomPadding must be greater than 0',
@@ -290,6 +295,7 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
   @override
   Widget build(BuildContext context) {
     return ScannerScreen.multiscan(
+      lensType: widget.lensType,
       toolBar: StandardToolBar(
         showSwitchCameraButton: false,
         trailing: [_buildScanListButton()],

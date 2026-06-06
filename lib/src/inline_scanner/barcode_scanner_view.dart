@@ -6,6 +6,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:native_haptics_and_audio/native_haptics_and_audio.dart';
 
 import '../action_button.dart';
+import '../scanner_lens_type.dart';
 import 'barcode_scanner_controller.dart';
 
 const assetMessage =
@@ -21,6 +22,7 @@ class BarcodeScannerView extends StatefulWidget {
   final bool showToggleButton;
   final bool useDarkModeButtonTheme;
   final BorderRadiusGeometry borderRadius;
+  final ScannerLensType lensType;
 
   const BarcodeScannerView({
     super.key,
@@ -33,6 +35,7 @@ class BarcodeScannerView extends StatefulWidget {
     this.showToggleButton = true,
     this.useDarkModeButtonTheme = true,
     this.borderRadius = const BorderRadius.all(Radius.circular(12)),
+    this.lensType = ScannerLensType.any,
   }) : assert(maxWidth >= 200.0 && maxWidth <= 600.0, assetMessage);
 
   @override
@@ -41,12 +44,7 @@ class BarcodeScannerView extends StatefulWidget {
 
 class _BarcodeScannerViewState extends State<BarcodeScannerView>
     with WidgetsBindingObserver {
-  final MobileScannerController _controller = MobileScannerController(
-    facing: CameraFacing.back,
-    autoStart: false,
-    detectionSpeed: DetectionSpeed.normal,
-    initialZoom: 1.5,
-  );
+  late final MobileScannerController _controller;
   StreamSubscription<BarcodeCapture>? _subscription;
   Timer? _idleTimer;
 
@@ -60,6 +58,15 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView>
   @override
   void initState() {
     super.initState();
+
+    _controller = MobileScannerController(
+      facing: CameraFacing.back,
+      autoStart: false,
+      detectionSpeed: DetectionSpeed.normal,
+      initialZoom: 1.5,
+      lensType: widget.lensType.mobileScannerLens,
+    );
+
     WidgetsBinding.instance.addObserver(this);
     _effects.initialize();
     _subscription = _controller.barcodes.listen(_onBarcodeDetected);

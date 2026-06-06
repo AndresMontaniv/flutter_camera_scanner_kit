@@ -14,6 +14,7 @@ import 'package:mobile_scanner/mobile_scanner.dart'
 
 import '_constants.dart';
 import 'action_button.dart';
+import 'scanner_lens_type.dart';
 
 import 'scanner_view.dart';
 import 'scanner_overlay.dart';
@@ -92,6 +93,9 @@ class ScannerScreen extends StatefulWidget {
   /// switch camera). Defaults to [ActionButtonTheme.dark].
   final bool useDarkModeButtonTheme;
 
+  /// The physical camera lens to use. Defaults to [ScannerLensType.any].
+  final ScannerLensType lensType;
+
   /// Internal flag set by the named constructors.
   final _ScanMode _mode;
 
@@ -118,6 +122,7 @@ class ScannerScreen extends StatefulWidget {
     this.scannerViewConfig,
     this.enableSoundAndVibration = true,
     this.useDarkModeButtonTheme = true,
+    this.lensType = ScannerLensType.any,
   }) : _mode = _ScanMode.single,
        onCameraScan = null,
        allowDuplicates = false,
@@ -145,6 +150,7 @@ class ScannerScreen extends StatefulWidget {
     this.sameItemCooldownMs = 1500,
     this.enableSoundAndVibration = true,
     this.useDarkModeButtonTheme = true,
+    this.lensType = ScannerLensType.any,
     void Function(String)? onScanRejected,
   }) : _mode = _ScanMode.multiscan,
        onScanRejected = !allowDuplicates ? onScanRejected : null;
@@ -269,6 +275,7 @@ class _ScannerScreenState extends State<ScannerScreen>
       detectionSpeed: DetectionSpeed.normal,
       detectionTimeoutMs: widget.detectionTimeoutMs,
       formats: _getEffectiveFormats(),
+      lensType: widget.lensType.mobileScannerLens,
     );
 
     _subscribeToBarcodes();

@@ -109,6 +109,7 @@ class _TestMatrixScreenState extends State<TestMatrixScreen> {
               final result = await scanQrCode(
                 context,
                 useDarkModeButtonTheme: _useDarkModeButtonTheme,
+                lensType: ScannerLensType.normal,
                 overlayStyle: const ScannerOverlayStyle(
                   borderColor: Colors.blue,
                 ),
@@ -125,6 +126,8 @@ class _TestMatrixScreenState extends State<TestMatrixScreen> {
               final result = await scanBarcode(
                 context,
                 useDarkModeButtonTheme: _useDarkModeButtonTheme,
+                // Test .wide on iOS
+                // lensType: ScannerLensType.wide,
                 overlayStyle: const ScannerOverlayStyle(
                   borderColor: Colors.pink,
                 ),
