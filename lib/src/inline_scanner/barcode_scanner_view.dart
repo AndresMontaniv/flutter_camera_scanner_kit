@@ -5,7 +5,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import 'package:native_haptics_and_audio/native_haptics_and_audio.dart';
 
-import '../action_button.dart';
+import '../widgets/action_button.dart';
 import '../scanner_lens_type.dart';
 import 'barcode_scanner_controller.dart';
 

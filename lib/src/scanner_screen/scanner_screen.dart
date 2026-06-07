@@ -12,12 +12,12 @@ import 'package:mobile_scanner/mobile_scanner.dart'
         CameraFacing,
         DetectionSpeed;
 
-import '_constants.dart';
-import 'action_button.dart';
-import 'scanner_lens_type.dart';
+import '../_constants.dart';
+import '../widgets/action_button.dart';
+import '../scanner_lens_type.dart';
 
-import 'scanner_view.dart';
-import 'scanner_overlay.dart';
+import '../widgets/scanner_view.dart';
+import '../widgets/scanner_overlay.dart';
 
 part 'scanner_configs.dart';
 part 'scanner_top_bar.dart';

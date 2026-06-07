@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
-import 'action_button.dart';
-import 'scanner_lens_type.dart';
-import 'scanner_overlay.dart';
-import 'scanner_screen.dart';
+import '../widgets/action_button.dart';
+import '../scanner_lens_type.dart';
+import '../widgets/scanner_overlay.dart';
+import '../scanner_screen/scanner_screen.dart';
 
 const _defaultBorderColor = Colors.blue;
 const _defaultPulseColor = Colors.cyanAccent;

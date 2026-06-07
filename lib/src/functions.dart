@@ -19,10 +19,10 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '_constants.dart';
-import 'pos_barcode_scanner_screen.dart';
+import 'prebuilt_screens/pos_barcode_scanner_screen.dart';
 import 'scanner_lens_type.dart';
-import 'scanner_overlay.dart';
-import 'scanner_screen.dart';
+import 'widgets/scanner_overlay.dart';
+import 'scanner_screen/scanner_screen.dart';
 
 
 // MARK: - Single-Scan
