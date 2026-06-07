@@ -1,7 +1,18 @@
-/// This file implements the Facade pattern for the [ScannerScreen] widget,
-/// providing the primary public API for developers. It abstracts away the
-/// internal configuration objects and presents nine clean, distinct functions
-/// (Single, Batch, and Stream × Custom, Barcode, and QR Code) for simple integration.
+/// Facade API for the [ScannerScreen] widget.
+///
+/// This file provides the primary public API surface of the `camera_scanner_kit`
+/// package.  It abstracts away internal configuration objects and exposes ten
+/// clean, purpose-built functions covering every combination of:
+///
+/// | Routing Mode | Custom | Barcode | QR Code | POS |
+/// |---|---|---|---|---|
+/// | **Single** | [scanCustom] | [scanBarcode] | [scanQrCode] | — |
+/// | **Batch** | [scanCustomBatch] | [scanBarcodeBatch] | [scanQrCodeBatch] | — |
+/// | **Stream** | [scanCustomStream] | [scanBarcodeStream] | [scanQrCodeStream] | — |
+/// | **POS** | — | [showPosBarcodeScanner] | — | ✓ |
+///
+/// All functions push a full-screen [ScannerScreen] (or [PosBarcodeScannerScreen])
+/// via `Navigator.push` and manage the camera hardware lifecycle automatically.
 library;
 
 import 'package:flutter/material.dart';
@@ -13,20 +24,58 @@ import 'scanner_lens_type.dart';
 import 'scanner_overlay.dart';
 import 'scanner_screen.dart';
 
-/// Opens the scanner for a **Single** scan with a custom overlay configuration.
+/// Opens the scanner for a **single** scan with a fully custom overlay.
 ///
-/// Locks the camera hardware immediately after the first successful read
-/// and returns the scanned value as a `String?`. Returns `null` if canceled.
+/// This is the lowest-level single-scan entry point. It pushes a full-screen
+/// [ScannerScreen.singleScan] and returns the first successfully decoded
+/// barcode value as a `String?`. Returns `null` if the user dismisses the
+/// scanner without scanning.
 ///
-/// ### Example Usage
+/// The camera hardware is locked **immediately** after the first successful
+/// read to prevent ghost scans during the exit animation.
+///
+/// ### Parameters
+///
+/// * [context] — A [BuildContext] with a valid [Navigator] ancestor.
+/// * [stackChildren] — Additional widgets layered on top of the camera
+///   preview (e.g., instructional banners or brand logos).
+/// * [toolBar] — Toolbar configuration. Pass `null` to hide the toolbar.
+///   Must **not** be a [BatchToolBar]; use [scanCustomBatch] for batch modes.
+/// * [onScanRejected] — Called when a scan is silently rejected (e.g., when
+///   [ScannerScreen.allowDuplicates] is `false` and a duplicate is detected).
+/// * [scannerViewConfig] — Full manual control over the overlay shape,
+///   scan window [Rect], and allowed barcode formats.
+/// * [enableSoundAndVibration] — Whether to trigger haptic feedback and an
+///   audible beep on a successful scan. Defaults to `true`.
+/// * [useDarkModeButtonTheme] — When `true`, toolbar buttons use a dark
+///   translucent background. Defaults to `true`.
+/// * [lensType] — The physical camera lens to activate. Defaults to
+///   [ScannerLensType.any] for maximum device compatibility. See
+///   [ScannerLensType] for hardware fragmentation warnings.
+/// * [initialZoom] — The initial zoom scale for the camera (0.0 – 1.0).
+///   Only supported on iOS, macOS, and Android. Pass `null` (default) for
+///   no initial zoom.
+///
+/// ### Example
 /// ```dart
 /// final barcode = await scanCustom(
 ///   context,
 ///   scannerViewConfig: ScannerViewConfig(
 ///     scanWindow: Rect.fromLTWH(50, 100, 200, 200),
 ///   ),
+///   lensType: ScannerLensType.wide,
+///   initialZoom: 0.3,
 /// );
+///
+/// if (barcode != null) {
+///   print('Scanned: $barcode');
+/// }
 /// ```
+///
+/// ### Errors
+/// All exceptions from the camera pipeline are caught internally and logged
+/// via [debugPrint]. In the event of a camera error, the function returns
+/// `null` rather than throwing.
 Future<String?> scanCustom(
   BuildContext context, {
   List<Widget>? stackChildren,
@@ -36,8 +85,6 @@ Future<String?> scanCustom(
   bool enableSoundAndVibration = true,
   bool useDarkModeButtonTheme = true,
   ScannerLensType lensType = ScannerLensType.any,
-  /// The initial zoom scale for the camera.
-  /// Defaults to no initial zoom and is only supported on iOS, MacOS and Android.
   double? initialZoom,
 }) async {
   try {
@@ -68,12 +115,39 @@ Future<String?> scanCustom(
   }
 }
 
-/// Opens the scanner for a **Single** scan optimized for horizontal Barcodes.
+/// Opens the scanner for a **single** scan optimized for **horizontal 1D barcodes**.
 ///
-/// Locks the camera hardware immediately after the first successful read
-/// and returns the scanned value as a `String?`. Returns `null` if canceled.
+/// Pushes a full-screen [ScannerScreen.singleScan] with a wide, landscape-
+/// oriented overlay. Locks the camera hardware immediately after the first
+/// successful read and returns the scanned value as a `String?`. Returns
+/// `null` if canceled.
 ///
-/// ### Example Usage
+/// When [allowedFormats] is empty (the default), the scanner restricts
+/// detection to the standard set of horizontal 1D symbologies (EAN-13,
+/// UPC-A, Code 128, etc.) to avoid wasting decode cycles on 2D matrix codes.
+///
+/// ### Parameters
+///
+/// * [context] — A [BuildContext] with a valid [Navigator] ancestor.
+/// * [stackChildren] — Additional widgets layered on top of the camera preview.
+/// * [onScanRejected] — Called when a scan is silently rejected.
+/// * [overlayStyle] — Visual customization for the overlay border, corner
+///   radius, and background dimming. See [ScannerOverlayStyle].
+/// * [offsetFromCenter] — Vertical/horizontal nudge applied to the scan
+///   window position relative to the screen center.
+/// * [toolBar] — Toolbar config. Defaults to a [StandardToolBar].
+/// * [allowedFormats] — Restricts detection to specific [BarcodeFormat]s.
+///   Values are intersected with the built-in 1D set.
+/// * [enableSoundAndVibration] — Haptic and audio feedback on success.
+///   Defaults to `true`.
+/// * [useDarkModeButtonTheme] — Dark translucent button backgrounds.
+///   Defaults to `true`.
+/// * [lensType] — Physical camera lens. Defaults to [ScannerLensType.any].
+///   See [ScannerLensType] for hardware fragmentation warnings.
+/// * [initialZoom] — Initial zoom scale (0.0 – 1.0). iOS, macOS, and
+///   Android only. Defaults to `null` (no zoom).
+///
+/// ### Example
 /// ```dart
 /// final barcode = await scanBarcode(
 ///   context,
@@ -110,14 +184,36 @@ Future<String?> scanBarcode(
   );
 }
 
-/// Opens the scanner for a **Single** scan optimized for QR Codes.
+/// Opens the scanner for a **single** scan optimized for **QR codes**.
 ///
-/// Locks the camera hardware immediately after the first successful read
-/// and returns the scanned value as a `String?`. Returns `null` if canceled.
+/// Pushes a full-screen [ScannerScreen.singleScan] with a responsive 1:1
+/// square overlay. Detection is locked to [BarcodeFormat.qrCode] to
+/// eliminate accidental 1D reads.
 ///
-/// ### Example Usage
+/// Returns the decoded `String?`, or `null` if the user dismisses the
+/// scanner.
+///
+/// ### Parameters
+///
+/// * [context] — A [BuildContext] with a valid [Navigator] ancestor.
+/// * [stackChildren] — Additional widgets layered on top of the camera preview.
+/// * [onScanRejected] — Called when a scan is silently rejected.
+/// * [overlayStyle] — Visual overlay customization. See [ScannerOverlayStyle].
+/// * [offsetFromCenter] — Nudge for the scan window position.
+/// * [toolBar] — Toolbar config. Defaults to a [StandardToolBar].
+/// * [enableSoundAndVibration] — Haptic and audio feedback. Defaults to `true`.
+/// * [useDarkModeButtonTheme] — Dark button backgrounds. Defaults to `true`.
+/// * [lensType] — Physical camera lens. Defaults to [ScannerLensType.any].
+///   See [ScannerLensType] for hardware fragmentation warnings.
+/// * [initialZoom] — Initial zoom scale (0.0 – 1.0). iOS, macOS, and
+///   Android only. Defaults to `null`.
+///
+/// ### Example
 /// ```dart
 /// final qrCode = await scanQrCode(context);
+/// if (qrCode != null) {
+///   launchUrl(Uri.parse(qrCode));
+/// }
 /// ```
 Future<String?> scanQrCode(
   BuildContext context, {
@@ -147,18 +243,54 @@ Future<String?> scanQrCode(
   );
 }
 
-/// Opens the scanner in **Batch** mode with a custom overlay configuration.
+/// Opens the scanner in **batch** mode with a fully custom overlay.
 ///
-/// Acts as a shopping cart: the user can scan multiple items. When the
-/// user closes the screen, it returns the accumulated `List<String>?`.
+/// Acts as a shopping cart: the user scans multiple items and each accepted
+/// value is appended to an internal list. When the user closes the screen,
+/// the accumulated `List<String>?` is returned. Returns `null` if the
+/// navigator route is disposed without a result.
 ///
-/// ### Example Usage
+/// ### Parameters
+///
+/// * [context] — A [BuildContext] with a valid [Navigator] ancestor.
+/// * [stackChildren] — Additional widgets layered on top of the camera preview.
+/// * [toolBar] — Toolbar config. Pass `null` to hide the toolbar entirely.
+/// * [scannerViewConfig] — Full manual control over overlay shape, scan window,
+///   and allowed barcode formats.
+/// * [allowDuplicates] — When `false`, scans that match a value already in
+///   the internal list are silently rejected (or routed to [onScanRejected]).
+///   Defaults to `true`.
+/// * [detectionTimeoutMs] — Minimum milliseconds between *any* two decode
+///   callbacks from the native camera pipeline. Lower values increase
+///   responsiveness but raise CPU load. Defaults to `250`.
+/// * [sameItemCooldownMs] — Minimum milliseconds before the *same* barcode
+///   value is accepted again. Prevents rapid-fire duplicates when the user
+///   holds a barcode under the camera. Defaults to `1500`.
+/// * [enableSoundAndVibration] — Haptic and audio feedback. Defaults to `true`.
+/// * [onScanRejected] — Fires when a scan is rejected due to
+///   [allowDuplicates] being `false`.
+/// * [useDarkModeButtonTheme] — Dark button backgrounds. Defaults to `true`.
+/// * [lensType] — Physical camera lens. Defaults to [ScannerLensType.any].
+///   See [ScannerLensType] for hardware fragmentation warnings.
+/// * [initialZoom] — Initial zoom scale (0.0 – 1.0). iOS, macOS, and
+///   Android only. Defaults to `null`.
+///
+/// ### Example
 /// ```dart
 /// final items = await scanCustomBatch(
 ///   context,
 ///   allowDuplicates: false,
+///   onScanRejected: (dup) => showSnackBar('Already scanned: $dup'),
 /// );
+///
+/// if (items != null && items.isNotEmpty) {
+///   processItems(items);
+/// }
 /// ```
+///
+/// ### Errors
+/// All camera exceptions are caught internally and logged via [debugPrint].
+/// In the event of a camera error, the function returns `null`.
 Future<List<String>?> scanCustomBatch(
   BuildContext context, {
   List<Widget>? stackChildren,
@@ -204,16 +336,42 @@ Future<List<String>?> scanCustomBatch(
   }
 }
 
-/// Opens the scanner in **Batch** mode optimized for horizontal Barcodes.
+/// Opens the scanner in **batch** mode optimized for **horizontal 1D barcodes**.
 ///
-/// Acts as a shopping cart: the user can scan multiple items. When the
-/// user closes the screen, it returns the accumulated `List<String>?`.
+/// Combines the batch accumulation behaviour of [scanCustomBatch] with the
+/// barcode-optimised overlay and format filtering of [scanBarcode]. The user
+/// scans multiple items; on close the accumulated `List<String>?` is returned.
 ///
-/// ### Example Usage
+/// ### Parameters
+///
+/// * [context] — A [BuildContext] with a valid [Navigator] ancestor.
+/// * [stackChildren] — Extra widgets layered on top of the camera preview.
+/// * [toolBar] — Toolbar config. Defaults to a [BatchToolBar] (includes a
+///   scanned-items badge).
+/// * [allowDuplicates] — Whether to accept the same barcode value more than
+///   once. Defaults to `true`.
+/// * [detectionTimeoutMs] — Minimum ms between decode callbacks. Defaults
+///   to `250`.
+/// * [sameItemCooldownMs] — Minimum ms before the same barcode can scan
+///   again. Defaults to `1500`.
+/// * [enableSoundAndVibration] — Haptic and audio feedback. Defaults to `true`.
+/// * [onScanRejected] — Fires on rejected duplicates.
+/// * [offsetFromCenter] — Scan window position nudge.
+/// * [overlayStyle] — Visual overlay customization. See [ScannerOverlayStyle].
+/// * [allowedFormats] — Restricts detection. Intersected with the built-in
+///   1D format set. An empty list (default) uses the full 1D set.
+/// * [useDarkModeButtonTheme] — Dark button backgrounds. Defaults to `true`.
+/// * [lensType] — Physical camera lens. Defaults to [ScannerLensType.any].
+///   See [ScannerLensType] for hardware fragmentation warnings.
+/// * [initialZoom] — Initial zoom scale (0.0 – 1.0). iOS, macOS, and
+///   Android only. Defaults to `null`.
+///
+/// ### Example
 /// ```dart
 /// final barcodes = await scanBarcodeBatch(
 ///   context,
 ///   allowDuplicates: false,
+///   allowedFormats: [BarcodeFormat.ean13],
 /// );
 /// ```
 Future<List<String>?> scanBarcodeBatch(
@@ -252,14 +410,42 @@ Future<List<String>?> scanBarcodeBatch(
   );
 }
 
-/// Opens the scanner in **Batch** mode optimized for QR Codes.
+/// Opens the scanner in **batch** mode optimized for **QR codes**.
 ///
-/// Acts as a shopping cart: the user can scan multiple items. When the
-/// user closes the screen, it returns the accumulated `List<String>?`.
+/// Combines the batch accumulation behaviour of [scanCustomBatch] with the
+/// QR-optimised square overlay and format lock of [scanQrCode]. Detection is
+/// restricted to [BarcodeFormat.qrCode].
 ///
-/// ### Example Usage
+/// ### Parameters
+///
+/// * [context] — A [BuildContext] with a valid [Navigator] ancestor.
+/// * [stackChildren] — Extra widgets layered on top of the camera preview.
+/// * [toolBar] — Toolbar config. Defaults to a [BatchToolBar].
+/// * [allowDuplicates] — Accept the same QR value more than once. Defaults
+///   to `true`.
+/// * [detectionTimeoutMs] — Minimum ms between decode callbacks. Defaults
+///   to `250`.
+/// * [sameItemCooldownMs] — Minimum ms before the same QR can scan again.
+///   Defaults to `1500`.
+/// * [enableSoundAndVibration] — Haptic and audio feedback. Defaults to `true`.
+/// * [onScanRejected] — Fires on rejected duplicates.
+/// * [offsetFromCenter] — Scan window position nudge.
+/// * [overlayStyle] — Visual overlay customization. See [ScannerOverlayStyle].
+/// * [useDarkModeButtonTheme] — Dark button backgrounds. Defaults to `true`.
+/// * [lensType] — Physical camera lens. Defaults to [ScannerLensType.any].
+///   See [ScannerLensType] for hardware fragmentation warnings.
+/// * [initialZoom] — Initial zoom scale (0.0 – 1.0). iOS, macOS, and
+///   Android only. Defaults to `null`.
+///
+/// ### Example
 /// ```dart
 /// final qrCodes = await scanQrCodeBatch(context);
+///
+/// if (qrCodes != null) {
+///   for (final code in qrCodes) {
+///     print('Scanned QR: $code');
+///   }
+/// }
 /// ```
 Future<List<String>?> scanQrCodeBatch(
   BuildContext context, {
@@ -295,13 +481,43 @@ Future<List<String>?> scanQrCodeBatch(
   );
 }
 
-/// Opens the scanner in **Stream** mode with a custom overlay configuration.
+/// Opens the scanner in **stream** mode with a fully custom overlay.
 ///
-/// Streams real-time data to the [onCameraScan] callback as each item is
-/// successfully scanned. The `Future<void>` completes when the user closes
+/// Instead of accumulating results and returning them on pop, this function
+/// fires the [onCameraScan] callback in **real-time** as each barcode is
+/// successfully decoded. The `Future<void>` completes when the user closes
 /// the scanner screen.
 ///
-/// ### Example Usage
+/// Internally this uses [ScannerScreen.multiscan] with the [onCameraScan]
+/// callback wired in. A batch list is still accumulated behind the scenes
+/// (accessible via the toolbar badge if a [BatchToolBar] is used), but the
+/// primary data channel is the callback.
+///
+/// ### Parameters
+///
+/// * [context] — A [BuildContext] with a valid [Navigator] ancestor.
+/// * [onCameraScan] — **Required.** Called with the raw barcode `String`
+///   every time a scan is accepted.
+/// * [stackChildren] — Extra widgets layered on top of the camera preview.
+/// * [toolBar] — Toolbar config. Pass `null` to hide the toolbar.
+/// * [scannerViewConfig] — Full manual control over the overlay shape,
+///   scan window, and allowed barcode formats.
+/// * [allowDuplicates] — Accept the same value more than once. Defaults
+///   to `true`.
+/// * [detectionTimeoutMs] — Minimum ms between decode callbacks. Defaults
+///   to `250`.
+/// * [sameItemCooldownMs] — Minimum ms before the same barcode can scan
+///   again. Defaults to `1500`.
+/// * [enableSoundAndVibration] — Haptic and audio feedback. Defaults to `true`.
+/// * [onScanRejected] — Fires when a scan is rejected due to
+///   [allowDuplicates] being `false`.
+/// * [useDarkModeButtonTheme] — Dark button backgrounds. Defaults to `true`.
+/// * [lensType] — Physical camera lens. Defaults to [ScannerLensType.any].
+///   See [ScannerLensType] for hardware fragmentation warnings.
+/// * [initialZoom] — Initial zoom scale (0.0 – 1.0). iOS, macOS, and
+///   Android only. Defaults to `null`.
+///
+/// ### Example
 /// ```dart
 /// await scanCustomStream(
 ///   context,
@@ -310,6 +526,9 @@ Future<List<String>?> scanQrCodeBatch(
 ///   },
 /// );
 /// ```
+///
+/// ### Errors
+/// Camera exceptions are caught internally and logged via [debugPrint].
 Future<void> scanCustomStream(
   BuildContext context, {
   required void Function(String) onCameraScan,
@@ -349,13 +568,38 @@ Future<void> scanCustomStream(
   }
 }
 
-/// Opens the scanner in **Stream** mode optimized for horizontal Barcodes.
+/// Opens the scanner in **stream** mode optimized for **horizontal 1D barcodes**.
 ///
-/// Streams real-time data to the [onCameraScan] callback as each item is
-/// successfully scanned. The `Future<void>` completes when the user closes
-/// the scanner screen.
+/// Combines the real-time streaming behaviour of [scanCustomStream] with
+/// the barcode-optimised overlay and format filtering of [scanBarcode].
+/// Each accepted barcode fires the [onCameraScan] callback immediately.
 ///
-/// ### Example Usage
+/// ### Parameters
+///
+/// * [context] — A [BuildContext] with a valid [Navigator] ancestor.
+/// * [onCameraScan] — **Required.** Called with the raw barcode `String`
+///   on every accepted scan.
+/// * [stackChildren] — Extra widgets layered on top of the camera preview.
+/// * [toolBar] — Toolbar config. Defaults to a [BatchToolBar].
+/// * [allowDuplicates] — Accept the same value more than once. Defaults
+///   to `true`.
+/// * [detectionTimeoutMs] — Minimum ms between decode callbacks. Defaults
+///   to `250`.
+/// * [sameItemCooldownMs] — Minimum ms before the same barcode can scan
+///   again. Defaults to `1500`.
+/// * [enableSoundAndVibration] — Haptic and audio feedback. Defaults to `true`.
+/// * [onScanRejected] — Fires on rejected duplicates.
+/// * [overlayStyle] — Visual overlay customization. See [ScannerOverlayStyle].
+/// * [offsetFromCenter] — Scan window position nudge.
+/// * [allowedFormats] — Restricts detection. Intersected with the built-in
+///   1D format set. An empty list (default) uses the full 1D set.
+/// * [useDarkModeButtonTheme] — Dark button backgrounds. Defaults to `true`.
+/// * [lensType] — Physical camera lens. Defaults to [ScannerLensType.any].
+///   See [ScannerLensType] for hardware fragmentation warnings.
+/// * [initialZoom] — Initial zoom scale (0.0 – 1.0). iOS, macOS, and
+///   Android only. Defaults to `null`.
+///
+/// ### Example
 /// ```dart
 /// await scanBarcodeStream(
 ///   context,
@@ -400,18 +644,41 @@ Future<void> scanBarcodeStream(
   initialZoom: initialZoom,
 );
 
-/// Opens the scanner in **Stream** mode optimized for QR Codes.
+/// Opens the scanner in **stream** mode optimized for **QR codes**.
 ///
-/// Streams real-time data to the [onCameraScan] callback as each item is
-/// successfully scanned. The `Future<void>` completes when the user closes
-/// the scanner screen.
+/// Combines the real-time streaming behaviour of [scanCustomStream] with
+/// the QR-optimised square overlay and format lock of [scanQrCode].
+/// Detection is restricted to [BarcodeFormat.qrCode].
 ///
-/// ### Example Usage
+/// ### Parameters
+///
+/// * [context] — A [BuildContext] with a valid [Navigator] ancestor.
+/// * [onCameraScan] — **Required.** Called with the raw QR `String` on
+///   every accepted scan.
+/// * [stackChildren] — Extra widgets layered on top of the camera preview.
+/// * [toolBar] — Toolbar config. Defaults to a [BatchToolBar].
+/// * [allowDuplicates] — Accept the same QR value more than once. Defaults
+///   to `true`.
+/// * [detectionTimeoutMs] — Minimum ms between decode callbacks. Defaults
+///   to `250`.
+/// * [sameItemCooldownMs] — Minimum ms before the same QR can scan again.
+///   Defaults to `1500`.
+/// * [enableSoundAndVibration] — Haptic and audio feedback. Defaults to `true`.
+/// * [onScanRejected] — Fires on rejected duplicates.
+/// * [overlayStyle] — Visual overlay customization. See [ScannerOverlayStyle].
+/// * [offsetFromCenter] — Scan window position nudge.
+/// * [useDarkModeButtonTheme] — Dark button backgrounds. Defaults to `true`.
+/// * [lensType] — Physical camera lens. Defaults to [ScannerLensType.any].
+///   See [ScannerLensType] for hardware fragmentation warnings.
+/// * [initialZoom] — Initial zoom scale (0.0 – 1.0). iOS, macOS, and
+///   Android only. Defaults to `null`.
+///
+/// ### Example
 /// ```dart
 /// await scanQrCodeStream(
 ///   context,
 ///   onCameraScan: (code) {
-///     print('Scanned: $code');
+///     print('Scanned QR: $code');
 ///   },
 /// );
 /// ```
@@ -449,29 +716,65 @@ Future<void> scanQrCodeStream(
   initialZoom: initialZoom,
 );
 
-/// Launches the Point of Sale (POS) Barcode Scanner.
+/// Launches the **Point of Sale (POS) Barcode Scanner**.
 ///
-///  * The [onScan] callback is triggered every time a barcode is successfully
-///    scanned and its quantity is confirmed in the POS interface.
+/// Pushes a full-screen [PosBarcodeScannerScreen] optimised for retail/warehouse
+/// workflows. The screen includes:
 ///
-///  * [allowedFormats] limits the scanner to specific barcode types.
+/// * A **barcode-optimised overlay** with a wide, landscape-oriented scan window.
+/// * **Quantity control buttons** (+ / −) positioned below the scan window so
+///   the cashier can set a quantity *before* scanning.
+/// * A **reactive badge** in the toolbar showing the total scanned items,
+///   tappable to reveal a bottom-sheet list of all scans.
+/// * A **"ghost pulse"** success animation that flashes the screen on each
+///   accepted scan.
 ///
-///  * [detectionTimeoutMs] specifies the delay between barcode detection attempts.
+/// The [onScan] callback fires each time a barcode is successfully scanned,
+/// passing both the raw barcode `String` and the current quantity `int`.
+/// After each scan the quantity resets to `1`.
 ///
-///  * [sameItemCooldownMs] sets the minimum time before the identical barcode can be scanned again.
-/// * [enableSoundAndVibration] controls whether haptic and audio feedback are triggered on success.
-/// * [offsetFromCenter] adjusts the physical center of the scanning window.
-/// * [overlayStyle] provides visual customization for the camera overlay UI.
+/// ### Parameters
 ///
-/// ### Example Usage
+/// * [context] — A [BuildContext] with a valid [Navigator] ancestor.
+/// * [onScan] — **Required.** Called with `(String barcode, int quantity)`
+///   on every accepted scan.
+/// * [allowedFormats] — Restricts detection to specific [BarcodeFormat]s.
+///   Empty list (default) accepts the standard 1D set.
+/// * [detectionTimeoutMs] — Minimum ms between decode callbacks. Defaults
+///   to `250`.
+/// * [sameItemCooldownMs] — Minimum ms before the same barcode can scan
+///   again. Defaults to `1500`.
+/// * [enableSoundAndVibration] — Haptic and audio feedback. Defaults to `true`.
+/// * [offsetFromCenter] — Vertical/horizontal nudge for the scan window.
+///   Defaults to `Offset(0, -180)` (raised above center to leave room for
+///   the quantity buttons below).
+/// * [overlayStyle] — Visual overlay customization. See [ScannerOverlayStyle].
+/// * [useDarkModeButtonTheme] — Dark button backgrounds. Defaults to `true`.
+/// * [qtyButtonsBottomPadding] — Bottom padding for the quantity buttons.
+///   Defaults to `230`. **Asserts** that the value is greater than `0`.
+/// * [closeButtonLabel] — Custom label for the close button. Defaults to
+///   `'Close Camera'`.
+/// * [successPulseColor] — The color of the full-screen ghost pulse on a
+///   successful scan. Defaults to [Colors.cyanAccent].
+/// * [lensType] — Physical camera lens. Defaults to [ScannerLensType.any].
+///   See [ScannerLensType] for hardware fragmentation warnings.
+/// * [initialZoom] — Initial zoom scale (0.0 – 1.0). iOS, macOS, and
+///   Android only. Defaults to `null`.
+///
+/// ### Example
 /// ```dart
 /// showPosBarcodeScanner(
 ///   context,
 ///   onScan: (barcode, quantity) {
-///     print('Added $quantity of $barcode to cart');
+///     print('Added $quantity × $barcode to cart');
 ///   },
+///   allowedFormats: [BarcodeFormat.ean13, BarcodeFormat.upcA],
+///   successPulseColor: Colors.greenAccent,
 /// );
 /// ```
+///
+/// ### Errors
+/// Camera exceptions are caught internally and logged via [debugPrint].
 void showPosBarcodeScanner(
   BuildContext context, {
   required void Function(String barcode, int quantity) onScan,

@@ -12,22 +12,145 @@ import 'barcode_scanner_controller.dart';
 const assetMessage =
     'BarcodeScannerView: maxWidth must be between 200.0 and 600.0 to ensure scanning performance.';
 
+/// An embeddable, inline barcode scanner widget that can be placed anywhere
+/// in the widget tree — forms, detail pages, inventory screens, etc.
+///
+/// Unlike the full-screen [ScannerScreen], this widget renders as a compact,
+/// self-contained camera window with an animated "window blind" open/close
+/// transition. It manages its own camera lifecycle, idle timeout, and
+/// same-item cooldown logic.
+///
+/// ### Architecture
+///
+/// The camera hardware is toggled via the built-in Start/Stop button (when
+/// [showToggleButton] is `true`) **or** programmatically through an external
+/// [BarcodeScannerController]. The controller exposes [BarcodeScannerController.start],
+/// [BarcodeScannerController.stop], and [BarcodeScannerController.toggle] for
+/// full external control, plus observable [BarcodeScannerController.isCameraActive]
+/// and [BarcodeScannerController.isTransitioning] state properties.
+///
+/// > ### ⚠️ Singleton Trap — IndexedStack & Bottom Navigation
+/// >
+/// > **Do NOT place this widget inside an [IndexedStack], [Offstage], or a
+/// > tab-based bottom navigation layout that keeps hidden tabs alive.**
+/// >
+/// > When a tab is hidden but still mounted, the native camera hardware
+/// > remains allocated. This causes:
+/// >
+/// > 1. **Battery drain** — the camera pipeline runs even when invisible.
+/// > 2. **Hardware collisions** — switching to another tab that also opens a
+/// >    camera will fail because the device sensor is already locked.
+/// > 3. **Platform crashes** — some Android OEMs throw native exceptions
+/// >    when two camera clients compete for the same sensor.
+/// >
+/// > **Solution:** Always **unmount** this widget when the tab is hidden.
+/// > Use [BarcodeScannerController.stop] before hiding, or wrap the tab
+/// > content in a builder that only mounts the scanner when the tab is
+/// > visible:
+/// >
+/// > ```dart
+/// > // ✅ SAFE — scanner is unmounted when tab is hidden
+/// > IndexedStack(
+/// >   index: _currentIndex,
+/// >   children: [
+/// >     HomeTab(),
+/// >     if (_currentIndex == 1) ScannerTab() else const SizedBox.shrink(),
+/// >   ],
+/// > )
+/// > ```
+///
+/// ### Parameters
+///
+/// * [onBarcodeScanned] — **Required.** Fires with the decoded barcode `String`
+///   each time a scan is accepted.
+/// * [maxWidth] — Maximum width constraint for the camera window. Must be
+///   between `200.0` and `600.0` (inclusive). Values outside this range will
+///   trigger an [AssertionError] in debug mode. Defaults to `400.0`.
+/// * [enableSoundAndVibration] — Whether to trigger haptic feedback and an
+///   audible beep on a successful scan. Defaults to `true`.
+/// * [sameItemCooldownMs] — Minimum milliseconds before the same barcode
+///   value is accepted again. Prevents rapid-fire duplicates when the user
+///   holds a barcode under the camera. Defaults to `1500`.
+/// * [idleTimeout] — Duration of inactivity after which the camera
+///   automatically shuts down to conserve battery. Defaults to 90 seconds.
+/// * [controller] — Optional external [BarcodeScannerController] for
+///   programmatic start/stop and state observation.
+/// * [showToggleButton] — Whether to display the built-in Start/Stop toggle
+///   button below the camera window. Defaults to `true`.
+/// * [useDarkModeButtonTheme] — When `true`, overlay buttons (close,
+///   flashlight) use dark translucent backgrounds. Defaults to `true`.
+/// * [borderRadius] — Corner radius for the camera window clip. Defaults to
+///   `BorderRadius.all(Radius.circular(12))`.
+/// * [lensType] — The physical camera lens to activate. Defaults to
+///   [ScannerLensType.any] for maximum device compatibility. See
+///   [ScannerLensType] for hardware fragmentation warnings.
+/// * [initialZoom] — The initial zoom scale for the camera (0.0 – 1.0).
+///   Only supported on iOS, macOS, and Android. Defaults to `null` (no zoom).
+///
+/// ### Example
+/// ```dart
+/// final controller = BarcodeScannerController();
+///
+/// BarcodeScannerView(
+///   controller: controller,
+///   maxWidth: 350,
+///   sameItemCooldownMs: 2000,
+///   onBarcodeScanned: (barcode) {
+///     setState(() => _lastScanned = barcode);
+///   },
+/// )
+///
+/// // Programmatically start the camera from an external button:
+/// ElevatedButton(
+///   onPressed: controller.start,
+///   child: const Text('Open Scanner'),
+/// )
+/// ```
 class BarcodeScannerView extends StatefulWidget {
+  /// Maximum width constraint for the camera window.
+  ///
+  /// **Asserts** that the value is between `200.0` and `600.0` (inclusive)
+  /// to ensure adequate scanning resolution while preventing the camera
+  /// feed from consuming excessive screen real estate.
   final double maxWidth;
+
+  /// Called with the decoded barcode `String` each time a scan is accepted.
   final void Function(String barcode) onBarcodeScanned;
+
+  /// Whether haptic vibration and audible beep are triggered on success.
   final bool enableSoundAndVibration;
+
+  /// Minimum milliseconds before the same barcode value is accepted again.
   final int sameItemCooldownMs;
+
+  /// Inactivity timeout after which the camera auto-shuts down.
   final Duration idleTimeout;
+
+  /// Optional external controller for programmatic start/stop and state
+  /// observation. See [BarcodeScannerController].
   final BarcodeScannerController? controller;
+
+  /// Whether to display the built-in Start/Stop toggle button.
   final bool showToggleButton;
+
+  /// When `true`, overlay buttons use dark translucent backgrounds.
   final bool useDarkModeButtonTheme;
+
+  /// Corner radius for the camera window clip.
   final BorderRadiusGeometry borderRadius;
+
+  /// The physical camera lens to use. Defaults to [ScannerLensType.any].
+  /// See [ScannerLensType] for hardware fragmentation warnings.
   final ScannerLensType lensType;
 
-  /// The initial zoom scale for the camera.
-  /// Defaults to no initial zoom and is only supported on iOS, MacOS and Android.
+  /// The initial zoom scale for the camera (0.0 – 1.0).
+  /// Only supported on iOS, macOS, and Android. Defaults to `null`.
   final double? initialZoom;
 
+  /// Creates a [BarcodeScannerView].
+  ///
+  /// Throws an [AssertionError] in debug mode if [maxWidth] is outside the
+  /// `200.0`–`600.0` range.
   const BarcodeScannerView({
     super.key,
     required this.onBarcodeScanned,
@@ -42,6 +165,7 @@ class BarcodeScannerView extends StatefulWidget {
     this.lensType = ScannerLensType.any,
     this.initialZoom,
   }) : assert(maxWidth >= 200.0 && maxWidth <= 600.0, assetMessage);
+
 
   @override
   State<BarcodeScannerView> createState() => _BarcodeScannerViewState();

@@ -1,9 +1,35 @@
 import 'package:flutter/material.dart';
 
-/// Visual styling configurations for the camera overlay.
+/// Visual styling configuration for the scanner's cut-out overlay region.
 ///
-/// Allows customizing the background dimming, border color, corner radius,
-/// and line thickness of the scanner's cut-out region.
+/// Controls the appearance of the semi-transparent dimming layer and the
+/// bordered cut-out window that guides the user's aim. Every property has
+/// a sensible default so the class can be instantiated with zero arguments
+/// for a clean, white-bordered look.
+///
+/// ### Parameters
+///
+/// * [opacity] — The alpha intensity of the background dimming layer,
+///   ranging from `0.0` (fully transparent) to `1.0` (fully opaque).
+///   Defaults to `0.5`.
+/// * [borderColor] — The stroke color of the cut-out border. Defaults to
+///   [Colors.white].
+/// * [opacityColor] — The base fill color of the background overlay (which
+///   is then dimmed via [opacity]). Defaults to [Colors.black].
+/// * [borderWidth] — The stroke width (in logical pixels) of the cut-out
+///   border. Defaults to `2.5`.
+/// * [borderRadius] — The corner radius (in logical pixels) of the cut-out
+///   region. Defaults to `12.0`.
+///
+/// ### Example
+/// ```dart
+/// ScannerOverlayStyle(
+///   opacity: 0.7,
+///   borderColor: Colors.blue,
+///   borderWidth: 3.0,
+///   borderRadius: 16.0,
+/// )
+/// ```
 class ScannerOverlayStyle {
   /// The opacity of the background dimming overlay (ranges from 0.0 to 1.0).
   /// Defaults to `0.5`.
@@ -26,6 +52,8 @@ class ScannerOverlayStyle {
   final double borderRadius;
 
   /// Creates a style instance for customizing the scan window overlay.
+  ///
+  /// All parameters are optional and fall back to sensible defaults.
   const ScannerOverlayStyle({
     double? opacity,
     Color? borderColor,

@@ -87,6 +87,8 @@ class ScannerScreen extends StatefulWidget {
   /// "already scanned" toasts.
   final void Function(String rejected)? onScanRejected;
 
+  /// Whether to trigger native haptic feedback and an audible scanner beep
+  /// on a successful scan.  Defaults to `true`.
   final bool enableSoundAndVibration;
 
   /// The visual theme applied to the toolbar action buttons (close, flash,

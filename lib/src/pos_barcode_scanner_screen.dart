@@ -10,11 +10,75 @@ const _defaultBorderColor = Colors.blue;
 const _defaultPulseColor = Colors.cyanAccent;
 const _defaultCloseButtonLabel = 'Close Camera';
 
-/// A full-screen barcode scanner optimized for Point of Sale (POS) environments.
+/// A full-screen barcode scanner optimized for **Point of Sale (POS)** environments.
 ///
-/// Provides a dedicated overlay containing quantity control buttons (+ / -),
-/// real-time haptic/audio success feedback, and a reactive badge that shows the
-/// list of scanned items in a modal bottom sheet.
+/// Provides a dedicated barcode scanning experience with built-in quantity
+/// controls, real-time haptic/audio feedback, and a reactive scan-history
+/// modal. Internally composes a [ScannerScreen.multiscan] with a
+/// [ScannerViewConfig.barcode] overlay, adding POS-specific UI on top.
+///
+/// ### Features
+///
+/// * **Quantity buttons** (+ / −) positioned below the scan window. The
+///   cashier sets the desired quantity *before* scanning. After each
+///   successful scan the quantity resets to `1`.
+/// * **Ghost pulse animation** — a brief full-screen colour flash
+///   (controlled by [successPulseColor]) that gives instant visual
+///   confirmation of a successful scan.
+/// * **Scan-history badge** — a toolbar button showing the running total of
+///   scanned items. Tapping it opens a [DraggableScrollableSheet] with
+///   barcode × quantity breakdowns.
+/// * **Close button** — a labelled text button anchored to the bottom safe
+///   area for quick dismissal.
+///
+/// ### Parameters
+///
+/// * [onScan] — **Required.** Called with `(String barcode, int quantity)`
+///   each time a barcode is accepted.
+/// * [allowedFormats] — Restricts detection to specific [BarcodeFormat]s.
+///   Empty list (default) accepts the standard horizontal 1D set.
+/// * [detectionTimeoutMs] — Minimum ms between decode callbacks from the
+///   native pipeline. Defaults to `250`.
+/// * [sameItemCooldownMs] — Minimum ms before the same barcode can fire
+///   [onScan] again. Defaults to `1500`.
+/// * [enableSoundAndVibration] — Haptic and audio feedback on success.
+///   Defaults to `true`.
+/// * [offsetFromCenter] — Vertical/horizontal nudge for the scan window.
+///   Defaults to `null` (uses the barcode preset default).
+/// * [overlayStyle] — Visual overlay customization (border color, dimming,
+///   corner radius). See [ScannerOverlayStyle].
+/// * [useDarkModeButtonTheme] — Dark translucent button backgrounds.
+///   Defaults to `true`.
+/// * [qtyButtonsBottomPadding] — Bottom padding in logical pixels for
+///   positioning the quantity buttons. Must be greater than `0`.
+///   Defaults to `230`.
+/// * [closeButtonLabel] — Custom label for the close button. Defaults to
+///   `'Close Camera'`.
+/// * [successPulseColor] — The ghost-pulse overlay color. Defaults to
+///   [Colors.cyanAccent].
+/// * [lensType] — Physical camera lens. Defaults to [ScannerLensType.any].
+///   See [ScannerLensType] for hardware fragmentation warnings.
+/// * [initialZoom] — Initial zoom scale (0.0 – 1.0). iOS, macOS, and
+///   Android only. Defaults to `null` (no zoom).
+///
+/// ### Example
+/// ```dart
+/// Navigator.push(
+///   context,
+///   MaterialPageRoute(
+///     builder: (_) => PosBarcodeScannerScreen(
+///       onScan: (barcode, qty) {
+///         cart.addItem(barcode, quantity: qty);
+///       },
+///       overlayStyle: const ScannerOverlayStyle(borderColor: Colors.blue),
+///       successPulseColor: Colors.greenAccent,
+///     ),
+///   ),
+/// );
+/// ```
+///
+/// ### Asserts
+/// * [qtyButtonsBottomPadding] must be greater than `0`.
 class PosBarcodeScannerScreen extends StatefulWidget {
   /// Callback triggered when a barcode is scanned, providing the raw code
   /// and the quantity selected by the user.
@@ -42,22 +106,30 @@ class PosBarcodeScannerScreen extends StatefulWidget {
   final bool useDarkModeButtonTheme;
 
   /// The bottom padding for placing the quantity adjustment buttons.
+  ///
+  /// **Asserts** that this value is greater than `0`.
   final double qtyButtonsBottomPadding;
 
   /// Optional custom label text to display on the close button.
+  /// Defaults to `'Close Camera'`.
   final String? closeButtonLabel;
 
   /// The background pulse color flashed upon a successful scan.
+  /// Defaults to [Colors.cyanAccent].
   final Color? successPulseColor;
 
   /// The physical camera lens to use. Defaults to [ScannerLensType.any].
+  /// See [ScannerLensType] for hardware fragmentation warnings.
   final ScannerLensType lensType;
 
-  /// The initial zoom scale for the camera.
-  /// Defaults to no initial zoom and is only supported on iOS, MacOS and Android.
+  /// The initial zoom scale for the camera (0.0 – 1.0).
+  /// Only supported on iOS, macOS, and Android. Defaults to `null`.
   final double? initialZoom;
 
   /// Creates a [PosBarcodeScannerScreen] instance.
+  ///
+  /// Throws an [AssertionError] in debug mode if [qtyButtonsBottomPadding]
+  /// is not greater than `0`.
   const PosBarcodeScannerScreen({
     super.key,
     required this.onScan,

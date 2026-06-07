@@ -3,8 +3,59 @@ import 'package:flutter/foundation.dart';
 /// Controller that manages and synchronizes the active/transitioning state
 /// of an embeddable [BarcodeScannerView].
 ///
-/// Exposes methods to toggle the camera hardware and properties to inspect
-/// whether the camera is booting or actively scanning.
+/// This controller follows the **attach-and-observe** pattern: the
+/// [BarcodeScannerView] calls [attach] during `initState` to bind its
+/// internal toggle function to this controller. From that point forward,
+/// external code can call [start], [stop], or [toggle] to programmatically
+/// control the camera hardware, and observe [isCameraActive] and
+/// [isTransitioning] to update UI accordingly.
+///
+/// ### UX Transition Floor
+///
+/// To prevent a jarring flash when the camera boots in under 100 ms, the
+/// controller enforces a **minimum 500 ms transition duration**. If the
+/// hardware initialises faster than this floor, the remaining time is padded
+/// with `Future.delayed` so the user always sees a smooth loading indicator.
+///
+/// ### Lifecycle
+///
+/// This controller extends [ChangeNotifier]. Call `dispose()` when the
+/// controller is no longer needed to release listeners.
+///
+/// ### Example
+/// ```dart
+/// class _ScanPageState extends State<ScanPage> {
+///   final _scannerController = BarcodeScannerController();
+///
+///   @override
+///   Widget build(BuildContext context) {
+///     return Column(
+///       children: [
+///         BarcodeScannerView(
+///           controller: _scannerController,
+///           onBarcodeScanned: (code) => print('Scanned: $code'),
+///         ),
+///         ListenableBuilder(
+///           listenable: _scannerController,
+///           builder: (_, __) => Text(
+///             _scannerController.isCameraActive ? 'Scanning…' : 'Idle',
+///           ),
+///         ),
+///         ElevatedButton(
+///           onPressed: _scannerController.toggle,
+///           child: const Text('Toggle Camera'),
+///         ),
+///       ],
+///     );
+///   }
+///
+///   @override
+///   void dispose() {
+///     _scannerController.dispose();
+///     super.dispose();
+///   }
+/// }
+/// ```
 class BarcodeScannerController extends ChangeNotifier {
   bool _isCameraActive = false;
   bool _isTransitioning = false;
