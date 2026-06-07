@@ -36,6 +36,9 @@ Future<String?> scanCustom(
   bool enableSoundAndVibration = true,
   bool useDarkModeButtonTheme = true,
   ScannerLensType lensType = ScannerLensType.any,
+  /// The initial zoom scale for the camera.
+  /// Defaults to no initial zoom and is only supported on iOS, MacOS and Android.
+  double? initialZoom,
 }) async {
   try {
     final String? scannedItem = await Navigator.of(context, rootNavigator: true)
@@ -49,6 +52,7 @@ Future<String?> scanCustom(
               enableSoundAndVibration: enableSoundAndVibration,
               useDarkModeButtonTheme: useDarkModeButtonTheme,
               lensType: lensType,
+              initialZoom: initialZoom,
             ),
           ),
         );
@@ -87,6 +91,7 @@ Future<String?> scanBarcode(
   bool enableSoundAndVibration = true,
   bool useDarkModeButtonTheme = true,
   ScannerLensType lensType = ScannerLensType.any,
+  double? initialZoom,
 }) async {
   return scanCustom(
     context,
@@ -101,6 +106,7 @@ Future<String?> scanBarcode(
     enableSoundAndVibration: enableSoundAndVibration,
     useDarkModeButtonTheme: useDarkModeButtonTheme,
     lensType: lensType,
+    initialZoom: initialZoom,
   );
 }
 
@@ -123,6 +129,7 @@ Future<String?> scanQrCode(
   bool enableSoundAndVibration = true,
   bool useDarkModeButtonTheme = true,
   ScannerLensType lensType = ScannerLensType.any,
+  double? initialZoom,
 }) async {
   return scanCustom(
     context,
@@ -136,6 +143,7 @@ Future<String?> scanQrCode(
     enableSoundAndVibration: enableSoundAndVibration,
     useDarkModeButtonTheme: useDarkModeButtonTheme,
     lensType: lensType,
+    initialZoom: initialZoom,
   );
 }
 
@@ -163,6 +171,7 @@ Future<List<String>?> scanCustomBatch(
   void Function(String)? onScanRejected,
   bool useDarkModeButtonTheme = true,
   ScannerLensType lensType = ScannerLensType.any,
+  double? initialZoom,
 }) async {
   try {
     final List<String>? scannedItems =
@@ -179,6 +188,7 @@ Future<List<String>?> scanCustomBatch(
               enableSoundAndVibration: enableSoundAndVibration,
               useDarkModeButtonTheme: useDarkModeButtonTheme,
               lensType: lensType,
+              initialZoom: initialZoom,
             ),
           ),
         );
@@ -220,6 +230,7 @@ Future<List<String>?> scanBarcodeBatch(
   List<BarcodeFormat> allowedFormats = const [],
   bool useDarkModeButtonTheme = true,
   ScannerLensType lensType = ScannerLensType.any,
+  double? initialZoom,
 }) async {
   return scanCustomBatch(
     context,
@@ -237,6 +248,7 @@ Future<List<String>?> scanBarcodeBatch(
     enableSoundAndVibration: enableSoundAndVibration,
     useDarkModeButtonTheme: useDarkModeButtonTheme,
     lensType: lensType,
+    initialZoom: initialZoom,
   );
 }
 
@@ -262,6 +274,7 @@ Future<List<String>?> scanQrCodeBatch(
   ScannerOverlayStyle? overlayStyle,
   bool useDarkModeButtonTheme = true,
   ScannerLensType lensType = ScannerLensType.any,
+  double? initialZoom,
 }) async {
   return scanCustomBatch(
     context,
@@ -278,6 +291,7 @@ Future<List<String>?> scanQrCodeBatch(
     enableSoundAndVibration: enableSoundAndVibration,
     useDarkModeButtonTheme: useDarkModeButtonTheme,
     lensType: lensType,
+    initialZoom: initialZoom,
   );
 }
 
@@ -309,6 +323,7 @@ Future<void> scanCustomStream(
   void Function(String)? onScanRejected,
   bool useDarkModeButtonTheme = true,
   ScannerLensType lensType = ScannerLensType.any,
+  double? initialZoom,
 }) async {
   try {
     await Navigator.of(context, rootNavigator: true).push(
@@ -325,6 +340,7 @@ Future<void> scanCustomStream(
           enableSoundAndVibration: enableSoundAndVibration,
           useDarkModeButtonTheme: useDarkModeButtonTheme,
           lensType: lensType,
+          initialZoom: initialZoom,
         ),
       ),
     );
@@ -363,6 +379,7 @@ Future<void> scanBarcodeStream(
   List<BarcodeFormat> allowedFormats = const [],
   bool useDarkModeButtonTheme = true,
   ScannerLensType lensType = ScannerLensType.any,
+  double? initialZoom,
 }) async => scanCustomStream(
   context,
   stackChildren: stackChildren,
@@ -380,6 +397,7 @@ Future<void> scanBarcodeStream(
   enableSoundAndVibration: enableSoundAndVibration,
   useDarkModeButtonTheme: useDarkModeButtonTheme,
   lensType: lensType,
+  initialZoom: initialZoom,
 );
 
 /// Opens the scanner in **Stream** mode optimized for QR Codes.
@@ -411,6 +429,7 @@ Future<void> scanQrCodeStream(
   Offset? offsetFromCenter,
   bool useDarkModeButtonTheme = true,
   ScannerLensType lensType = ScannerLensType.any,
+  double? initialZoom,
 }) async => scanCustomStream(
   context,
   stackChildren: stackChildren,
@@ -427,6 +446,7 @@ Future<void> scanQrCodeStream(
   enableSoundAndVibration: enableSoundAndVibration,
   useDarkModeButtonTheme: useDarkModeButtonTheme,
   lensType: lensType,
+  initialZoom: initialZoom,
 );
 
 /// Launches the Point of Sale (POS) Barcode Scanner.
@@ -466,6 +486,7 @@ void showPosBarcodeScanner(
   String? closeButtonLabel,
   Color? successPulseColor,
   ScannerLensType lensType = ScannerLensType.any,
+  double? initialZoom,
 }) async {
   try {
     await Navigator.of(context, rootNavigator: true).push(
@@ -483,6 +504,7 @@ void showPosBarcodeScanner(
           qtyButtonsBottomPadding: qtyButtonsBottomPadding,
           successPulseColor: successPulseColor,
           lensType: lensType,
+          initialZoom: initialZoom,
         ),
       ),
     );

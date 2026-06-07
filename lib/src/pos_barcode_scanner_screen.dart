@@ -53,6 +53,10 @@ class PosBarcodeScannerScreen extends StatefulWidget {
   /// The physical camera lens to use. Defaults to [ScannerLensType.any].
   final ScannerLensType lensType;
 
+  /// The initial zoom scale for the camera.
+  /// Defaults to no initial zoom and is only supported on iOS, MacOS and Android.
+  final double? initialZoom;
+
   /// Creates a [PosBarcodeScannerScreen] instance.
   const PosBarcodeScannerScreen({
     super.key,
@@ -68,6 +72,7 @@ class PosBarcodeScannerScreen extends StatefulWidget {
     this.useDarkModeButtonTheme = true,
     this.qtyButtonsBottomPadding = 230,
     this.lensType = ScannerLensType.any,
+    this.initialZoom,
   }) : assert(
          qtyButtonsBottomPadding > 0,
          'qtyButtonsBottomPadding must be greater than 0',
@@ -296,6 +301,7 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
   Widget build(BuildContext context) {
     return ScannerScreen.multiscan(
       lensType: widget.lensType,
+      initialZoom: widget.initialZoom,
       toolBar: StandardToolBar(
         showSwitchCameraButton: false,
         trailing: [_buildScanListButton()],

@@ -96,6 +96,10 @@ class ScannerScreen extends StatefulWidget {
   /// The physical camera lens to use. Defaults to [ScannerLensType.any].
   final ScannerLensType lensType;
 
+  /// The initial zoom scale for the camera.
+  /// Defaults to no initial zoom and is only supported on iOS, MacOS and Android.
+  final double? initialZoom;
+
   /// Internal flag set by the named constructors.
   final _ScanMode _mode;
 
@@ -123,6 +127,7 @@ class ScannerScreen extends StatefulWidget {
     this.enableSoundAndVibration = true,
     this.useDarkModeButtonTheme = true,
     this.lensType = ScannerLensType.any,
+    this.initialZoom,
   }) : _mode = _ScanMode.single,
        onCameraScan = null,
        allowDuplicates = false,
@@ -151,6 +156,7 @@ class ScannerScreen extends StatefulWidget {
     this.enableSoundAndVibration = true,
     this.useDarkModeButtonTheme = true,
     this.lensType = ScannerLensType.any,
+    this.initialZoom,
     void Function(String)? onScanRejected,
   }) : _mode = _ScanMode.multiscan,
        onScanRejected = !allowDuplicates ? onScanRejected : null;
@@ -276,6 +282,7 @@ class _ScannerScreenState extends State<ScannerScreen>
       detectionTimeoutMs: widget.detectionTimeoutMs,
       formats: _getEffectiveFormats(),
       lensType: widget.lensType.mobileScannerLens,
+      initialZoom: widget.initialZoom,
     );
 
     _subscribeToBarcodes();

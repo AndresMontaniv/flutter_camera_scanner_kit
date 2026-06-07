@@ -24,6 +24,10 @@ class BarcodeScannerView extends StatefulWidget {
   final BorderRadiusGeometry borderRadius;
   final ScannerLensType lensType;
 
+  /// The initial zoom scale for the camera.
+  /// Defaults to no initial zoom and is only supported on iOS, MacOS and Android.
+  final double? initialZoom;
+
   const BarcodeScannerView({
     super.key,
     required this.onBarcodeScanned,
@@ -36,6 +40,7 @@ class BarcodeScannerView extends StatefulWidget {
     this.useDarkModeButtonTheme = true,
     this.borderRadius = const BorderRadius.all(Radius.circular(12)),
     this.lensType = ScannerLensType.any,
+    this.initialZoom,
   }) : assert(maxWidth >= 200.0 && maxWidth <= 600.0, assetMessage);
 
   @override
@@ -63,8 +68,8 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView>
       facing: CameraFacing.back,
       autoStart: false,
       detectionSpeed: DetectionSpeed.normal,
-      initialZoom: 1.5,
       lensType: widget.lensType.mobileScannerLens,
+      initialZoom: widget.initialZoom,
     );
 
     WidgetsBinding.instance.addObserver(this);
