@@ -24,6 +24,9 @@ import 'scanner_lens_type.dart';
 import 'scanner_overlay.dart';
 import 'scanner_screen.dart';
 
+
+// MARK: - Single-Scan
+
 /// Opens the scanner for a **single** scan with a fully custom overlay.
 ///
 /// This is the lowest-level single-scan entry point. It pushes a full-screen
@@ -77,14 +80,31 @@ import 'scanner_screen.dart';
 /// via [debugPrint]. In the event of a camera error, the function returns
 /// `null` rather than throwing.
 Future<String?> scanCustom(
+  /// A [BuildContext] with a valid [Navigator] ancestor.
   BuildContext context, {
+
+  /// Additional widgets layered on top of the camera preview.
   List<Widget>? stackChildren,
+
+  /// Toolbar configuration. Pass `null` to hide the toolbar.
   ScannerToolBar? toolBar,
+
+  /// Called when a scan is silently rejected.
   void Function(String)? onScanRejected,
+
+  /// Full manual control over the overlay shape and allowed formats.
   ScannerViewConfig? scannerViewConfig,
+
+  /// Whether to trigger haptic feedback and an audible beep on success.
   bool enableSoundAndVibration = true,
+
+  /// When `true`, toolbar buttons use a dark translucent background.
   bool useDarkModeButtonTheme = true,
+
+  /// The physical camera lens to activate.
   ScannerLensType lensType = ScannerLensType.any,
+
+  /// The initial zoom scale for the camera (0.0 – 1.0).
   double? initialZoom,
 }) async {
   try {
@@ -155,16 +175,37 @@ Future<String?> scanCustom(
 /// );
 /// ```
 Future<String?> scanBarcode(
+  /// A [BuildContext] with a valid [Navigator] ancestor.
   BuildContext context, {
+
+  /// Additional widgets layered on top of the camera preview.
   List<Widget>? stackChildren,
+
+  /// Called when a scan is silently rejected.
   void Function(String)? onScanRejected,
+
+  /// Visual customization for the overlay border, corner radius, etc.
   ScannerOverlayStyle? overlayStyle,
+
+  /// Vertical/horizontal nudge applied to the scan window position.
   Offset? offsetFromCenter,
+
+  /// Toolbar configuration. Defaults to a [StandardToolBar].
   ScannerToolBar? toolBar = const StandardToolBar(),
+
+  /// Restricts detection to specific [BarcodeFormat]s.
   List<BarcodeFormat> allowedFormats = const [],
+
+  /// Whether to trigger haptic feedback and an audible beep on success.
   bool enableSoundAndVibration = true,
+
+  /// When `true`, toolbar buttons use a dark translucent background.
   bool useDarkModeButtonTheme = true,
+
+  /// The physical camera lens to activate.
   ScannerLensType lensType = ScannerLensType.any,
+
+  /// The initial zoom scale for the camera (0.0 – 1.0).
   double? initialZoom,
 }) async {
   return scanCustom(
@@ -216,15 +257,34 @@ Future<String?> scanBarcode(
 /// }
 /// ```
 Future<String?> scanQrCode(
+  /// A [BuildContext] with a valid [Navigator] ancestor.
   BuildContext context, {
+
+  /// Additional widgets layered on top of the camera preview.
   List<Widget>? stackChildren,
+
+  /// Called when a scan is silently rejected.
   void Function(String)? onScanRejected,
+
+  /// Visual customization for the overlay border, corner radius, etc.
   ScannerOverlayStyle? overlayStyle,
+
+  /// Vertical/horizontal nudge applied to the scan window position.
   Offset? offsetFromCenter,
+
+  /// Toolbar configuration. Defaults to a [StandardToolBar].
   ScannerToolBar? toolBar = const StandardToolBar(),
+
+  /// Whether to trigger haptic feedback and an audible beep on success.
   bool enableSoundAndVibration = true,
+
+  /// When `true`, toolbar buttons use a dark translucent background.
   bool useDarkModeButtonTheme = true,
+
+  /// The physical camera lens to activate.
   ScannerLensType lensType = ScannerLensType.any,
+
+  /// The initial zoom scale for the camera (0.0 – 1.0).
   double? initialZoom,
 }) async {
   return scanCustom(
@@ -242,6 +302,8 @@ Future<String?> scanQrCode(
     initialZoom: initialZoom,
   );
 }
+
+// MARK: - Batch
 
 /// Opens the scanner in **batch** mode with a fully custom overlay.
 ///
@@ -292,17 +354,40 @@ Future<String?> scanQrCode(
 /// All camera exceptions are caught internally and logged via [debugPrint].
 /// In the event of a camera error, the function returns `null`.
 Future<List<String>?> scanCustomBatch(
+  /// A [BuildContext] with a valid [Navigator] ancestor.
   BuildContext context, {
+
+  /// Additional widgets layered on top of the camera preview.
   List<Widget>? stackChildren,
+
+  /// Toolbar configuration. Pass `null` to hide the toolbar.
   ScannerToolBar? toolBar,
+
+  /// Full manual control over the overlay shape and allowed formats.
   ScannerViewConfig? scannerViewConfig,
+
+  /// When `false`, matching duplicate scans are silently rejected.
   bool allowDuplicates = true,
+
+  /// Minimum milliseconds between decode callbacks.
   int detectionTimeoutMs = 250,
+
+  /// Minimum milliseconds before the same barcode is accepted again.
   int sameItemCooldownMs = 1500,
+
+  /// Whether to trigger haptic feedback and an audible beep on success.
   bool enableSoundAndVibration = true,
+
+  /// Fires when a scan is rejected due to duplicate rules.
   void Function(String)? onScanRejected,
+
+  /// When `true`, toolbar buttons use a dark translucent background.
   bool useDarkModeButtonTheme = true,
+
+  /// The physical camera lens to activate.
   ScannerLensType lensType = ScannerLensType.any,
+
+  /// The initial zoom scale for the camera (0.0 – 1.0).
   double? initialZoom,
 }) async {
   try {
@@ -375,19 +460,46 @@ Future<List<String>?> scanCustomBatch(
 /// );
 /// ```
 Future<List<String>?> scanBarcodeBatch(
+  /// A [BuildContext] with a valid [Navigator] ancestor.
   BuildContext context, {
+
+  /// Additional widgets layered on top of the camera preview.
   List<Widget>? stackChildren,
+
+  /// Toolbar configuration. Defaults to a [BatchToolBar].
   ScannerToolBar? toolBar = const BatchToolBar(),
+
+  /// When `false`, matching duplicate scans are silently rejected.
   bool allowDuplicates = true,
+
+  /// Minimum milliseconds between decode callbacks.
   int detectionTimeoutMs = 250,
+
+  /// Minimum milliseconds before the same barcode is accepted again.
   int sameItemCooldownMs = 1500,
+
+  /// Whether to trigger haptic feedback and an audible beep on success.
   bool enableSoundAndVibration = true,
+
+  /// Fires when a scan is rejected due to duplicate rules.
   void Function(String)? onScanRejected,
+
+  /// Vertical/horizontal nudge applied to the scan window position.
   Offset? offsetFromCenter,
+
+  /// Visual customization for the overlay border, corner radius, etc.
   ScannerOverlayStyle? overlayStyle,
+
+  /// Restricts detection to specific [BarcodeFormat]s.
   List<BarcodeFormat> allowedFormats = const [],
+
+  /// When `true`, toolbar buttons use a dark translucent background.
   bool useDarkModeButtonTheme = true,
+
+  /// The physical camera lens to activate.
   ScannerLensType lensType = ScannerLensType.any,
+
+  /// The initial zoom scale for the camera (0.0 – 1.0).
   double? initialZoom,
 }) async {
   return scanCustomBatch(
@@ -448,18 +560,43 @@ Future<List<String>?> scanBarcodeBatch(
 /// }
 /// ```
 Future<List<String>?> scanQrCodeBatch(
+  /// A [BuildContext] with a valid [Navigator] ancestor.
   BuildContext context, {
+
+  /// Additional widgets layered on top of the camera preview.
   List<Widget>? stackChildren,
+
+  /// Toolbar configuration. Defaults to a [BatchToolBar].
   ScannerToolBar? toolBar = const BatchToolBar(),
+
+  /// When `false`, matching duplicate scans are silently rejected.
   bool allowDuplicates = true,
+
+  /// Minimum milliseconds between decode callbacks.
   int detectionTimeoutMs = 250,
+
+  /// Minimum milliseconds before the same barcode is accepted again.
   int sameItemCooldownMs = 1500,
+
+  /// Whether to trigger haptic feedback and an audible beep on success.
   bool enableSoundAndVibration = true,
+
+  /// Fires when a scan is rejected due to duplicate rules.
   void Function(String)? onScanRejected,
+
+  /// Vertical/horizontal nudge applied to the scan window position.
   Offset? offsetFromCenter,
+
+  /// Visual customization for the overlay border, corner radius, etc.
   ScannerOverlayStyle? overlayStyle,
+
+  /// When `true`, toolbar buttons use a dark translucent background.
   bool useDarkModeButtonTheme = true,
+
+  /// The physical camera lens to activate.
   ScannerLensType lensType = ScannerLensType.any,
+
+  /// The initial zoom scale for the camera (0.0 – 1.0).
   double? initialZoom,
 }) async {
   return scanCustomBatch(
@@ -480,6 +617,9 @@ Future<List<String>?> scanQrCodeBatch(
     initialZoom: initialZoom,
   );
 }
+
+
+// MARK: - Stream
 
 /// Opens the scanner in **stream** mode with a fully custom overlay.
 ///
@@ -530,18 +670,43 @@ Future<List<String>?> scanQrCodeBatch(
 /// ### Errors
 /// Camera exceptions are caught internally and logged via [debugPrint].
 Future<void> scanCustomStream(
+  /// A [BuildContext] with a valid [Navigator] ancestor.
   BuildContext context, {
+
+  /// Called with the raw barcode string on every accepted scan.
   required void Function(String) onCameraScan,
+
+  /// Additional widgets layered on top of the camera preview.
   List<Widget>? stackChildren,
+
+  /// Toolbar configuration. Pass `null` to hide the toolbar.
   ScannerToolBar? toolBar,
+
+  /// Full manual control over the overlay shape and allowed formats.
   ScannerViewConfig? scannerViewConfig,
+
+  /// When `false`, matching duplicate scans are silently rejected.
   bool allowDuplicates = true,
+
+  /// Minimum milliseconds between decode callbacks.
   int detectionTimeoutMs = 250,
+
+  /// Minimum milliseconds before the same barcode is accepted again.
   int sameItemCooldownMs = 1500,
+
+  /// Whether to trigger haptic feedback and an audible beep on success.
   bool enableSoundAndVibration = true,
+
+  /// Fires when a scan is rejected due to duplicate rules.
   void Function(String)? onScanRejected,
+
+  /// When `true`, toolbar buttons use a dark translucent background.
   bool useDarkModeButtonTheme = true,
+
+  /// The physical camera lens to activate.
   ScannerLensType lensType = ScannerLensType.any,
+
+  /// The initial zoom scale for the camera (0.0 – 1.0).
   double? initialZoom,
 }) async {
   try {
@@ -609,20 +774,49 @@ Future<void> scanCustomStream(
 /// );
 /// ```
 Future<void> scanBarcodeStream(
+  /// A [BuildContext] with a valid [Navigator] ancestor.
   BuildContext context, {
+
+  /// Called with the raw barcode string on every accepted scan.
   required void Function(String) onCameraScan,
+
+  /// Additional widgets layered on top of the camera preview.
   List<Widget>? stackChildren,
+
+  /// Toolbar configuration. Defaults to a [BatchToolBar].
   ScannerToolBar? toolBar = const BatchToolBar(),
+
+  /// When `false`, matching duplicate scans are silently rejected.
   bool allowDuplicates = true,
+
+  /// Minimum milliseconds between decode callbacks.
   int detectionTimeoutMs = 250,
+
+  /// Minimum milliseconds before the same barcode is accepted again.
   int sameItemCooldownMs = 1500,
+
+  /// Whether to trigger haptic feedback and an audible beep on success.
   bool enableSoundAndVibration = true,
+
+  /// Fires when a scan is rejected due to duplicate rules.
   void Function(String)? onScanRejected,
+
+  /// Visual customization for the overlay border, corner radius, etc.
   ScannerOverlayStyle? overlayStyle,
+
+  /// Vertical/horizontal nudge applied to the scan window position.
   Offset? offsetFromCenter,
+
+  /// Restricts detection to specific [BarcodeFormat]s.
   List<BarcodeFormat> allowedFormats = const [],
+
+  /// When `true`, toolbar buttons use a dark translucent background.
   bool useDarkModeButtonTheme = true,
+
+  /// The physical camera lens to activate.
   ScannerLensType lensType = ScannerLensType.any,
+
+  /// The initial zoom scale for the camera (0.0 – 1.0).
   double? initialZoom,
 }) async => scanCustomStream(
   context,
@@ -683,19 +877,46 @@ Future<void> scanBarcodeStream(
 /// );
 /// ```
 Future<void> scanQrCodeStream(
+  /// A [BuildContext] with a valid [Navigator] ancestor.
   BuildContext context, {
+
+  /// Called with the raw barcode string on every accepted scan.
   required void Function(String) onCameraScan,
+
+  /// Additional widgets layered on top of the camera preview.
   List<Widget>? stackChildren,
+
+  /// Toolbar configuration. Defaults to a [BatchToolBar].
   ScannerToolBar? toolBar = const BatchToolBar(),
+
+  /// When `false`, matching duplicate scans are silently rejected.
   bool allowDuplicates = true,
+
+  /// Minimum milliseconds between decode callbacks.
   int detectionTimeoutMs = 250,
+
+  /// Minimum milliseconds before the same barcode is accepted again.
   int sameItemCooldownMs = 1500,
+
+  /// Whether to trigger haptic feedback and an audible beep on success.
   bool enableSoundAndVibration = true,
+
+  /// Fires when a scan is rejected due to duplicate rules.
   void Function(String)? onScanRejected,
+
+  /// Visual customization for the overlay border, corner radius, etc.
   ScannerOverlayStyle? overlayStyle,
+
+  /// Vertical/horizontal nudge applied to the scan window position.
   Offset? offsetFromCenter,
+
+  /// When `true`, toolbar buttons use a dark translucent background.
   bool useDarkModeButtonTheme = true,
+
+  /// The physical camera lens to activate.
   ScannerLensType lensType = ScannerLensType.any,
+
+  /// The initial zoom scale for the camera (0.0 – 1.0).
   double? initialZoom,
 }) async => scanCustomStream(
   context,
@@ -776,19 +997,46 @@ Future<void> scanQrCodeStream(
 /// ### Errors
 /// Camera exceptions are caught internally and logged via [debugPrint].
 void showPosBarcodeScanner(
+  /// A [BuildContext] with a valid [Navigator] ancestor.
   BuildContext context, {
+
+  /// Called with `(String barcode, int quantity)` on every accepted scan.
   required void Function(String barcode, int quantity) onScan,
+
+  /// Restricts detection to specific [BarcodeFormat]s.
   List<BarcodeFormat> allowedFormats = const <BarcodeFormat>[],
+
+  /// Minimum milliseconds between decode callbacks.
   int detectionTimeoutMs = 250,
+
+  /// Minimum milliseconds before the same barcode is accepted again.
   int sameItemCooldownMs = 1500,
+
+  /// Whether to trigger haptic feedback and an audible beep on success.
   bool enableSoundAndVibration = true,
+
+  /// Vertical/horizontal nudge applied to the scan window position.
   Offset offsetFromCenter = const Offset(0, -180),
+
+  /// Visual customization for the overlay border, corner radius, etc.
   ScannerOverlayStyle? overlayStyle,
+
+  /// When `true`, toolbar buttons use a dark translucent background.
   bool useDarkModeButtonTheme = true,
+
+  /// Bottom padding for the quantity buttons. Must be > 0.
   double qtyButtonsBottomPadding = 230,
+
+  /// Custom label for the close button.
   String? closeButtonLabel,
+
+  /// The color of the full-screen ghost pulse on a successful scan.
   Color? successPulseColor,
+
+  /// The physical camera lens to activate.
   ScannerLensType lensType = ScannerLensType.any,
+
+  /// The initial zoom scale for the camera (0.0 – 1.0).
   double? initialZoom,
 }) async {
   try {
