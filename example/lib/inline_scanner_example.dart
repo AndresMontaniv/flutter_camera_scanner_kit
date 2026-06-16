@@ -32,7 +32,7 @@ class _InlineScannerExampleState extends State<InlineScannerExample> {
             BarcodeScannerView(
               borderRadius: BorderRadius.zero,
               controller: _scannerController,
-              showToggleButton: false,
+              showToggleButton: true,
               useDarkModeButtonTheme: widget.useDarkMode,
               onBarcodeScanned: _onScanned,
             ),

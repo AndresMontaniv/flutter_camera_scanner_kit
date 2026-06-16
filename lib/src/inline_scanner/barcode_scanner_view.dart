@@ -420,29 +420,30 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBin
 
                 if (widget.showToggleButton) ...[
                   const SizedBox(height: 12),
-                  // 2. The External Control Layer
-                  ElevatedButton.icon(
-                    style: (_isCameraActive ? _activeToggleStyle : _inactiveToggleStyle).copyWith(
-                      minimumSize: WidgetStatePropertyAll(
-                        Size(currentWidth, 48),
-                      ),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      style: _isCameraActive ? _activeToggleStyle : _inactiveToggleStyle,
+                      icon: _isTransitioning
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : _isCameraActive
+                          ? const Icon(Icons.stop)
+                          : const Icon(Icons.play_arrow),
+                      label: _isTransitioning
+                          ? const SizedBox.shrink()
+                          : _isCameraActive
+                          ? const Text('Stop Camera')
+                          : const Text('Start Camera'),
+                      onPressed: _isTransitioning ? null : _toggleCamera,
                     ),
-                    icon: _isTransitioning
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Icon(_isCameraActive ? Icons.stop : Icons.play_arrow),
-                    label: _isTransitioning
-                        ? const SizedBox.shrink()
-                        : Text(
-                            _isCameraActive ? 'Stop Camera' : 'Start Camera',
-                          ),
-                    onPressed: _isTransitioning ? null : _toggleCamera,
                   ),
                 ],
               ],
