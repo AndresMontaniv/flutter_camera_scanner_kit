@@ -3,14 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:native_haptics_and_audio/native_haptics_and_audio.dart';
 import 'package:mobile_scanner/mobile_scanner.dart'
-    show
-        BarcodeFormat,
-        MobileScannerController,
-        MobileScannerState,
-        TorchState,
-        BarcodeCapture,
-        CameraFacing,
-        DetectionSpeed;
+    show BarcodeFormat, MobileScannerController, MobileScannerState, TorchState, BarcodeCapture, CameraFacing, DetectionSpeed;
 
 import '../_constants.dart';
 import '../widgets/action_button.dart';
@@ -169,8 +162,7 @@ class ScannerScreen extends StatefulWidget {
 
 // ─── State ──────────────────────────────────────────────────────────────────
 
-class _ScannerScreenState extends State<ScannerScreen>
-    with WidgetsBindingObserver {
+class _ScannerScreenState extends State<ScannerScreen> with WidgetsBindingObserver {
   late MobileScannerController controller;
 
   // Reference to your Native Sounds and Vibration plugin
@@ -181,8 +173,7 @@ class _ScannerScreenState extends State<ScannerScreen>
   /// Single source of truth for the list of successfully scanned barcode
   /// values.  Wrapped in a [ValueNotifier] so the toolbar badge can rebuild
   /// reactively without triggering a full [setState] on the camera preview.
-  final ValueNotifier<List<String>> scannedItemsNotifier =
-      ValueNotifier<List<String>>([]);
+  final ValueNotifier<List<String>> scannedItemsNotifier = ValueNotifier<List<String>>([]);
 
   // ── Same-item cooldown state ──────────────────────────────────────────
   // These two fields implement a lightweight time-based throttle that
@@ -237,9 +228,7 @@ class _ScannerScreenState extends State<ScannerScreen>
       if (allowedFormats.isEmpty) {
         return _horizontal1DFormats;
       }
-      return allowedFormats
-          .where((f) => _horizontal1DFormats.contains(f))
-          .toList();
+      return allowedFormats.where((f) => _horizontal1DFormats.contains(f)).toList();
     }
     return allowedFormats;
   }
@@ -317,16 +306,19 @@ class _ScannerScreenState extends State<ScannerScreen>
       case AppLifecycleState.hidden:
       case AppLifecycleState.paused:
       case AppLifecycleState.inactive:
-        // Release native camera resources when not in foreground.
-        _subscription?.pause();
-        controller.stop();
+        unawaited(controller.stop());
         break;
       case AppLifecycleState.resumed:
-        // Re-acquire camera safely
-        controller.start().catchError((e) {
-          debugPrint('[camera_scanner_kit] Error resuming camera: $e');
+
+        // Add a slight delay to let the OS fully unlock the camera hardware
+        Future.delayed(const Duration(milliseconds: 250), () {
+          // Check mounted AND our safety tripwire before booting
+          if (mounted && !_isPopping) {
+            controller.start().catchError((e) {
+              debugPrint('[camera_scanner_kit] Error resuming camera: $e');
+            });
+          }
         });
-        _subscription?.resume();
         break;
     }
   }
@@ -358,9 +350,7 @@ class _ScannerScreenState extends State<ScannerScreen>
       // the entire pipeline after the first successful read.
       if (widget._mode != _ScanMode.single) {
         if (rawValue == _lastScannedCode && _lastScanTime != null) {
-          final elapsed = DateTime.now()
-              .difference(_lastScanTime!)
-              .inMilliseconds;
+          final elapsed = DateTime.now().difference(_lastScanTime!).inMilliseconds;
           if (elapsed < widget.sameItemCooldownMs) return;
         }
 
@@ -406,8 +396,7 @@ class _ScannerScreenState extends State<ScannerScreen>
         break;
 
       case _ScanMode.multiscan:
-        if (!widget.allowDuplicates &&
-            scannedItemsNotifier.value.contains(rawValue)) {
+        if (!widget.allowDuplicates && scannedItemsNotifier.value.contains(rawValue)) {
           _playRejectedFeedback();
           widget.onScanRejected?.call(rawValue);
           return;
@@ -571,8 +560,7 @@ class _ScannerScreenState extends State<ScannerScreen>
           controller: controller,
           useAppLifecycleState: false,
           overlayStyle: widget.scannerViewConfig?.overlayStyle,
-          offsetFromCenter:
-              widget.scannerViewConfig?.offsetFromCenter ?? _qrOffset,
+          offsetFromCenter: widget.scannerViewConfig?.offsetFromCenter ?? _qrOffset,
           stackChildren: stackChildren,
         );
         break;
@@ -582,8 +570,7 @@ class _ScannerScreenState extends State<ScannerScreen>
           controller: controller,
           useAppLifecycleState: false,
           overlayStyle: widget.scannerViewConfig?.overlayStyle,
-          offsetFromCenter:
-              widget.scannerViewConfig?.offsetFromCenter ?? _barcodeOffset,
+          offsetFromCenter: widget.scannerViewConfig?.offsetFromCenter ?? _barcodeOffset,
           stackChildren: stackChildren,
         );
         break;
