@@ -9,7 +9,8 @@ import '../widgets/action_button.dart';
 import '../scanner_lens_type.dart';
 import 'barcode_scanner_controller.dart';
 
-const assetMessage = 'BarcodeScannerView: maxWidth must be between 200.0 and 600.0 to ensure scanning performance.';
+const assetMessage =
+    'BarcodeScannerView: maxWidth must be between 200.0 and 600.0 to ensure scanning performance.';
 
 /// An embeddable, inline barcode scanner widget that can be placed anywhere
 /// in the widget tree — forms, detail pages, inventory screens, etc.
@@ -169,7 +170,8 @@ class BarcodeScannerView extends StatefulWidget {
   State<BarcodeScannerView> createState() => _BarcodeScannerViewState();
 }
 
-class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBindingObserver {
+class _BarcodeScannerViewState extends State<BarcodeScannerView>
+    with WidgetsBindingObserver {
   late final MobileScannerController _controller;
   StreamSubscription<BarcodeCapture>? _subscription;
   Timer? _idleTimer;
@@ -382,12 +384,15 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBin
                           left: 8,
                           right: 8,
                           child: AnimatedOpacity(
-                            opacity: (_isCameraActive && !_isTransitioning) ? 1.0 : 0.0,
+                            opacity: (_isCameraActive && !_isTransitioning)
+                                ? 1.0
+                                : 0.0,
                             duration: const Duration(milliseconds: 150),
                             child: IgnorePointer(
                               ignoring: !_isCameraActive || _isTransitioning,
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   // Close 'X' Button
                                   CircleButton(
@@ -401,10 +406,13 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBin
                                     valueListenable: _controller,
                                     builder: (context, state, child) {
                                       return CircleButton(
-                                        icon: state.torchState == TorchState.on ? Icons.flash_on : Icons.flash_off,
+                                        icon: state.torchState == TorchState.on
+                                            ? Icons.flash_on
+                                            : Icons.flash_off,
                                         size: 25,
                                         darkMode: widget.useDarkModeButtonTheme,
-                                        onPressed: () => _controller.toggleTorch(),
+                                        onPressed: () =>
+                                            _controller.toggleTorch(),
                                       );
                                     },
                                   ),
@@ -424,7 +432,9 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBin
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton.icon(
-                      style: _isCameraActive ? _activeToggleStyle : _inactiveToggleStyle,
+                      style: _isCameraActive
+                          ? _activeToggleStyle
+                          : _inactiveToggleStyle,
                       icon: _isTransitioning
                           ? const SizedBox(
                               width: 20,

@@ -24,7 +24,6 @@ import 'scanner_lens_type.dart';
 import 'widgets/scanner_overlay.dart';
 import 'scanner_screen/scanner_screen.dart';
 
-
 // MARK: - Single-Scan
 
 /// Opens the scanner for a **single** scan with a fully custom overlay.
@@ -617,7 +616,6 @@ Future<List<String>?> scanQrCodeBatch(
     initialZoom: initialZoom,
   );
 }
-
 
 // MARK: - Stream
 
