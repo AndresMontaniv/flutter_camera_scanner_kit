@@ -31,7 +31,6 @@ class _InlineScannerExampleState extends State<InlineScannerExample> {
             // 1. The Embedded Scanner View
             BarcodeScannerView(
               borderRadius: BorderRadius.zero,
-              lensType: ScannerLensType.wide,
               controller: _scannerController,
               showToggleButton: false,
               useDarkModeButtonTheme: widget.useDarkMode,

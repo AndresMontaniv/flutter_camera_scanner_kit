@@ -9,8 +9,7 @@ import '../widgets/action_button.dart';
 import '../scanner_lens_type.dart';
 import 'barcode_scanner_controller.dart';
 
-const assetMessage =
-    'BarcodeScannerView: maxWidth must be between 200.0 and 600.0 to ensure scanning performance.';
+const assetMessage = 'BarcodeScannerView: maxWidth must be between 200.0 and 600.0 to ensure scanning performance.';
 
 /// An embeddable, inline barcode scanner widget that can be placed anywhere
 /// in the widget tree — forms, detail pages, inventory screens, etc.
@@ -166,13 +165,11 @@ class BarcodeScannerView extends StatefulWidget {
     this.initialZoom,
   }) : assert(maxWidth >= 200.0 && maxWidth <= 600.0, assetMessage);
 
-
   @override
   State<BarcodeScannerView> createState() => _BarcodeScannerViewState();
 }
 
-class _BarcodeScannerViewState extends State<BarcodeScannerView>
-    with WidgetsBindingObserver {
+class _BarcodeScannerViewState extends State<BarcodeScannerView> with WidgetsBindingObserver {
   late final MobileScannerController _controller;
   StreamSubscription<BarcodeCapture>? _subscription;
   Timer? _idleTimer;
@@ -204,7 +201,7 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // If the camera isn't even active, we don't care about backgrounding.
+    // If the camera isn't active, we don't care.
     if (!_isCameraActive) return;
 
     switch (state) {
@@ -213,13 +210,17 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView>
       case AppLifecycleState.paused:
       case AppLifecycleState.inactive:
         _cancelIdleTimer();
-        _subscription?.pause();
         unawaited(_controller.stop());
+
+        // Force the UI to visually turn off when backgrounded
+        setState(() => _isCameraActive = false);
+        widget.controller?.updateState(active: false, transitioning: false);
         break;
+
       case AppLifecycleState.resumed:
-        _controller.start();
-        _subscription?.resume();
-        _resetIdleTimer();
+        // Do nothing. The user must explicitly press "Start Camera" to resume.
+        // Because we set _isCameraActive to false above, the widget
+        // will naturally stay closed when they unlock the phone.
         break;
     }
   }
@@ -381,15 +382,12 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView>
                           left: 8,
                           right: 8,
                           child: AnimatedOpacity(
-                            opacity: (_isCameraActive && !_isTransitioning)
-                                ? 1.0
-                                : 0.0,
+                            opacity: (_isCameraActive && !_isTransitioning) ? 1.0 : 0.0,
                             duration: const Duration(milliseconds: 150),
                             child: IgnorePointer(
                               ignoring: !_isCameraActive || _isTransitioning,
                               child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   // Close 'X' Button
                                   CircleButton(
@@ -403,13 +401,10 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView>
                                     valueListenable: _controller,
                                     builder: (context, state, child) {
                                       return CircleButton(
-                                        icon: state.torchState == TorchState.on
-                                            ? Icons.flash_on
-                                            : Icons.flash_off,
+                                        icon: state.torchState == TorchState.on ? Icons.flash_on : Icons.flash_off,
                                         size: 25,
                                         darkMode: widget.useDarkModeButtonTheme,
-                                        onPressed: () =>
-                                            _controller.toggleTorch(),
+                                        onPressed: () => _controller.toggleTorch(),
                                       );
                                     },
                                   ),
@@ -427,15 +422,11 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView>
                   const SizedBox(height: 12),
                   // 2. The External Control Layer
                   ElevatedButton.icon(
-                    style:
-                        (_isCameraActive
-                                ? _activeToggleStyle
-                                : _inactiveToggleStyle)
-                            .copyWith(
-                              minimumSize: WidgetStatePropertyAll(
-                                Size(currentWidth, 48),
-                              ),
-                            ),
+                    style: (_isCameraActive ? _activeToggleStyle : _inactiveToggleStyle).copyWith(
+                      minimumSize: WidgetStatePropertyAll(
+                        Size(currentWidth, 48),
+                      ),
+                    ),
                     icon: _isTransitioning
                         ? const SizedBox(
                             width: 20,
