@@ -17,6 +17,7 @@ While packages like `mobile_scanner` provide the raw camera stream, integrating 
 - **Built-in POS Mode**: A complete Point of Sale scanning interface featuring live quantity increment/decrement controls, ghost success pulses, and a reactive checkout cart summary.
 - **Low-Latency Native Feedback**: Direct integration with native haptic and audio APIs for ultra-low latency scan confirmation beeps.
 - **Collapsible Inline View**: An embeddable `BarcodeScannerView` that slides open/shut like a window blind and automatically sleeps during periods of inactivity.
+- **Theme Isolation**: Hardened primitives and scoped Material 3 modals ensure the scanner UI remains visually consistent, rendering identically whether the host application uses Material 3 or legacy Material 2 configurations.
 
 ---
 
@@ -26,7 +27,7 @@ Add `camera_scanner_kit` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  camera_scanner_kit: ^1.0.2
+  camera_scanner_kit: ^1.1.2
 ```
 
 ### Platform Setup
