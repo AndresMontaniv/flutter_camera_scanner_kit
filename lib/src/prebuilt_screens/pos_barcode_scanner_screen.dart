@@ -190,95 +190,105 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.5,
-          minChildSize: 0.3,
-          maxChildSize: 0.9,
-          expand: false,
-          builder: (context, scrollController) {
-            return ValueListenableBuilder<int>(
-              valueListenable: totalItemsNotifier,
-              builder: (context, totalLength, _) {
-                final list = scannedBarcodes.entries.toList();
-                return Column(
-                  children: [
-                    // Header
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Scanned Barcodes ($totalLength)',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.close,
-                              color: Colors.black54,
-                            ),
-                            onPressed: () => Navigator.of(ctx).pop(),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Divider(height: 1),
-
-                    // Empty State (Just in case)
-                    if (list.isEmpty)
-                      const Expanded(
-                        child: Center(
-                          child: Text(
-                            'No items scanned yet.',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.black54,
-                            ),
-                          ),
-                        ),
-                      )
-                    // Scrollable List
-                    else
-                      Expanded(
-                        child: ListView.separated(
-                          controller: scrollController,
-                          itemCount: scannedBarcodes.length,
-                          separatorBuilder: (_, _) => const Divider(height: 1),
-                          itemBuilder: (context, index) {
-                            final item = list[index];
-                            final qty = item.value;
-                            final barcode = item.key;
-                            return ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: Colors.blue.shade100,
-                                foregroundColor: Colors.blue.shade900,
-                                child: Text('$qty x'),
-                              ),
-                              title: Text(
-                                barcode,
+        return Theme(
+          data: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+          ),
+          child: DraggableScrollableSheet(
+            initialChildSize: 0.5,
+            minChildSize: 0.3,
+            maxChildSize: 0.9,
+            expand: false,
+            builder: (context, scrollController) {
+              return Material(
+                color: Colors.white,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: ValueListenableBuilder<int>(
+                  valueListenable: totalItemsNotifier,
+                  builder: (context, totalLength, _) {
+                    final list = scannedBarcodes.entries.toList();
+                    return Column(
+                      children: [
+                        // Header
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Scanned Barcodes ($totalLength)',
                                 style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
                                 ),
                               ),
-                            );
-                          },
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: Colors.black54,
+                                ),
+                                onPressed: () => Navigator.of(ctx).pop(),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                  ],
-                );
-              },
-            );
-          },
+                        const Divider(height: 1),
+
+                        // Empty State (Just in case)
+                        if (list.isEmpty)
+                          const Expanded(
+                            child: Center(
+                              child: Text(
+                                'No items scanned yet.',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.black54,
+                                ),
+                              ),
+                            ),
+                          )
+                        // Scrollable List
+                        else
+                          Expanded(
+                            child: ListView.separated(
+                              controller: scrollController,
+                              itemCount: scannedBarcodes.length,
+                              separatorBuilder: (_, _) => const Divider(height: 1),
+                              itemBuilder: (context, index) {
+                                final item = list[index];
+                                final qty = item.value;
+                                final barcode = item.key;
+                                return ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor: Colors.blue.shade100,
+                                    foregroundColor: Colors.blue.shade900,
+                                    child: Text('$qty x'),
+                                  ),
+                                  title: Text(
+                                    barcode,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+              );
+            },
+          ),
         );
       },
     );
@@ -294,23 +304,29 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
       builder: (ctx, total, _) {
         return ScaleTransition(
           scale: _buttonScale,
-          child: IconButton(
-            onPressed: _onShowScanListPressed,
-            style: actionButtonTheme.buttonStyle.copyWith(
-              fixedSize: const WidgetStatePropertyAll(Size(55, 55)),
-              padding: const WidgetStatePropertyAll(EdgeInsets.zero),
-              shape: WidgetStatePropertyAll(
-                CircleBorder(side: BorderSide(color: borderColor, width: 2.0)),
-              ),
-              textStyle: const WidgetStatePropertyAll(
-                TextStyle(
-                  fontSize: 22.0,
-                  fontWeight: FontWeight.bold,
-                  height: 1.0,
+          child: Material(
+            color: actionButtonTheme.backgroundColor,
+            clipBehavior: Clip.antiAlias,
+            shape: CircleBorder(side: BorderSide(color: borderColor, width: 2.0)),
+            child: InkWell(
+              onTap: _onShowScanListPressed,
+              customBorder: const CircleBorder(),
+              child: SizedBox(
+                width: 55,
+                height: 55,
+                child: Center(
+                  child: Text(
+                    total.toString(),
+                    style: TextStyle(
+                      color: actionButtonTheme.foregroundColor,
+                      fontSize: 22.0,
+                      fontWeight: FontWeight.bold,
+                      height: 1.0,
+                    ),
+                  ),
                 ),
               ),
             ),
-            icon: Text(total.toString()),
           ),
         );
       },
@@ -330,17 +346,26 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
         right: false,
         left: false,
         minimum: const EdgeInsets.only(bottom: 100),
-        child: TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          style: actionButtonTheme.buttonStyle.copyWith(
-            shape: WidgetStatePropertyAll(
-              RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: borderColor),
+        child: Material(
+          color: actionButtonTheme.backgroundColor,
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: borderColor),
+          ),
+          child: InkWell(
+            onTap: () => Navigator.of(context).pop(),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+              child: Text(
+                widget.closeButtonLabel ?? _defaultCloseButtonLabel,
+                style: TextStyle(
+                  color: actionButtonTheme.foregroundColor,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ),
-          child: Text(widget.closeButtonLabel ?? _defaultCloseButtonLabel),
         ),
       ),
     );

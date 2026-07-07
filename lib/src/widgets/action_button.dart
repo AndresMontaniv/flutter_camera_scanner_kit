@@ -12,29 +12,8 @@ enum ActionButtonTheme {
   ;
 
   Color get borderColor => this == ActionButtonTheme.dark ? _white85 : _grey60;
-
-  ButtonStyle get buttonStyle {
-    switch (this) {
-      case ActionButtonTheme.light:
-        return const ButtonStyle(
-          backgroundColor: WidgetStatePropertyAll(_white85),
-          iconColor: WidgetStatePropertyAll(_lightForegroundColor),
-          foregroundColor: WidgetStatePropertyAll(_lightForegroundColor),
-          shape: WidgetStatePropertyAll(
-            CircleBorder(side: BorderSide(color: _grey60)),
-          ),
-        );
-      case ActionButtonTheme.dark:
-        return const ButtonStyle(
-          backgroundColor: WidgetStatePropertyAll(_darkBgColor),
-          iconColor: WidgetStatePropertyAll(_darkForegroundColor),
-          foregroundColor: WidgetStatePropertyAll(_darkForegroundColor),
-          shape: WidgetStatePropertyAll(
-            CircleBorder(side: BorderSide(color: _white85)),
-          ),
-        );
-    }
-  }
+  Color get backgroundColor => this == ActionButtonTheme.dark ? _darkBgColor : _white85;
+  Color get foregroundColor => this == ActionButtonTheme.dark ? _darkForegroundColor : _lightForegroundColor;
 }
 
 class CircleButton extends StatelessWidget {
@@ -53,13 +32,37 @@ class CircleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final actionButtonTheme = darkMode
-        ? ActionButtonTheme.dark
-        : ActionButtonTheme.light;
-    return IconButton(
-      icon: Icon(icon, size: size),
-      style: actionButtonTheme.buttonStyle,
-      onPressed: onPressed,
+    final actionButtonTheme = darkMode ? ActionButtonTheme.dark : ActionButtonTheme.light;
+
+    final bool isDisabled = onPressed == null;
+    final double opacityFactor = isDisabled ? 0.4 : 1.0;
+
+    return Material(
+      color: actionButtonTheme.backgroundColor.withValues(
+        alpha: actionButtonTheme.backgroundColor.a * opacityFactor,
+      ),
+      clipBehavior: Clip.antiAlias,
+      shape: CircleBorder(
+        side: BorderSide(
+          color: actionButtonTheme.borderColor.withValues(
+            alpha: actionButtonTheme.borderColor.a * opacityFactor,
+          ),
+        ),
+      ),
+      child: InkWell(
+        onTap: onPressed,
+        customBorder: const CircleBorder(),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Icon(
+            icon,
+            size: size,
+            color: actionButtonTheme.foregroundColor.withValues(
+              alpha: actionButtonTheme.foregroundColor.a * opacityFactor,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

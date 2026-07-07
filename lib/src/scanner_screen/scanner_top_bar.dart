@@ -366,80 +366,90 @@ class _SmartCartButton extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.5,
-          minChildSize: 0.3,
-          maxChildSize: 0.9,
-          expand: false,
-          builder: (context, scrollController) {
-            return Column(
-              children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Scanned Items (${scannedItems.length})',
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.close, color: Colors.black54),
-                        onPressed: () => Navigator.of(ctx).pop(),
-                      ),
-                    ],
-                  ),
+        return Theme(
+          data: ThemeData(
+            useMaterial3: true,
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+          ),
+          child: DraggableScrollableSheet(
+            initialChildSize: 0.5,
+            minChildSize: 0.3,
+            maxChildSize: 0.9,
+            expand: false,
+            builder: (context, scrollController) {
+              return Material(
+                color: Colors.white,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                 ),
-                const Divider(height: 1),
-
-                // Empty State
-                if (scannedItems.isEmpty)
-                  const Expanded(
-                    child: Center(
-                      child: Text(
-                        'No items scanned yet.',
-                        style: TextStyle(fontSize: 16, color: Colors.black54),
-                      ),
-                    ),
-                  )
-                // Scrollable List
-                else
-                  Expanded(
-                    child: ListView.separated(
-                      controller: scrollController,
-                      itemCount: scannedItems.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
-                      itemBuilder: (context, index) {
-                        return ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: Colors.blue.shade100,
-                            foregroundColor: Colors.blue.shade900,
-                            child: Text('${index + 1}'),
-                          ),
-                          title: Text(
-                            scannedItems[index],
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  children: [
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Scanned Items (${scannedItems.length})',
                             style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
                             ),
                           ),
-                        );
-                      },
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.black54),
+                            onPressed: () => Navigator.of(ctx).pop(),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-              ],
-            );
-          },
+                    const Divider(height: 1),
+
+                    // Empty State
+                    if (scannedItems.isEmpty)
+                      const Expanded(
+                        child: Center(
+                          child: Text(
+                            'No items scanned yet.',
+                            style: TextStyle(fontSize: 16, color: Colors.black54),
+                          ),
+                        ),
+                      )
+                    // Scrollable List
+                    else
+                      Expanded(
+                        child: ListView.separated(
+                          controller: scrollController,
+                          itemCount: scannedItems.length,
+                          separatorBuilder: (_, _) => const Divider(height: 1),
+                          itemBuilder: (context, index) {
+                            return ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: Colors.blue.shade100,
+                                foregroundColor: Colors.blue.shade900,
+                                child: Text('${index + 1}'),
+                              ),
+                              title: Text(
+                                scannedItems[index],
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
         );
       },
     );
