@@ -30,4 +30,6 @@ migrate_working_dir/
 /build/
 /coverage/
 
+.tool-versions
+
 notes.md

@@ -170,8 +170,8 @@ class BarcodeScannerView extends StatefulWidget {
   State<BarcodeScannerView> createState() => _BarcodeScannerViewState();
 }
 
-class _BarcodeScannerViewState extends State<BarcodeScannerView>
-    with WidgetsBindingObserver {
+class _BarcodeScannerViewState extends State<BarcodeScannerView> {
+  late final AppLifecycleListener _lifecycleListener;
   late final MobileScannerController _controller;
   StreamSubscription<BarcodeCapture>? _subscription;
   Timer? _idleTimer;
@@ -195,36 +195,24 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView>
       initialZoom: widget.initialZoom,
     );
 
-    WidgetsBinding.instance.addObserver(this);
+    _lifecycleListener = AppLifecycleListener(
+      onInactive: _onAppBackgrounded,
+      onPause: _onAppBackgrounded,
+      onDetach: _onAppBackgrounded,
+      onHide: _onAppBackgrounded,
+      // Note: We intentionally omit onResume because the camera should not auto-start.
+    );
     _effects.initialize();
     _subscription = _controller.barcodes.listen(_onBarcodeDetected);
     widget.controller?.attach(_toggleCamera);
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    // If the camera isn't active, we don't care.
+  void _onAppBackgrounded() {
     if (!_isCameraActive) return;
-
-    switch (state) {
-      case AppLifecycleState.detached:
-      case AppLifecycleState.hidden:
-      case AppLifecycleState.paused:
-      case AppLifecycleState.inactive:
-        _cancelIdleTimer();
-        unawaited(_controller.stop());
-
-        // Force the UI to visually turn off when backgrounded
-        setState(() => _isCameraActive = false);
-        widget.controller?.updateState(active: false, transitioning: false);
-        break;
-
-      case AppLifecycleState.resumed:
-        // Do nothing. The user must explicitly press "Start Camera" to resume.
-        // Because we set _isCameraActive to false above, the widget
-        // will naturally stay closed when they unlock the phone.
-        break;
-    }
+    _cancelIdleTimer();
+    unawaited(_controller.stop());
+    setState(() => _isCameraActive = false);
+    widget.controller?.updateState(active: false, transitioning: false);
   }
 
   void _cancelIdleTimer() {
@@ -323,7 +311,7 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView>
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
+    _lifecycleListener.dispose();
     _cancelIdleTimer();
     _subscription?.cancel();
     _controller.dispose();
