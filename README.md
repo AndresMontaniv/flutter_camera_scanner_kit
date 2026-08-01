@@ -27,7 +27,7 @@ Add `camera_scanner_kit` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  camera_scanner_kit: ^1.1.2
+  camera_scanner_kit: ^1.1.3
 ```
 
 ### Platform Setup
@@ -116,6 +116,8 @@ class MyInlineForm extends StatelessWidget {
 ```
 
 > **💡 Programmatic Control (v1.0.2+):** In addition to `toggle()`, you can call `_controller.start()` and `_controller.stop()` for explicit, idempotent control. Both are safe to call repeatedly — calling `start()` on an already-active camera (or `stop()` on an already-stopped one) is a no-op.
+
+> **Advanced Routing (GoRouter & Nested Navigators):** When using advanced routing packages like `GoRouter`, or when embedding the scanner inside a tab-based layout (like `IndexedStack` or `BottomNavigationBar`), you must be careful not to leave the camera hardware running when the user navigates away from the active tab. Leaving the camera active in the background will drain the user's battery and can cause native hardware crashes if another screen tries to claim the camera sensor. To see a complete, production-ready example of how to orchestrate the `BarcodeScannerView` with `GoRouter` and RouteAware mixins, check out our official **[Route Aware Sandbox](https://github.com/andresmontaniv/route_aware_sandbox/blob/main/lib/camera_scanner_screen.dart)** on GitHub.
 
 ---
 
