@@ -9,8 +9,7 @@ import '../widgets/action_button.dart';
 import '../scanner_lens_type.dart';
 import 'barcode_scanner_controller.dart';
 
-const assetMessage =
-    'BarcodeScannerView: maxWidth must be between 200.0 and 600.0 to ensure scanning performance.';
+const assetMessage = 'BarcodeScannerView: maxWidth must be between 200.0 and 600.0 to ensure scanning performance.';
 
 /// An embeddable, inline barcode scanner widget that can be placed anywhere
 /// in the widget tree — forms, detail pages, inventory screens, etc.
@@ -86,6 +85,10 @@ const assetMessage =
 ///   [ScannerLensType] for hardware fragmentation warnings.
 /// * [initialZoom] — The initial zoom scale for the camera (0.0 – 1.0).
 ///   Only supported on iOS, macOS, and Android. Defaults to `null` (no zoom).
+/// * [stopCameraOnBackground] — Whether to automatically stop the camera
+///   when the app transitions to background states. Defaults to `true`.
+/// * [startCameraOnResume] — Whether to automatically restart the camera
+///   when the app returns to the foreground. Defaults to `false`.
 ///
 /// ### Example
 /// ```dart
@@ -147,6 +150,33 @@ class BarcodeScannerView extends StatefulWidget {
   /// Only supported on iOS, macOS, and Android. Defaults to `null`.
   final double? initialZoom;
 
+  /// Whether to automatically stop the camera when the app transitions to
+  /// background states (`inactive`, `paused`, `detached`, `hidden`).
+  ///
+  /// Defaults to `true`. Disabling this means the camera hardware will
+  /// remain active while the app is in the background, which **will cause
+  /// battery drain** and may trigger platform-level hardware lock errors
+  /// if another app attempts to access the camera sensor.
+  ///
+  /// **This value is read once during [State.initState] and is not
+  /// re-evaluated on subsequent rebuilds.** To change lifecycle behavior
+  /// at runtime, assign a new [Key] (e.g., `ValueKey(stopCameraOnBackground)`)
+  /// to force a full widget unmount and remount.
+  final bool stopCameraOnBackground;
+
+  /// Whether to automatically restart the camera when the app returns to
+  /// the foreground (`resumed`).
+  ///
+  /// Defaults to `false`. When enabled, the camera will restart via
+  /// [_toggleCamera] — preserving all UI transition guards — as soon as
+  /// the OS reports the app has resumed.
+  ///
+  /// **This value is read once during [State.initState] and is not
+  /// re-evaluated on subsequent rebuilds.** To change lifecycle behavior
+  /// at runtime, assign a new [Key] (e.g., `ValueKey(startCameraOnResume)`)
+  /// to force a full widget unmount and remount.
+  final bool startCameraOnResume;
+
   /// Creates a [BarcodeScannerView].
   ///
   /// Throws an [AssertionError] in debug mode if [maxWidth] is outside the
@@ -164,6 +194,8 @@ class BarcodeScannerView extends StatefulWidget {
     this.borderRadius = const BorderRadius.all(Radius.circular(12)),
     this.lensType = ScannerLensType.any,
     this.initialZoom,
+    this.stopCameraOnBackground = true,
+    this.startCameraOnResume = false,
   }) : assert(maxWidth >= 200.0 && maxWidth <= 600.0, assetMessage);
 
   @override
@@ -171,7 +203,7 @@ class BarcodeScannerView extends StatefulWidget {
 }
 
 class _BarcodeScannerViewState extends State<BarcodeScannerView> {
-  late final AppLifecycleListener _lifecycleListener;
+  AppLifecycleListener? _lifecycleListener;
   late final MobileScannerController _controller;
   StreamSubscription<BarcodeCapture>? _subscription;
   Timer? _idleTimer;
@@ -195,24 +227,32 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
       initialZoom: widget.initialZoom,
     );
 
-    _lifecycleListener = AppLifecycleListener(
-      onInactive: _onAppBackgrounded,
-      onPause: _onAppBackgrounded,
-      onDetach: _onAppBackgrounded,
-      onHide: _onAppBackgrounded,
-      // Note: We intentionally omit onResume because the camera should not auto-start.
-    );
+    if (widget.stopCameraOnBackground || widget.startCameraOnResume) {
+      _lifecycleListener = AppLifecycleListener(
+        onInactive: widget.stopCameraOnBackground ? _onAppBackgrounded : null,
+        onPause: widget.stopCameraOnBackground ? _onAppBackgrounded : null,
+        onDetach: widget.stopCameraOnBackground ? _onAppBackgrounded : null,
+        onHide: widget.stopCameraOnBackground ? _onAppBackgrounded : null,
+        onResume: widget.startCameraOnResume ? _onAppForegrounded : null,
+      );
+    }
     _effects.initialize();
     _subscription = _controller.barcodes.listen(_onBarcodeDetected);
     widget.controller?.attach(_toggleCamera);
   }
 
   void _onAppBackgrounded() {
+    debugPrint('[BarcodeScannerWidget] App backgrounded');
     if (!_isCameraActive) return;
     _cancelIdleTimer();
     unawaited(_controller.stop());
     setState(() => _isCameraActive = false);
     widget.controller?.updateState(active: false, transitioning: false);
+  }
+
+  void _onAppForegrounded() {
+    if (_isCameraActive || _isTransitioning) return;
+    _toggleCamera();
   }
 
   void _cancelIdleTimer() {
@@ -311,7 +351,7 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
 
   @override
   void dispose() {
-    _lifecycleListener.dispose();
+    _lifecycleListener?.dispose();
     _cancelIdleTimer();
     _subscription?.cancel();
     _controller.dispose();
@@ -372,15 +412,12 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
                           left: 8,
                           right: 8,
                           child: AnimatedOpacity(
-                            opacity: (_isCameraActive && !_isTransitioning)
-                                ? 1.0
-                                : 0.0,
+                            opacity: (_isCameraActive && !_isTransitioning) ? 1.0 : 0.0,
                             duration: const Duration(milliseconds: 150),
                             child: IgnorePointer(
                               ignoring: !_isCameraActive || _isTransitioning,
                               child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   // Close 'X' Button
                                   CircleButton(
@@ -394,13 +431,10 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
                                     valueListenable: _controller,
                                     builder: (context, state, child) {
                                       return CircleButton(
-                                        icon: state.torchState == TorchState.on
-                                            ? Icons.flash_on
-                                            : Icons.flash_off,
+                                        icon: state.torchState == TorchState.on ? Icons.flash_on : Icons.flash_off,
                                         size: 25,
                                         darkMode: widget.useDarkModeButtonTheme,
-                                        onPressed: () =>
-                                            _controller.toggleTorch(),
+                                        onPressed: () => _controller.toggleTorch(),
                                       );
                                     },
                                   ),
@@ -420,9 +454,7 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton.icon(
-                      style: _isCameraActive
-                          ? _activeToggleStyle
-                          : _inactiveToggleStyle,
+                      style: _isCameraActive ? _activeToggleStyle : _inactiveToggleStyle,
                       icon: _isTransitioning
                           ? const SizedBox(
                               width: 20,
