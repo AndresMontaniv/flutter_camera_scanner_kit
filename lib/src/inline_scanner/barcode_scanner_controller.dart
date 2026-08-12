@@ -59,6 +59,18 @@ import 'package:flutter/foundation.dart';
 class BarcodeScannerController extends ChangeNotifier {
   bool _isCameraActive = false;
   bool _isTransitioning = false;
+  bool _isDisposed = false;
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
+
+  @override
+  void notifyListeners() {
+    if (!_isDisposed) super.notifyListeners();
+  }
 
   /// Whether the camera sensor is actively open and capturing frames.
   bool get isCameraActive => _isCameraActive;
@@ -76,6 +88,7 @@ class BarcodeScannerController extends ChangeNotifier {
   /// Binds the hardware toggle action of the scanner view to this controller.
   /// Intended for internal use by the [BarcodeScannerView].
   void attach(Future<void> Function() toggleCallback) {
+    if (_isDisposed) return;
     _toggleCallback = toggleCallback;
   }
 
@@ -86,6 +99,8 @@ class BarcodeScannerController extends ChangeNotifier {
     required bool active,
     required bool transitioning,
   }) async {
+    if (_isDisposed) return;
+
     _isCameraActive = active;
 
     if (transitioning) {
@@ -107,6 +122,8 @@ class BarcodeScannerController extends ChangeNotifier {
         await Future.delayed(_minUxTransition - elapsed);
       }
 
+      if (_isDisposed) return;
+
       // 4. Minimum time has passed. Unlock the external button.
       _isTransitioning = false;
       notifyListeners();
@@ -118,6 +135,8 @@ class BarcodeScannerController extends ChangeNotifier {
   /// Safe to call repeatedly; double-taps are blocked internally while
   /// a transition is in progress.
   Future<void> toggle() async {
+    if (_isDisposed) return;
+
     if (_toggleCallback == null) {
       debugPrint(
         '[camera_scanner_kit] WARN: Cannot toggle. BarcodeScannerController is not attached to a BarcodeScannerView.',
@@ -141,6 +160,8 @@ class BarcodeScannerController extends ChangeNotifier {
   /// This method is idempotent. If the camera is already active, it will
   /// safely do nothing.
   Future<void> start() async {
+    if (_isDisposed) return;
+
     if (_isCameraActive) {
       debugPrint(
         '[camera_scanner_kit] INFO: Camera is already active. Ignoring start().',
@@ -157,6 +178,8 @@ class BarcodeScannerController extends ChangeNotifier {
   /// This method is idempotent. If the camera is already stopped, it will
   /// safely do nothing.
   Future<void> stop() async {
+    if (_isDisposed) return;
+
     if (!_isCameraActive) {
       debugPrint(
         '[camera_scanner_kit] INFO: Camera is already stopped. Ignoring stop().',
