@@ -1,5 +1,12 @@
-## 1.1.4
+## 1.1.5
 
+* **Fix:** Added `isTransitioning` idempotency guards to `start()` and `stop()` in `BarcodeScannerController` to prevent redundant hardware toggle attempts during active transitions.
+* **Feature:** Exposed `detach()` on `BarcodeScannerController` to safely release the hardware bindings without fully disposing the controller, useful for complex tab-switching rebuilds.
+* **Fix:** Corrected an inconsistent logging tag in `BarcodeScannerView` for background lifecycle events.
+* **Test:** Added unit tests covering the idempotency guarantees of the `BarcodeScannerController`.
+* **Documentation:** Clarified the safe programmatic pop architecture in `PosBarcodeScannerScreen`.
+
+## 1.1.4
 * **Fix:** Resolved an async disposal race condition in `BarcodeScannerController` where `notifyListeners()` could fire after `dispose()` if the parent widget was torn down during the UX transition padding delay. The controller now tracks its own disposal state and silently drops stale callbacks.
 
 ## 1.1.3

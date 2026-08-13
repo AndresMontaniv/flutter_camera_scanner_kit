@@ -92,6 +92,15 @@ class BarcodeScannerController extends ChangeNotifier {
     _toggleCallback = toggleCallback;
   }
 
+  /// Detaches this controller from its [BarcodeScannerView].
+  ///
+  /// After calling [detach], this controller will no longer receive state
+  /// updates from the view. Call [BarcodeScannerView.attach] (via a new
+  /// [BarcodeScannerView] construction) to re-attach.
+  void detach() {
+    _toggleCallback = null;
+  }
+
   /// Updates the controller's internal state.
   /// Intended for internal use by the [BarcodeScannerView] to synchronize
   /// its hardware state to external listeners.
@@ -169,6 +178,13 @@ class BarcodeScannerController extends ChangeNotifier {
       return;
     }
 
+    if (_isTransitioning) {
+      debugPrint(
+        '[camera_scanner_kit] INFO: Camera is transitioning. Ignoring start().',
+      );
+      return;
+    }
+
     debugPrint('[camera_scanner_kit] INFO: Programmatically starting camera.');
     await toggle();
   }
@@ -183,6 +199,13 @@ class BarcodeScannerController extends ChangeNotifier {
     if (!_isCameraActive) {
       debugPrint(
         '[camera_scanner_kit] INFO: Camera is already stopped. Ignoring stop().',
+      );
+      return;
+    }
+
+    if (_isTransitioning) {
+      debugPrint(
+        '[camera_scanner_kit] INFO: Camera is transitioning. Ignoring stop().',
       );
       return;
     }

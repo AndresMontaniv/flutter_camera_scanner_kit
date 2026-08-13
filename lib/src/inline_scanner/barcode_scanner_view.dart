@@ -225,7 +225,7 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
 
   void _onAppBackgrounded() {
     if (!_isCameraActive) return;
-    debugPrint('[BarcodeScannerWidget] App backgrounded- Auto Stopping camera');
+    debugPrint('[camera_scanner_kit] BarcodeScannerView: App backgrounded — auto-stopping camera.');
     _cancelIdleTimer();
     unawaited(_controller.stop());
     setState(() => _isCameraActive = false);

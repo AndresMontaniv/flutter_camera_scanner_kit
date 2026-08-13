@@ -151,12 +151,10 @@ class PosBarcodeScannerScreen extends StatefulWidget {
        );
 
   @override
-  State<PosBarcodeScannerScreen> createState() =>
-      _PosBarcodeScannerScreenState();
+  State<PosBarcodeScannerScreen> createState() => _PosBarcodeScannerScreenState();
 }
 
-class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
-    with SingleTickerProviderStateMixin {
+class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> with SingleTickerProviderStateMixin {
   final ValueNotifier<int> qtyNotifier = ValueNotifier<int>(1);
   final ValueNotifier<int> totalItemsNotifier = ValueNotifier<int>(0);
   Map<String, int> scannedBarcodes = {};
@@ -295,9 +293,7 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
   }
 
   Widget _buildScanListButton() {
-    final actionButtonTheme = widget.useDarkModeButtonTheme
-        ? ActionButtonTheme.dark
-        : ActionButtonTheme.light;
+    final actionButtonTheme = widget.useDarkModeButtonTheme ? ActionButtonTheme.dark : ActionButtonTheme.light;
     final borderColor = widget.overlayStyle?.borderColor ?? _defaultBorderColor;
     return ValueListenableBuilder<int>(
       valueListenable: totalItemsNotifier,
@@ -334,9 +330,7 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
   }
 
   Widget _buildCloseCameraTextButton() {
-    final actionButtonTheme = widget.useDarkModeButtonTheme
-        ? ActionButtonTheme.dark
-        : ActionButtonTheme.light;
+    final actionButtonTheme = widget.useDarkModeButtonTheme ? ActionButtonTheme.dark : ActionButtonTheme.light;
     final borderColor = actionButtonTheme.borderColor;
     return Align(
       alignment: Alignment.bottomCenter,
@@ -354,6 +348,10 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
             side: BorderSide(color: borderColor),
           ),
           child: InkWell(
+            // NOTE: Calling Navigator.pop() here directly is safe because this screen
+            // composes a ScannerScreen.multiscan, which is wrapped in a PopScope(canPop: false).
+            // That PopScope will intercept this programmatic pop, execute the hardware teardown
+            // safely, and then perform the actual final pop.
             onTap: () => Navigator.of(context).pop(),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
@@ -409,9 +407,7 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
       enableSoundAndVibration: widget.enableSoundAndVibration,
       useDarkModeButtonTheme: widget.useDarkModeButtonTheme,
       scannerViewConfig: ScannerViewConfig.barcode(
-        overlayStyle:
-            widget.overlayStyle ??
-            const ScannerOverlayStyle(borderColor: _defaultBorderColor),
+        overlayStyle: widget.overlayStyle ?? const ScannerOverlayStyle(borderColor: _defaultBorderColor),
         offsetFromCenter: widget.offsetFromCenter,
         allowedFormats: widget.allowedFormats,
       ),
@@ -429,9 +425,7 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
           ),
         ),
         Positioned(
-          bottom:
-              MediaQuery.of(context).padding.bottom +
-              widget.qtyButtonsBottomPadding,
+          bottom: MediaQuery.of(context).padding.bottom + widget.qtyButtonsBottomPadding,
           left: 0,
           right: 0,
           child: ValueListenableBuilder<int>(
