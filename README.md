@@ -27,7 +27,7 @@ Add `camera_scanner_kit` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  camera_scanner_kit: ^1.1.4
+  camera_scanner_kit: ^1.1.6
 ```
 
 ### Platform Setup

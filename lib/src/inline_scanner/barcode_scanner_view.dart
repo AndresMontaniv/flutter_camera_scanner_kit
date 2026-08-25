@@ -218,7 +218,7 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
         onHide: _onAppBackgrounded,
       );
     }
-    _effects.initialize();
+    unawaited(_effects.initialize());
     _subscription = _controller.barcodes.listen(_onBarcodeDetected);
     widget.controller?.attach(_toggleCamera);
   }

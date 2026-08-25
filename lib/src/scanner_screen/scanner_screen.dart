@@ -275,7 +275,7 @@ class _ScannerScreenState extends State<ScannerScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _effects.initialize();
+    unawaited(_effects.initialize());
     controller = MobileScannerController(
       autoStart: false,
       torchEnabled: false,
