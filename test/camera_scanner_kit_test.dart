@@ -1,6 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:camera_scanner_kit/camera_scanner_kit.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('ScannerOverlayStyle defaults are set correctly', () {
@@ -63,6 +62,21 @@ void main() {
       controller.dispose();
     });
     
+    test('detach() resets cached hardware state', () async {
+      final controller = BarcodeScannerController()..attach(() async {});
+
+      await controller.updateState(active: true, transitioning: false);
+      expect(controller.isCameraActive, true);
+
+      // A controller reused across a remount must not report a camera that
+      // no longer exists, or start() would no-op with "already active".
+      controller.detach();
+      expect(controller.isCameraActive, false);
+      expect(controller.isTransitioning, false);
+
+      controller.dispose();
+    });
+
     test('detach() clears toggle callback', () async {
       bool toggleCalled = false;
       final controller = BarcodeScannerController()

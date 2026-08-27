@@ -27,7 +27,7 @@ Add `camera_scanner_kit` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  camera_scanner_kit: ^1.1.6
+  camera_scanner_kit: ^1.2.0
 ```
 
 ### Platform Setup
@@ -44,6 +44,44 @@ Add the camera usage description to your `Info.plist` (usually under `ios/Runner
 <key>NSCameraUsageDescription</key>
 <string>This app requires camera access to scan barcodes.</string>
 ```
+
+---
+
+## Sound & Haptics
+
+Scan feedback is powered by [`native_haptics_and_audio`](https://pub.dev/packages/native_haptics_and_audio).
+Both scanner widgets initialize the shared audio engine on mount and preload their beeps,
+so the first scan of a session has no decode latency. Set `enableSoundAndVibration: false`
+to skip this entirely — no engine is started and no audio is loaded.
+
+### Configuring the audio engine
+
+The audio engine is a **process-wide singleton**, and its configuration is honored from the
+first successful `initialize()` call only. This package deliberately calls it with defaults
+so it never silently clamps your app's settings.
+
+If you want non-default behavior, call `initialize()` yourself in `main()` **before** any
+scanner mounts:
+
+```dart
+import 'package:native_haptics_and_audio/native_haptics_and_audio.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await NativeHapticsAndAudioRepository.instance.initialize(
+    // On iOS, beeps are silenced by the hardware ringer switch by default.
+    // POS apps usually want them audible regardless:
+    respectSilentSwitch: false,
+  );
+
+  runApp(const MyApp());
+}
+```
+
+> **⚠️ iOS ringer switch.** Without the call above, `respectSilentSwitch` defaults to `true`
+> and the scanner beep **will not play** when the device's mute switch is on. This is the
+> most common cause of "the scanner stopped beeping" reports on iOS.
 
 ---
 

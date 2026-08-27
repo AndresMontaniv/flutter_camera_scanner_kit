@@ -363,7 +363,7 @@ class _SmartCartButton extends StatelessWidget {
     BuildContext context,
     List<String> scannedItems,
   ) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

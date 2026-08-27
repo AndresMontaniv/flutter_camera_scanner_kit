@@ -6,10 +6,36 @@
   on the hot path — losing the zero-latency guarantee. Sounds are now pinned,
   exempt from cache eviction, before the first barcode can be read.
 * **Fix:** Feedback is no longer dropped when a barcode is scanned before the
-  audio engine finishes initializing; `initialize()` is now chained rather than
-  fire-and-forget.
+  audio engine finishes initializing. Playback now defers onto the warm-up
+  future instead of silently no-opping. Once the engine is up — at most once
+  per app session, since it is a process-wide singleton — dispatch is
+  unchanged and synchronous.
 * **Perf:** `enableSoundAndVibration: false` no longer initializes the native
-  audio engine or loads any audio.
+  audio engine or loads any audio. Note that this value is read once in
+  `initState`; flipping it at runtime requires a remount.
+* **Fix:** `BarcodeScannerView` now detaches its `BarcodeScannerController` in
+  `dispose()`. Previously a controller that outlived the view kept a reference
+  to the disposed `State`, so a later `start()` / `stop()` / `toggle()` threw
+  `setState() called after dispose()`. `detach()` also clears the cached
+  hardware state, so a controller reused across a remount no longer reports a
+  camera that no longer exists.
+* **Fix:** `BarcodeScannerView` now handles a swapped `controller` via
+  `didUpdateWidget`, rebinding to the new instance.
+* **Fix:** `ScannerScreen`'s same-item cooldown now uses a monotonic
+  `Stopwatch` instead of `DateTime.now()`. A wall-clock jump (NTP sync, or the
+  user changing the device time or timezone) could previously freeze or skip
+  the cooldown. This matches `BarcodeScannerView`, which was already correct.
+* **Docs:** Added a **Sound & Haptics** section to the README covering the
+  shared audio engine and how to configure it — notably `respectSilentSwitch`,
+  which must be set by the host app in `main()` if you want scanner beeps to
+  survive the iOS hardware ringer switch.
+* **Docs:** Fixed broken dartdoc references, including a stale `[ToolBarConfig]`
+  link (the class is `ScannerToolBar`) and a detached documentation block that
+  left `ScannerViewConfig` undocumented on pub.dev.
+* **Chore:** Modernized `analysis_options.yaml` — replaced the `strong-mode`
+  keys removed in Dart 2.19 with `strict-casts` / `strict-inference` /
+  `strict-raw-types`, and enabled `unawaited_futures`, `comment_references`,
+  `directives_ordering` and `avoid_dynamic_calls`.
 * **Chore:** Migrated to the 2.0.0 API — `PosSound` → `NativeSound`,
   `PosHaptic` → `HapticPattern`, `playSound()` → `play()`.
 * **Chore:** Corrected the Flutter constraint from `>=1.17.0` to `>=3.41.0`. The

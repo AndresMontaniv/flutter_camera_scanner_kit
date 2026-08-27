@@ -159,6 +159,9 @@ class CustomToolBar extends ScannerToolBar {
 
 // ─── Configuration Object: ScannerViewConfig ────────────────────────────────
 
+/// Determines the visual shape of the scan window overlay.
+enum _OverlayMode { custom, qrCode, barcode }
+
 /// **Configuration Object Pattern** — encapsulates all visual and
 /// hardware-facing scanner parameters (scan window, overlay style, and
 /// allowed barcode formats) into a single object.
@@ -181,10 +184,6 @@ class CustomToolBar extends ScannerToolBar {
 ///   subset is passed, only formats that *also* appear in that allow-list
 ///   are kept — preventing callers from accidentally enabling 2D codes
 ///   through this constructor.
-
-/// Determines the visual shape of the scan window overlay.
-enum _OverlayMode { custom, qrCode, barcode }
-
 class ScannerViewConfig {
   /// Internal overlay shape discriminator set by the chosen constructor.
   final _OverlayMode _mode;
