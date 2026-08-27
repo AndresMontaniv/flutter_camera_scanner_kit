@@ -9,7 +9,8 @@ import '../scanner_lens_type.dart';
 import '../widgets/action_button.dart';
 import 'barcode_scanner_controller.dart';
 
-const assetMessage = 'BarcodeScannerView: maxWidth must be between 200.0 and 600.0 to ensure scanning performance.';
+const assetMessage =
+    'BarcodeScannerView: maxWidth must be between 200.0 and 600.0 to ensure scanning performance.';
 
 /// An embeddable, inline barcode scanner widget that can be placed anywhere
 /// in the widget tree — forms, detail pages, inventory screens, etc.
@@ -209,7 +210,9 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
     if (!widget.enableSoundAndVibration) return;
     await _effects.initialize();
     if (!await _effects.preload(NativeSound.scannerBeep)) {
-      debugPrint('[camera_scanner_kit] BarcodeScannerView: beep failed to preload.');
+      debugPrint(
+        '[camera_scanner_kit] BarcodeScannerView: beep failed to preload.',
+      );
     }
   }
 
@@ -276,7 +279,9 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
 
   void _onAppBackgrounded() {
     if (!_isCameraActive) return;
-    debugPrint('[camera_scanner_kit] BarcodeScannerView: App backgrounded — auto-stopping camera.');
+    debugPrint(
+      '[camera_scanner_kit] BarcodeScannerView: App backgrounded — auto-stopping camera.',
+    );
     _cancelIdleTimer();
     unawaited(_controller.stop());
     setState(() => _isCameraActive = false);
@@ -451,12 +456,15 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
                           left: 8,
                           right: 8,
                           child: AnimatedOpacity(
-                            opacity: (_isCameraActive && !_isTransitioning) ? 1.0 : 0.0,
+                            opacity: (_isCameraActive && !_isTransitioning)
+                                ? 1.0
+                                : 0.0,
                             duration: const Duration(milliseconds: 150),
                             child: IgnorePointer(
                               ignoring: !_isCameraActive || _isTransitioning,
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   // Close 'X' Button
                                   CircleButton(
@@ -470,10 +478,13 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
                                     valueListenable: _controller,
                                     builder: (context, state, child) {
                                       return CircleButton(
-                                        icon: state.torchState == TorchState.on ? Icons.flash_on : Icons.flash_off,
+                                        icon: state.torchState == TorchState.on
+                                            ? Icons.flash_on
+                                            : Icons.flash_off,
                                         size: 25,
                                         darkMode: widget.useDarkModeButtonTheme,
-                                        onPressed: () => _controller.toggleTorch(),
+                                        onPressed: () =>
+                                            _controller.toggleTorch(),
                                       );
                                     },
                                   ),
@@ -493,7 +504,9 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton.icon(
-                      style: _isCameraActive ? _activeToggleStyle : _inactiveToggleStyle,
+                      style: _isCameraActive
+                          ? _activeToggleStyle
+                          : _inactiveToggleStyle,
                       icon: _isTransitioning
                           ? const SizedBox(
                               width: 20,

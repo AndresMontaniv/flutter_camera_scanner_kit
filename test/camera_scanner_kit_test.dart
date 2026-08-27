@@ -24,7 +24,7 @@ void main() {
       // Call start() - should be a no-op
       await controller.start();
       expect(toggleCalled, false);
-      
+
       controller.dispose();
     });
 
@@ -40,7 +40,7 @@ void main() {
       // Call stop() - should be a no-op
       await controller.stop();
       expect(toggleCalled, false);
-      
+
       controller.dispose();
     });
 
@@ -58,10 +58,10 @@ void main() {
       // Call toggle() - should be a no-op
       await controller.toggle();
       expect(toggleCalled, false);
-      
+
       controller.dispose();
     });
-    
+
     test('detach() resets cached hardware state', () async {
       final controller = BarcodeScannerController()..attach(() async {});
 
@@ -84,11 +84,11 @@ void main() {
           toggleCalled = true;
         })
         ..detach();
-      
+
       // Call toggle() - should be a no-op because it's detached
       await controller.toggle();
       expect(toggleCalled, false);
-      
+
       controller.dispose();
     });
   });

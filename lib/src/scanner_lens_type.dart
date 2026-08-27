@@ -24,8 +24,7 @@ enum ScannerLensType {
   normal,
 
   /// The telephoto/zoom lens.
-  zoom
-  ;
+  zoom;
 
   /// Internal mapper to the underlying mobile_scanner package enum.
   CameraLensType get mobileScannerLens {
