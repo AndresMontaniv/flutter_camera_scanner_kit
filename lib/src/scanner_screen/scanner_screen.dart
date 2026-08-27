@@ -176,6 +176,27 @@ class _ScannerScreenState extends State<ScannerScreen>
   // Reference to your Native Sounds and Vibration plugin
   final _effects = NativeHapticsAndAudioRepository.instance;
 
+  // Sounds used by this screen — preloaded at startup so the first scan
+  // does not pay a native decode on the hot path (2.0.0 behavior change).
+  static const _feedbackSounds = <Sound>[
+    NativeSound.scannerBeep,
+    NativeSound.warningBeep,
+  ];
+
+  Future<void> _warmUpEffects() async {
+    // Nothing will ever play — don't spin up the native audio engine at all.
+    if (!widget.enableSoundAndVibration) return;
+
+    await _effects.initialize();
+
+    // 2.0.0 loads no audio at initialize(). Pin the beeps so the first scan
+    // does not pay a native decode on the hot path. Pinned sounds are exempt
+    // from LRU eviction, so they stay warm for the life of the process.
+    if (!await _effects.preloadAll(_feedbackSounds)) {
+      debugPrint('$kTag Feedback audio failed to preload.');
+    }
+  }
+
   StreamSubscription<BarcodeCapture>? _subscription;
 
   /// Single source of truth for the list of successfully scanned barcode
@@ -275,7 +296,7 @@ class _ScannerScreenState extends State<ScannerScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    unawaited(_effects.initialize());
+    unawaited(_warmUpEffects());
     controller = MobileScannerController(
       autoStart: false,
       torchEnabled: false,
@@ -489,16 +510,14 @@ class _ScannerScreenState extends State<ScannerScreen>
 
   void _playSuccessFeedback() {
     if (!widget.enableSoundAndVibration) return;
-    _effects
-      ..playHaptic(PosHaptic.success)
-      ..playSound(PosSound.scannerBeep);
+    unawaited(_effects.playHaptic(HapticPattern.success));
+    unawaited(_effects.play(NativeSound.scannerBeep));
   }
 
   void _playRejectedFeedback() {
     if (!widget.enableSoundAndVibration) return;
-    _effects
-      ..playHaptic(PosHaptic.error)
-      ..playSound(PosSound.warningBeep);
+    unawaited(_effects.playHaptic(HapticPattern.error));
+    unawaited(_effects.play(NativeSound.warningBeep));
   }
 
   Widget? _buildToolBarUI() {

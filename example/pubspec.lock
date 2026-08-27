@@ -23,7 +23,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "1.1.6"
+    version: "1.2.0"
   characters:
     dependency: transitive
     description:
@@ -147,10 +147,10 @@ packages:
     dependency: transitive
     description:
       name: native_haptics_and_audio
-      sha256: ed28ce555df1ba150041cad3757d11997481e29d348e83531d40bbfba5550e75
+      sha256: "71bff255fa0a3487b5643089be56528d748bd4d85f67775bfec63e2c2d69aea7"
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.0"
+    version: "2.0.0"
   path:
     dependency: transitive
     description:
@@ -246,4 +246,4 @@ packages:
     version: "1.1.1"
 sdks:
   dart: ">=3.11.4 <4.0.0"
-  flutter: ">=3.29.0"
+  flutter: ">=3.41.0"

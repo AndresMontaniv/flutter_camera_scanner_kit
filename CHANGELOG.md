@@ -1,3 +1,21 @@
+## 1.2.0
+
+* **Dependency:** Upgraded `native_haptics_and_audio` to `^2.0.0`.
+* **Fix:** Preload the scanner beep at startup. 2.0.0 changed `initialize()` to
+  load no audio, so the first scan of a session would otherwise decode its beep
+  on the hot path — losing the zero-latency guarantee. Sounds are now pinned,
+  exempt from cache eviction, before the first barcode can be read.
+* **Fix:** Feedback is no longer dropped when a barcode is scanned before the
+  audio engine finishes initializing; `initialize()` is now chained rather than
+  fire-and-forget.
+* **Perf:** `enableSoundAndVibration: false` no longer initializes the native
+  audio engine or loads any audio.
+* **Chore:** Migrated to the 2.0.0 API — `PosSound` → `NativeSound`,
+  `PosHaptic` → `HapticPattern`, `playSound()` → `play()`.
+* **Chore:** Corrected the Flutter constraint from `>=1.17.0` to `>=3.41.0`. The
+  old bound was unenforceable — the Dart constraint already required Flutter
+  3.41 — so this excludes no one who could install 1.1.6.
+
 ## 1.1.6
 
 * **Dependency:** Upgraded `native_haptics_and_audio` to `^1.1.0` to inherit its new SwiftPM iOS architecture, Android Built-in Kotlin compatibility, and hardened `initialize()` concurrency guards.

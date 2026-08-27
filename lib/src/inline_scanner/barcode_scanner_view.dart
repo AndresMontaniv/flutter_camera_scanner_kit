@@ -199,6 +199,16 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
 
   final _effects = NativeHapticsAndAudioRepository.instance;
 
+  // Preloads only scannerBeep — this widget never plays warningBeep, so
+  // pinning it here would hold RAM for a sound it never uses.
+  Future<void> _warmUpEffects() async {
+    if (!widget.enableSoundAndVibration) return;
+    await _effects.initialize();
+    if (!await _effects.preload(NativeSound.scannerBeep)) {
+      debugPrint('[camera_scanner_kit] BarcodeScannerView: beep failed to preload.');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -218,7 +228,7 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
         onHide: _onAppBackgrounded,
       );
     }
-    unawaited(_effects.initialize());
+    unawaited(_warmUpEffects());
     _subscription = _controller.barcodes.listen(_onBarcodeDetected);
     widget.controller?.attach(_toggleCamera);
   }
@@ -315,9 +325,8 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
 
     // Trigger Native Hardware Feedback
     if (widget.enableSoundAndVibration) {
-      _effects
-        ..playHaptic(PosHaptic.success)
-        ..playSound(PosSound.scannerBeep);
+      unawaited(_effects.playHaptic(HapticPattern.success));
+      unawaited(_effects.play(NativeSound.scannerBeep));
     }
 
     _resetIdleTimer();
