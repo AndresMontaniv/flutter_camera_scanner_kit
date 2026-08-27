@@ -8,12 +8,14 @@ const _grey60 = Color(0x999E9E9E);
 
 enum ActionButtonTheme {
   light,
-  dark
-  ;
+  dark;
 
   Color get borderColor => this == ActionButtonTheme.dark ? _white85 : _grey60;
-  Color get backgroundColor => this == ActionButtonTheme.dark ? _darkBgColor : _white85;
-  Color get foregroundColor => this == ActionButtonTheme.dark ? _darkForegroundColor : _lightForegroundColor;
+  Color get backgroundColor =>
+      this == ActionButtonTheme.dark ? _darkBgColor : _white85;
+  Color get foregroundColor => this == ActionButtonTheme.dark
+      ? _darkForegroundColor
+      : _lightForegroundColor;
 }
 
 class CircleButton extends StatelessWidget {
@@ -32,7 +34,9 @@ class CircleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final actionButtonTheme = darkMode ? ActionButtonTheme.dark : ActionButtonTheme.light;
+    final actionButtonTheme = darkMode
+        ? ActionButtonTheme.dark
+        : ActionButtonTheme.light;
 
     final bool isDisabled = onPressed == null;
     final double opacityFactor = isDisabled ? 0.4 : 1.0;

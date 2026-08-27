@@ -363,7 +363,7 @@ class _SmartCartButton extends StatelessWidget {
     BuildContext context,
     List<String> scannedItems,
   ) {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -402,7 +402,10 @@ class _SmartCartButton extends StatelessWidget {
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.close, color: Colors.black54),
+                            icon: const Icon(
+                              Icons.close,
+                              color: Colors.black54,
+                            ),
                             onPressed: () => Navigator.of(ctx).pop(),
                           ),
                         ],
@@ -416,7 +419,10 @@ class _SmartCartButton extends StatelessWidget {
                         child: Center(
                           child: Text(
                             'No items scanned yet.',
-                            style: TextStyle(fontSize: 16, color: Colors.black54),
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.black54,
+                            ),
                           ),
                         ),
                       )

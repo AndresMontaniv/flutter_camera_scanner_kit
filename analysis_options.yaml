@@ -7,40 +7,50 @@
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
-  strong-mode:
-    implicit-casts: false
-    implicit-dynamic: false
+  # Replaces the old `strong-mode: implicit-casts/implicit-dynamic` keys, which
+  # were removed from the analyzer in Dart 2.19 and had been silently inert.
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
 
   errors:
-    missing_required_param: error
-    invalid_assignment: error
     todo: info
     dead_code: error
-    missing_return: error
+
+  # Only build output needs excluding — the analyzer does not walk the native
+  # platform directories of a Dart package.
+  exclude:
+    - build/**
+    - example/build/**
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
 
 linter:
   rules:
-    prefer_single_quotes: true 
-    prefer_const_constructors: true
-    prefer_const_declarations: true
-    avoid_empty_else: true
-    control_flow_in_finally: true
-    avoid_print: true
-    prefer_relative_imports: true
-    curly_braces_in_flow_control_structures: true
-    avoid_unnecessary_containers: true
-    avoid_renaming_method_parameters: true
-    prefer_final_fields: true
-    use_build_context_synchronously: true
-    prefer_collection_literals: true
-    avoid_returning_null_for_void: true
-    cascade_invocations: true 
+    # Only rules NOT already inherited from flutter_lints -> lints/recommended
+    # -> lints/core. Anything already covered upstream is omitted so this list
+    # states what the package actually adds.
+    - prefer_single_quotes
+    - prefer_const_constructors
+    - prefer_const_declarations
+    - prefer_relative_imports
+    - cascade_invocations
 
-    
+    # Makes the unawaited() calls around feedback playback load-bearing rather
+    # than stylistic, and catches the next accidentally-dropped future.
+    - unawaited_futures
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+    # This package's dartdoc leans heavily on [Symbol] links; this catches ones
+    # that broke in a rename and would render as dead text on pub.dev.
+    - comment_references
 
-# --- The correct section to add ---
+    - directives_ordering
+    - avoid_dynamic_calls
+
 formatter:
   trailing_commas: preserve

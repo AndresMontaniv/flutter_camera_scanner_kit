@@ -1,6 +1,5 @@
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:camera_scanner_kit/camera_scanner_kit.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('ScannerOverlayStyle defaults are set correctly', () {
@@ -25,7 +24,7 @@ void main() {
       // Call start() - should be a no-op
       await controller.start();
       expect(toggleCalled, false);
-      
+
       controller.dispose();
     });
 
@@ -41,7 +40,7 @@ void main() {
       // Call stop() - should be a no-op
       await controller.stop();
       expect(toggleCalled, false);
-      
+
       controller.dispose();
     });
 
@@ -59,10 +58,25 @@ void main() {
       // Call toggle() - should be a no-op
       await controller.toggle();
       expect(toggleCalled, false);
-      
+
       controller.dispose();
     });
-    
+
+    test('detach() resets cached hardware state', () async {
+      final controller = BarcodeScannerController()..attach(() async {});
+
+      await controller.updateState(active: true, transitioning: false);
+      expect(controller.isCameraActive, true);
+
+      // A controller reused across a remount must not report a camera that
+      // no longer exists, or start() would no-op with "already active".
+      controller.detach();
+      expect(controller.isCameraActive, false);
+      expect(controller.isTransitioning, false);
+
+      controller.dispose();
+    });
+
     test('detach() clears toggle callback', () async {
       bool toggleCalled = false;
       final controller = BarcodeScannerController()
@@ -70,11 +84,11 @@ void main() {
           toggleCalled = true;
         })
         ..detach();
-      
+
       // Call toggle() - should be a no-op because it's detached
       await controller.toggle();
       expect(toggleCalled, false);
-      
+
       controller.dispose();
     });
   });

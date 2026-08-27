@@ -21,8 +21,8 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '_constants.dart';
 import 'prebuilt_screens/pos_barcode_scanner_screen.dart';
 import 'scanner_lens_type.dart';
-import 'widgets/scanner_overlay.dart';
 import 'scanner_screen/scanner_screen.dart';
+import 'widgets/scanner_overlay.dart';
 
 // MARK: - Single-Scan
 
@@ -709,7 +709,7 @@ Future<void> scanCustomStream(
 }) async {
   try {
     await Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute(
+      MaterialPageRoute<void>(
         builder: (_) => ScannerScreen.multiscan(
           toolBar: toolBar,
           stackChildren: stackChildren,
@@ -1039,7 +1039,7 @@ void showPosBarcodeScanner(
 }) async {
   try {
     await Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute(
+      MaterialPageRoute<void>(
         builder: (_) => PosBarcodeScannerScreen(
           onScan: onScan,
           overlayStyle: overlayStyle,

@@ -5,16 +5,17 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import 'package:native_haptics_and_audio/native_haptics_and_audio.dart';
 
-import '../widgets/action_button.dart';
 import '../scanner_lens_type.dart';
+import '../widgets/action_button.dart';
 import 'barcode_scanner_controller.dart';
 
-const assetMessage = 'BarcodeScannerView: maxWidth must be between 200.0 and 600.0 to ensure scanning performance.';
+const assetMessage =
+    'BarcodeScannerView: maxWidth must be between 200.0 and 600.0 to ensure scanning performance.';
 
 /// An embeddable, inline barcode scanner widget that can be placed anywhere
 /// in the widget tree — forms, detail pages, inventory screens, etc.
 ///
-/// Unlike the full-screen [ScannerScreen], this widget renders as a compact,
+/// Unlike the full-screen `ScannerScreen`, this widget renders as a compact,
 /// self-contained camera window with an animated "window blind" open/close
 /// transition. It manages its own camera lifecycle, idle timeout, and
 /// same-item cooldown logic.
@@ -119,6 +120,10 @@ class BarcodeScannerView extends StatefulWidget {
   final void Function(String barcode) onBarcodeScanned;
 
   /// Whether haptic vibration and audible beep are triggered on success.
+  ///
+  /// **The audio engine is initialized once during [State.initState] based on
+  /// this value.** Flipping it from `false` to `true` on a later rebuild will
+  /// not start the engine — assign a new [Key] to force a remount instead.
   final bool enableSoundAndVibration;
 
   /// Minimum milliseconds before the same barcode value is accepted again.
@@ -199,6 +204,45 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
 
   final _effects = NativeHapticsAndAudioRepository.instance;
 
+  // Preloads only scannerBeep — this widget never plays warningBeep, so
+  // pinning it here would hold RAM for a sound it never uses.
+  Future<void> _warmUpEffects() async {
+    if (!widget.enableSoundAndVibration) return;
+    await _effects.initialize();
+    if (!await _effects.preload(NativeSound.scannerBeep)) {
+      debugPrint(
+        '[camera_scanner_kit] BarcodeScannerView: beep failed to preload.',
+      );
+    }
+  }
+
+  /// The in-flight warm-up, so feedback requested before the engine is ready
+  /// can chain onto it instead of being silently dropped.
+  Future<void>? _warmUp;
+
+  /// Fires haptic + sound, deferring until the audio engine is up.
+  ///
+  /// The engine is a process-wide singleton, so this only ever defers on the
+  /// very first scanner mounted in an app session. Once `isInitialized` is
+  /// true the platform message is dispatched synchronously, exactly as before.
+  ///
+  /// Deliberately not guarded by `mounted`: audio is a global side effect
+  /// confirming a scan the user already made. The deferral window is bounded
+  /// by `initialize()` — one platform-channel round trip.
+  void _fireFeedback(HapticPattern haptic, Sound sound) {
+    if (_effects.isInitialized) {
+      unawaited(_effects.playHaptic(haptic));
+      unawaited(_effects.play(sound));
+      return;
+    }
+    unawaited(
+      _warmUp?.whenComplete(() {
+        unawaited(_effects.playHaptic(haptic));
+        unawaited(_effects.play(sound));
+      }),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -218,14 +262,26 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
         onHide: _onAppBackgrounded,
       );
     }
-    unawaited(_effects.initialize());
+    _warmUp = _warmUpEffects();
+    unawaited(_warmUp);
     _subscription = _controller.barcodes.listen(_onBarcodeDetected);
     widget.controller?.attach(_toggleCamera);
   }
 
+  @override
+  void didUpdateWidget(covariant BarcodeScannerView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller?.detach();
+      widget.controller?.attach(_toggleCamera);
+    }
+  }
+
   void _onAppBackgrounded() {
     if (!_isCameraActive) return;
-    debugPrint('[camera_scanner_kit] BarcodeScannerView: App backgrounded — auto-stopping camera.');
+    debugPrint(
+      '[camera_scanner_kit] BarcodeScannerView: App backgrounded — auto-stopping camera.',
+    );
     _cancelIdleTimer();
     unawaited(_controller.stop());
     setState(() => _isCameraActive = false);
@@ -256,18 +312,28 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
   );
 
   Future<void> _toggleCamera() async {
+    // Defense in depth: the controller is detached in dispose(), but a stale
+    // invocation must no-op rather than setState() on a dead State.
+    if (!mounted) return;
     if (_isTransitioning) return;
     setState(() => _isTransitioning = true);
-    widget.controller?.updateState(
-      active: _isCameraActive,
-      transitioning: true,
+    // Fire-and-forget: the `transitioning: true` branch of updateState never
+    // awaits (only the `false` branch pads the 500ms UX floor), and the
+    // camera teardown below must not be gated on a listener notification.
+    unawaited(
+      widget.controller?.updateState(
+        active: _isCameraActive,
+        transitioning: true,
+      ),
     );
 
     if (_isCameraActive) {
       // Shutting down
       setState(() => _isCameraActive = false);
-      widget.controller?.updateState(active: false, transitioning: true);
-      await Future.delayed(
+      unawaited(
+        widget.controller?.updateState(active: false, transitioning: true),
+      );
+      await Future<void>.delayed(
         _animationDuration,
       ); // Wait for window blind to close
 
@@ -282,7 +348,9 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
         return; // Guard: Did user leave screen while hardware booted?
       }
       setState(() => _isCameraActive = true);
-      widget.controller?.updateState(active: true, transitioning: true);
+      unawaited(
+        widget.controller?.updateState(active: true, transitioning: true),
+      );
       _resetIdleTimer();
     }
 
@@ -315,9 +383,7 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
 
     // Trigger Native Hardware Feedback
     if (widget.enableSoundAndVibration) {
-      _effects
-        ..playHaptic(PosHaptic.success)
-        ..playSound(PosSound.scannerBeep);
+      _fireFeedback(HapticPattern.success, NativeSound.scannerBeep);
     }
 
     _resetIdleTimer();
@@ -328,6 +394,7 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
 
   @override
   void dispose() {
+    widget.controller?.detach();
     _lifecycleListener?.dispose();
     _cancelIdleTimer();
     _subscription?.cancel();
@@ -389,12 +456,15 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
                           left: 8,
                           right: 8,
                           child: AnimatedOpacity(
-                            opacity: (_isCameraActive && !_isTransitioning) ? 1.0 : 0.0,
+                            opacity: (_isCameraActive && !_isTransitioning)
+                                ? 1.0
+                                : 0.0,
                             duration: const Duration(milliseconds: 150),
                             child: IgnorePointer(
                               ignoring: !_isCameraActive || _isTransitioning,
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   // Close 'X' Button
                                   CircleButton(
@@ -408,10 +478,13 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
                                     valueListenable: _controller,
                                     builder: (context, state, child) {
                                       return CircleButton(
-                                        icon: state.torchState == TorchState.on ? Icons.flash_on : Icons.flash_off,
+                                        icon: state.torchState == TorchState.on
+                                            ? Icons.flash_on
+                                            : Icons.flash_off,
                                         size: 25,
                                         darkMode: widget.useDarkModeButtonTheme,
-                                        onPressed: () => _controller.toggleTorch(),
+                                        onPressed: () =>
+                                            _controller.toggleTorch(),
                                       );
                                     },
                                   ),
@@ -431,7 +504,9 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
                     width: double.infinity,
                     height: 48,
                     child: ElevatedButton.icon(
-                      style: _isCameraActive ? _activeToggleStyle : _inactiveToggleStyle,
+                      style: _isCameraActive
+                          ? _activeToggleStyle
+                          : _inactiveToggleStyle,
                       icon: _isTransitioning
                           ? const SizedBox(
                               width: 20,

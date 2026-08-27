@@ -114,7 +114,7 @@ class _TestMatrixScreenState extends State<TestMatrixScreen> {
                   borderColor: Colors.blue,
                 ),
               );
-              debugPrint('[ScannerExample] ✅ Single QR Result: $result');
+              debugPrint('[ScannerExample] Single QR Result: $result');
               if (!context.mounted) return;
               _showResult(context, 'Single QR: $result');
             },
@@ -132,7 +132,7 @@ class _TestMatrixScreenState extends State<TestMatrixScreen> {
                   borderColor: Colors.pink,
                 ),
               );
-              debugPrint('[ScannerExample] ✅ Single Barcode Result: $result');
+              debugPrint('[ScannerExample] Single Barcode Result: $result');
               if (!context.mounted) return;
               _showResult(context, 'Single Barcode: $result');
             },
@@ -153,7 +153,7 @@ class _TestMatrixScreenState extends State<TestMatrixScreen> {
                   ),
                 ),
               );
-              debugPrint('[ScannerExample] ✅ Single Custom Result: $result');
+              debugPrint('[ScannerExample] Single Custom Result: $result');
               if (!context.mounted) return;
               _showResult(context, 'Single Custom: $result');
             },
@@ -180,7 +180,7 @@ class _TestMatrixScreenState extends State<TestMatrixScreen> {
                 useDarkModeButtonTheme: _useDarkModeButtonTheme,
                 allowDuplicates: false,
               );
-              debugPrint('[ScannerExample] 🛒 Batch QR Result: $result');
+              debugPrint('[ScannerExample] Batch QR Result: $result');
             },
           ),
           ListTile(
@@ -193,7 +193,7 @@ class _TestMatrixScreenState extends State<TestMatrixScreen> {
                 useDarkModeButtonTheme: _useDarkModeButtonTheme,
                 allowDuplicates: true,
               );
-              debugPrint('[ScannerExample] 🛒 Batch Barcode Result: $result');
+              debugPrint('[ScannerExample] Batch Barcode Result: $result');
             },
           ),
           ListTile(
@@ -217,7 +217,7 @@ class _TestMatrixScreenState extends State<TestMatrixScreen> {
                   ),
                 ),
               );
-              debugPrint('[ScannerExample] 🛒 Batch Custom Result: $result');
+              debugPrint('[ScannerExample] Batch Custom Result: $result');
             },
           ),
 
@@ -241,7 +241,7 @@ class _TestMatrixScreenState extends State<TestMatrixScreen> {
                 context,
                 useDarkModeButtonTheme: _useDarkModeButtonTheme,
                 onCameraScan: (qrCode) {
-                  debugPrint('[ScannerExample] 🌊 STREAM DETECTED: $qrCode');
+                  debugPrint('[ScannerExample] STREAM DETECTED: $qrCode');
                   _showResult(context, 'Stream QR: $qrCode');
                 },
               );
@@ -257,7 +257,7 @@ class _TestMatrixScreenState extends State<TestMatrixScreen> {
                 useDarkModeButtonTheme: _useDarkModeButtonTheme,
                 allowDuplicates: false,
                 onCameraScan: (barcode) {
-                  debugPrint('[ScannerExample] 🌊 STREAM DETECTED: $barcode');
+                  debugPrint('[ScannerExample] STREAM DETECTED: $barcode');
                   _showResult(context, 'Stream Barcode: $barcode');
                 },
               );
@@ -271,7 +271,7 @@ class _TestMatrixScreenState extends State<TestMatrixScreen> {
                 context,
                 useDarkModeButtonTheme: _useDarkModeButtonTheme,
                 onCameraScan: (barcode) {
-                  debugPrint('[ScannerExample] 🌊 STREAM DETECTED: $barcode');
+                  debugPrint('[ScannerExample] STREAM DETECTED: $barcode');
                   _showResult(context, 'Stream Custom: $barcode');
                 },
               );

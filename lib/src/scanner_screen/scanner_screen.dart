@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:native_haptics_and_audio/native_haptics_and_audio.dart';
 import 'package:mobile_scanner/mobile_scanner.dart'
     show
         BarcodeFormat,
@@ -11,13 +10,13 @@ import 'package:mobile_scanner/mobile_scanner.dart'
         BarcodeCapture,
         CameraFacing,
         DetectionSpeed;
+import 'package:native_haptics_and_audio/native_haptics_and_audio.dart';
 
 import '../_constants.dart';
-import '../widgets/action_button.dart';
 import '../scanner_lens_type.dart';
-
-import '../widgets/scanner_view.dart';
+import '../widgets/action_button.dart';
 import '../widgets/scanner_overlay.dart';
+import '../widgets/scanner_view.dart';
 
 part 'scanner_configs.dart';
 part 'scanner_top_bar.dart';
@@ -29,7 +28,7 @@ part 'scanner_top_bar.dart';
 /// two configuration objects.
 ///
 /// ### Visual/Hardware Configuration
-/// Handled entirely by [ToolBarConfig] (toolbar buttons and callbacks)
+/// Handled entirely by [ScannerToolBar] (toolbar buttons and callbacks)
 /// and [ScannerViewConfig] (scan window shape, overlay styling, and allowed
 /// barcode formats).  This keeps every constructor's parameter list short.
 ///
@@ -44,7 +43,7 @@ part 'scanner_top_bar.dart';
 /// and stream routing (firing [onCameraScan] continuously as barcodes are scanned).
 ///
 /// ### Hardware Safety
-/// This widget implements an [_isPopping] **hardware safety tripwire**.  The
+/// This widget implements an `_isPopping` **hardware safety tripwire**.  The
 /// flag is flipped to `true` the instant a valid scan or back-button event
 /// begins the teardown sequence.  Every barcode listener checks this flag
 /// first, guaranteeing the camera sensor is fully locked and detached before
@@ -78,7 +77,7 @@ class ScannerScreen extends StatefulWidget {
   final ScannerViewConfig? scannerViewConfig;
 
   /// Real-time scan callback — the primary data channel for the stream
-  /// routing mode of the [multiscan] constructor. This is `null` in
+  /// routing mode of the [ScannerScreen.multiscan] constructor. This is `null` in
   /// single scan mode.
   final void Function(String)? onCameraScan;
 
@@ -89,6 +88,10 @@ class ScannerScreen extends StatefulWidget {
 
   /// Whether to trigger native haptic feedback and an audible scanner beep
   /// on a successful scan.  Defaults to `true`.
+  ///
+  /// **The audio engine is initialized once during [State.initState] based on
+  /// this value.** Flipping it from `false` to `true` on a later rebuild will
+  /// not start the engine — assign a new [Key] to force a remount instead.
   final bool enableSoundAndVibration;
 
   /// The visual theme applied to the toolbar action buttons (close, flash,
@@ -109,7 +112,7 @@ class ScannerScreen extends StatefulWidget {
   ///
   /// ### Flow
   /// 1. The camera starts and waits for a valid decode.
-  /// 2. On the first successful read the [_isPopping] tripwire fires,
+  /// 2. On the first successful read the `_isPopping` tripwire fires,
   ///    instantly locking the hardware to prevent ghost scans.
   /// 3. The barcode stream subscription is cancelled, and `controller.stop()`
   ///    is awaited so the native camera fully releases.
@@ -176,6 +179,31 @@ class _ScannerScreenState extends State<ScannerScreen>
   // Reference to your Native Sounds and Vibration plugin
   final _effects = NativeHapticsAndAudioRepository.instance;
 
+  // Sounds used by this screen — preloaded at startup so the first scan
+  // does not pay a native decode on the hot path (2.0.0 behavior change).
+  static const _feedbackSounds = <Sound>[
+    NativeSound.scannerBeep,
+    NativeSound.warningBeep,
+  ];
+
+  Future<void> _warmUpEffects() async {
+    // Nothing will ever play — don't spin up the native audio engine at all.
+    if (!widget.enableSoundAndVibration) return;
+
+    await _effects.initialize();
+
+    // 2.0.0 loads no audio at initialize(). Pin the beeps so the first scan
+    // does not pay a native decode on the hot path. Pinned sounds are exempt
+    // from LRU eviction, so they stay warm for the life of the process.
+    if (!await _effects.preloadAll(_feedbackSounds)) {
+      debugPrint('$kTag Feedback audio failed to preload.');
+    }
+  }
+
+  /// The in-flight warm-up, so feedback requested before the engine is ready
+  /// can chain onto it instead of being silently dropped.
+  Future<void>? _warmUp;
+
   StreamSubscription<BarcodeCapture>? _subscription;
 
   /// Single source of truth for the list of successfully scanned barcode
@@ -190,7 +218,11 @@ class _ScannerScreenState extends State<ScannerScreen>
   // while the user holds it under the camera.  Only active in multi-scan
   // modes; single-scan locks the entire pipeline on the first read.
   String? _lastScannedCode;
-  DateTime? _lastScanTime;
+
+  // Monotonic, unlike DateTime.now(): a wall-clock jump (NTP sync, the user
+  // changing the device time or timezone) must not freeze or skip the
+  // cooldown. Mirrors BarcodeScannerView.
+  final Stopwatch _cooldownWatch = Stopwatch();
 
   // ── Hardware Safety Tripwire ──────────────────────────────────────────
   // `_isPopping` is a one-shot flag that is flipped to `true` the INSTANT
@@ -275,7 +307,8 @@ class _ScannerScreenState extends State<ScannerScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    unawaited(_effects.initialize());
+    _warmUp = _warmUpEffects();
+    unawaited(_warmUp);
     controller = MobileScannerController(
       autoStart: false,
       torchEnabled: false,
@@ -325,7 +358,7 @@ class _ScannerScreenState extends State<ScannerScreen>
         Future.delayed(const Duration(milliseconds: 250), () {
           // Check mounted AND our safety tripwire before booting
           if (mounted && !_isPopping) {
-            controller.start().catchError((e) {
+            controller.start().catchError((Object e) {
               debugPrint('[camera_scanner_kit] Error resuming camera: $e');
             });
           }
@@ -341,7 +374,7 @@ class _ScannerScreenState extends State<ScannerScreen>
   /// 2. **Null / empty guard** — discard frames with no barcodes or no raw
   ///    value (e.g., a partial decode the OS couldn't resolve).
   /// 3. **Same-item cooldown** (multi-scan only) — if the same barcode
-  ///    value arrives within [sameItemCooldownMs] of its last acceptance,
+  ///    value arrives within [ScannerScreen.sameItemCooldownMs] of its last acceptance,
   ///    drop it silently. This prevents rapid-fire duplicates when the
   ///    user holds a barcode under the camera for several seconds.
   void _subscribeToBarcodes() {
@@ -360,15 +393,16 @@ class _ScannerScreenState extends State<ScannerScreen>
       // Single-scan doesn't need a cooldown because the tripwire locks
       // the entire pipeline after the first successful read.
       if (widget._mode != _ScanMode.single) {
-        if (rawValue == _lastScannedCode && _lastScanTime != null) {
-          final elapsed = DateTime.now()
-              .difference(_lastScanTime!)
-              .inMilliseconds;
-          if (elapsed < widget.sameItemCooldownMs) return;
+        if (rawValue == _lastScannedCode && _cooldownWatch.isRunning) {
+          if (_cooldownWatch.elapsedMilliseconds < widget.sameItemCooldownMs) {
+            return;
+          }
         }
 
         _lastScannedCode = rawValue;
-        _lastScanTime = DateTime.now();
+        _cooldownWatch
+          ..reset()
+          ..start();
       }
 
       _addScannedItem(rawValue);
@@ -484,21 +518,42 @@ class _ScannerScreenState extends State<ScannerScreen>
     if (didPop) return;
 
     // The user triggered a system back swipe. Intercept it and lock the hardware.
-    _popBack();
+    await _popBack();
+  }
+
+  /// Fires haptic + sound, deferring until the audio engine is up.
+  ///
+  /// The engine is a process-wide singleton, so this only ever defers on the
+  /// very first scanner mounted in an app session. Once `isInitialized` is
+  /// true the platform message is dispatched synchronously, exactly as before.
+  ///
+  /// Deliberately not guarded by `mounted`: audio is a global side effect
+  /// confirming a scan the user already made, and in single-scan mode the
+  /// screen pops within milliseconds of the beep being requested. The
+  /// deferral window is bounded by `initialize()` — one platform-channel
+  /// round trip.
+  void _fireFeedback(HapticPattern haptic, Sound sound) {
+    if (_effects.isInitialized) {
+      unawaited(_effects.playHaptic(haptic));
+      unawaited(_effects.play(sound));
+      return;
+    }
+    unawaited(
+      _warmUp?.whenComplete(() {
+        unawaited(_effects.playHaptic(haptic));
+        unawaited(_effects.play(sound));
+      }),
+    );
   }
 
   void _playSuccessFeedback() {
     if (!widget.enableSoundAndVibration) return;
-    _effects
-      ..playHaptic(PosHaptic.success)
-      ..playSound(PosSound.scannerBeep);
+    _fireFeedback(HapticPattern.success, NativeSound.scannerBeep);
   }
 
   void _playRejectedFeedback() {
     if (!widget.enableSoundAndVibration) return;
-    _effects
-      ..playHaptic(PosHaptic.error)
-      ..playSound(PosSound.warningBeep);
+    _fireFeedback(HapticPattern.error, NativeSound.warningBeep);
   }
 
   Widget? _buildToolBarUI() {

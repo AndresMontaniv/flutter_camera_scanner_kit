@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 
 /// Controller that manages and synchronizes the active/transitioning state
-/// of an embeddable [BarcodeScannerView].
+/// of an embeddable `BarcodeScannerView`.
 ///
 /// This controller follows the **attach-and-observe** pattern: the
-/// [BarcodeScannerView] calls [attach] during `initState` to bind its
+/// `BarcodeScannerView` calls [attach] during `initState` to bind its
 /// internal toggle function to this controller. From that point forward,
 /// external code can call [start], [stop], or [toggle] to programmatically
 /// control the camera hardware, and observe [isCameraActive] and
@@ -86,23 +86,35 @@ class BarcodeScannerController extends ChangeNotifier {
   final Duration _minUxTransition = const Duration(milliseconds: 500);
 
   /// Binds the hardware toggle action of the scanner view to this controller.
-  /// Intended for internal use by the [BarcodeScannerView].
+  /// Intended for internal use by the `BarcodeScannerView`.
   void attach(Future<void> Function() toggleCallback) {
     if (_isDisposed) return;
     _toggleCallback = toggleCallback;
   }
 
-  /// Detaches this controller from its [BarcodeScannerView].
+  /// Detaches this controller from its `BarcodeScannerView`.
   ///
   /// After calling [detach], this controller will no longer receive state
-  /// updates from the view. Call [BarcodeScannerView.attach] (via a new
-  /// [BarcodeScannerView] construction) to re-attach.
+  /// updates from the view. Constructing a new `BarcodeScannerView` with this
+  /// controller re-attaches it.
+  ///
+  /// Also clears the cached hardware state, so a controller reused across a
+  /// remount does not report a camera that no longer exists — otherwise
+  /// [start] would no-op with "already active" against a dead view.
+  ///
+  /// Deliberately does **not** call [notifyListeners]: this runs from the
+  /// view's `dispose()`, and notifying during widget teardown can trigger a
+  /// `setState() during build` in the parent. Listeners observe the reset
+  /// state on the next natural rebuild, which is already happening.
   void detach() {
     _toggleCallback = null;
+    _isCameraActive = false;
+    _isTransitioning = false;
+    _stopwatch.stop();
   }
 
   /// Updates the controller's internal state.
-  /// Intended for internal use by the [BarcodeScannerView] to synchronize
+  /// Intended for internal use by the `BarcodeScannerView` to synchronize
   /// its hardware state to external listeners.
   Future<void> updateState({
     required bool active,
@@ -128,7 +140,7 @@ class BarcodeScannerController extends ChangeNotifier {
 
       if (elapsed < _minUxTransition) {
         // Hardware was faster than our 400ms UX floor. Pad the remaining time.
-        await Future.delayed(_minUxTransition - elapsed);
+        await Future<void>.delayed(_minUxTransition - elapsed);
       }
 
       if (_isDisposed) return;

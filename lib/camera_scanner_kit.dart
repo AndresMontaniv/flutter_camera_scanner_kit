@@ -6,18 +6,19 @@
 /// for enterprise apps.
 library;
 
-export 'src/scanner_lens_type.dart';
 export 'src/functions.dart';
-
-// The Template Engine
-export 'src/scanner_screen/scanner_screen.dart';
-
-// Ready-to-use Screens
-export 'src/prebuilt_screens/pos_barcode_scanner_screen.dart';
-
-// Shared UI
-export 'src/widgets/scanner_overlay.dart' show ScannerOverlayStyle;
 
 // Inline Scanner Engine
 export 'src/inline_scanner/inline_scanner.dart'
     show BarcodeScannerView, BarcodeScannerController;
+
+// Ready-to-use Screens
+export 'src/prebuilt_screens/pos_barcode_scanner_screen.dart';
+
+export 'src/scanner_lens_type.dart';
+
+// The Template Engine
+export 'src/scanner_screen/scanner_screen.dart';
+
+// Shared UI
+export 'src/widgets/scanner_overlay.dart' show ScannerOverlayStyle;
