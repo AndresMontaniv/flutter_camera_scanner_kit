@@ -50,9 +50,10 @@ Add the camera usage description to your `Info.plist` (usually under `ios/Runner
 ## Sound & Haptics
 
 Scan feedback is powered by [`native_haptics_and_audio`](https://pub.dev/packages/native_haptics_and_audio).
-Both scanner widgets initialize the shared audio engine on mount and preload their beeps,
-so the first scan of a session has no decode latency. Set `enableSoundAndVibration: false`
-to skip this entirely — no engine is started and no audio is loaded.
+Every scanner — `ScannerScreen`, `BarcodeScannerView` and `PosBarcodeScannerScreen` —
+initializes the shared audio engine on mount and preloads its beeps, so the first scan of a
+session has no decode latency. Set `enableSoundAndVibration: false` to skip this entirely:
+no engine is started and no audio is loaded.
 
 ### Configuring the audio engine
 
@@ -93,7 +94,7 @@ Open the camera, scan exactly one item, and automatically pop the screen to retu
 ```dart
 import 'package:camera_scanner_kit/camera_scanner_kit.dart';
 
-void startSingleScan(BuildContext context) async {
+Future<void> startSingleScan(BuildContext context) async {
   // scanBarcode is optimized with a wide horizontal 1D cutout
   final String? barcode = await scanBarcode(context);
   
@@ -125,8 +126,21 @@ Embed a scanning window directly inside your existing UI (e.g. form fields or li
 ```dart
 import 'package:camera_scanner_kit/camera_scanner_kit.dart';
 
-class MyInlineForm extends StatelessWidget {
-  final BarcodeScannerController _controller = BarcodeScannerController();
+class MyInlineForm extends StatefulWidget {
+  const MyInlineForm({super.key});
+
+  @override
+  State<MyInlineForm> createState() => _MyInlineFormState();
+}
+
+class _MyInlineFormState extends State<MyInlineForm> {
+  final _controller = BarcodeScannerController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -139,7 +153,7 @@ class MyInlineForm extends StatelessWidget {
           },
         ),
         ElevatedButton(
-          onPressed: () => _controller.toggle(),
+          onPressed: _controller.toggle,
           child: ListenableBuilder(
             listenable: _controller,
             builder: (context, _) {
