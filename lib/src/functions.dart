@@ -1,15 +1,19 @@
 /// Facade API for the [ScannerScreen] widget.
 ///
 /// This file provides the primary public API surface of the `camera_scanner_kit`
-/// package.  It abstracts away internal configuration objects and exposes ten
-/// clean, purpose-built functions covering every combination of:
+/// package.  It abstracts away internal configuration objects and exposes
+/// eleven clean, purpose-built functions covering every combination of:
 ///
-/// | Routing Mode | Custom | Barcode | QR Code | POS |
-/// |---|---|---|---|---|
-/// | **Single** | [scanCustom] | [scanBarcode] | [scanQrCode] | — |
-/// | **Batch** | [scanCustomBatch] | [scanBarcodeBatch] | [scanQrCodeBatch] | — |
-/// | **Stream** | [scanCustomStream] | [scanBarcodeStream] | [scanQrCodeStream] | — |
-/// | **POS** | — | [showPosBarcodeScanner] | — | ✓ |
+/// | Routing Mode | Custom | Barcode | QR Code |
+/// |---|---|---|---|
+/// | **Single** | [scanCustom] | [scanBarcode] | [scanQrCode] |
+/// | **Batch** | [scanCustomBatch] | [scanBarcodeBatch] | [scanQrCodeBatch] |
+/// | **Stream** | [scanCustomStream] | [scanBarcodeStream] | [scanQrCodeStream] |
+/// | **POS** | [showPosScanner] | [showPosBarcodeScanner] | — |
+///
+/// In every row the *Custom* column is the primitive and the others are thin
+/// preset wrappers around it. There is deliberately no POS/QR entry: nobody
+/// scans QR codes in a quantity-driven checkout loop.
 ///
 /// All functions push a full-screen [ScannerScreen] (or [PosBarcodeScannerScreen])
 /// via `Navigator.push` and manage the camera hardware lifecycle automatically.
@@ -23,6 +27,9 @@ import 'prebuilt_screens/pos_barcode_scanner_screen.dart';
 import 'scanner_lens_type.dart';
 import 'scanner_screen/scanner_screen.dart';
 import 'widgets/scanner_overlay.dart';
+// Imported for `BarcodeWindowShape`. The rest of `scanner_view.dart` stays
+// package-internal — the barrel re-exports only that enum.
+import 'widgets/scanner_view.dart';
 
 // MARK: - Single-Scan
 
@@ -195,6 +202,9 @@ Future<String?> scanBarcode(
   /// Restricts detection to specific [BarcodeFormat]s.
   List<BarcodeFormat> allowedFormats = const [],
 
+  /// How tall the scan window is. Geometry only — never widens detection.
+  BarcodeWindowShape windowShape = BarcodeWindowShape.standard,
+
   /// Whether to trigger haptic feedback and an audible beep on success.
   bool enableSoundAndVibration = true,
 
@@ -216,6 +226,7 @@ Future<String?> scanBarcode(
       overlayStyle: overlayStyle,
       offsetFromCenter: offsetFromCenter,
       allowedFormats: allowedFormats,
+      windowShape: windowShape,
     ),
     enableSoundAndVibration: enableSoundAndVibration,
     useDarkModeButtonTheme: useDarkModeButtonTheme,
@@ -492,6 +503,9 @@ Future<List<String>?> scanBarcodeBatch(
   /// Restricts detection to specific [BarcodeFormat]s.
   List<BarcodeFormat> allowedFormats = const [],
 
+  /// How tall the scan window is. Geometry only — never widens detection.
+  BarcodeWindowShape windowShape = BarcodeWindowShape.standard,
+
   /// When `true`, toolbar buttons use a dark translucent background.
   bool useDarkModeButtonTheme = true,
 
@@ -513,6 +527,7 @@ Future<List<String>?> scanBarcodeBatch(
       overlayStyle: overlayStyle,
       offsetFromCenter: offsetFromCenter,
       allowedFormats: allowedFormats,
+      windowShape: windowShape,
     ),
     enableSoundAndVibration: enableSoundAndVibration,
     useDarkModeButtonTheme: useDarkModeButtonTheme,
@@ -808,6 +823,9 @@ Future<void> scanBarcodeStream(
   /// Restricts detection to specific [BarcodeFormat]s.
   List<BarcodeFormat> allowedFormats = const [],
 
+  /// How tall the scan window is. Geometry only — never widens detection.
+  BarcodeWindowShape windowShape = BarcodeWindowShape.standard,
+
   /// When `true`, toolbar buttons use a dark translucent background.
   bool useDarkModeButtonTheme = true,
 
@@ -828,6 +846,7 @@ Future<void> scanBarcodeStream(
     overlayStyle: overlayStyle,
     offsetFromCenter: offsetFromCenter,
     allowedFormats: allowedFormats,
+    windowShape: windowShape,
   ),
   toolBar: toolBar,
   enableSoundAndVibration: enableSoundAndVibration,
@@ -935,6 +954,112 @@ Future<void> scanQrCodeStream(
   initialZoom: initialZoom,
 );
 
+/// Launches the **Point of Sale (POS) Scanner** with a fully custom
+/// [ScannerViewConfig].
+///
+/// This is the unopinionated primitive behind [showPosBarcodeScanner], in the
+/// same way [scanCustom] sits behind [scanBarcode]. Reach for it only when you
+/// need a scan window the presets can't express; for a taller or square 1D
+/// window prefer [showPosBarcodeScanner] with a
+/// [BarcodeWindowShape] — it stays responsive and keeps the 1D format filter.
+///
+/// Pushes a full-screen [PosBarcodeScannerScreen] with quantity controls, a
+/// scan-history badge and the ghost-pulse success animation. The [onScan]
+/// callback fires on every accepted scan with the raw barcode and the current
+/// quantity; the quantity then resets to `1`.
+///
+/// ### Parameters
+///
+/// * [context] — A [BuildContext] with a valid [Navigator] ancestor.
+/// * [onScan] — **Required.** Called with `(String barcode, int quantity)`
+///   on every accepted scan.
+/// * [scannerViewConfig] — The scan window, overlay style and format
+///   allow-list. When `null` the screen falls back to its default
+///   [ScannerViewConfig.barcode] preset.
+///
+///   > **You own the geometry.** Unlike [showPosBarcodeScanner], no automatic
+///   > vertical fit is applied here — a config with an explicit [Rect] must
+///   > keep itself clear of the toolbar and the quantity buttons, and will not
+///   > recompute when the device rotates or resizes.
+///
+/// * [detectionTimeoutMs] — Minimum ms between decode callbacks. Defaults
+///   to `250`.
+/// * [sameItemCooldownMs] — Minimum ms before the same barcode can scan
+///   again. Defaults to `1500`.
+/// * [enableSoundAndVibration] — Haptic and audio feedback. Defaults to `true`.
+/// * [useDarkModeButtonTheme] — Dark button backgrounds. Defaults to `true`.
+/// * [qtyButtonsBottomPadding] — Bottom padding for the quantity buttons.
+///   Defaults to `230`. **Asserts** that the value is greater than `0`.
+/// * [closeButtonLabel] — Custom label for the close button. Defaults to
+///   `'Close Camera'`.
+/// * [successPulseColor] — The color of the full-screen ghost pulse on a
+///   successful scan. Defaults to [Colors.cyanAccent].
+/// * [lensType] — Physical camera lens. Defaults to [ScannerLensType.any].
+/// * [initialZoom] — Initial zoom scale (0.0 – 1.0). iOS, macOS, and
+///   Android only. Defaults to `null`.
+///
+/// ### Errors
+/// Camera exceptions are caught internally and logged via [debugPrint].
+void showPosScanner(
+  /// A [BuildContext] with a valid [Navigator] ancestor.
+  BuildContext context, {
+
+  /// Called with `(String barcode, int quantity)` on every accepted scan.
+  required void Function(String barcode, int quantity) onScan,
+
+  /// The scan window, overlay style and format allow-list.
+  ScannerViewConfig? scannerViewConfig,
+
+  /// Minimum milliseconds between decode callbacks.
+  int detectionTimeoutMs = 250,
+
+  /// Minimum milliseconds before the same barcode is accepted again.
+  int sameItemCooldownMs = 1500,
+
+  /// Whether to trigger haptic feedback and an audible beep on success.
+  bool enableSoundAndVibration = true,
+
+  /// When `true`, toolbar buttons use a dark translucent background.
+  bool useDarkModeButtonTheme = true,
+
+  /// Bottom padding for the quantity buttons. Must be > 0.
+  double qtyButtonsBottomPadding = 230,
+
+  /// Custom label for the close button.
+  String? closeButtonLabel,
+
+  /// The color of the full-screen ghost pulse on a successful scan.
+  Color? successPulseColor,
+
+  /// The physical camera lens to activate.
+  ScannerLensType lensType = ScannerLensType.any,
+
+  /// The initial zoom scale for the camera (0.0 – 1.0).
+  double? initialZoom,
+}) async {
+  try {
+    await Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PosBarcodeScannerScreen(
+          onScan: onScan,
+          scannerViewConfig: scannerViewConfig,
+          closeButtonLabel: closeButtonLabel,
+          detectionTimeoutMs: detectionTimeoutMs,
+          sameItemCooldownMs: sameItemCooldownMs,
+          enableSoundAndVibration: enableSoundAndVibration,
+          useDarkModeButtonTheme: useDarkModeButtonTheme,
+          qtyButtonsBottomPadding: qtyButtonsBottomPadding,
+          successPulseColor: successPulseColor,
+          lensType: lensType,
+          initialZoom: initialZoom,
+        ),
+      ),
+    );
+  } catch (e, stackTrace) {
+    debugPrint('$kTag Error on pos scanning: $e\n$stackTrace');
+  }
+}
+
 /// Launches the **Point of Sale (POS) Barcode Scanner**.
 ///
 /// Pushes a full-screen [PosBarcodeScannerScreen] optimised for retail/warehouse
@@ -964,9 +1089,14 @@ Future<void> scanQrCodeStream(
 /// * [sameItemCooldownMs] — Minimum ms before the same barcode can scan
 ///   again. Defaults to `1500`.
 /// * [enableSoundAndVibration] — Haptic and audio feedback. Defaults to `true`.
+/// * [windowShape] — How tall the scan window is; see [BarcodeWindowShape].
+///   Defaults to [BarcodeWindowShape.standard], the narrow 1D strip. This is
+///   a **viewport setting only** — [BarcodeWindowShape.square] renders a
+///   square window that still decodes 1D retail symbologies exclusively.
 /// * [offsetFromCenter] — Vertical/horizontal nudge for the scan window.
-///   Defaults to `Offset(0, -180)` (raised above center to leave room for
-///   the quantity buttons below).
+///   Defaults to `null`, which lets the screen fit the window between the
+///   toolbar and the quantity buttons — resolving to `Offset(0, -180)` for
+///   [BarcodeWindowShape.standard], unchanged from earlier releases.
 /// * [overlayStyle] — Visual overlay customization. See [ScannerOverlayStyle].
 /// * [useDarkModeButtonTheme] — Dark button backgrounds. Defaults to `true`.
 /// * [qtyButtonsBottomPadding] — Bottom padding for the quantity buttons.
@@ -1013,8 +1143,13 @@ void showPosBarcodeScanner(
   /// Whether to trigger haptic feedback and an audible beep on success.
   bool enableSoundAndVibration = true,
 
+  /// How tall the scan window is. Geometry only — never widens detection.
+  BarcodeWindowShape windowShape = BarcodeWindowShape.standard,
+
   /// Vertical/horizontal nudge applied to the scan window position.
-  Offset offsetFromCenter = const Offset(0, -180),
+  ///
+  /// `null` (the default) lets the screen fit the window to `windowShape`.
+  Offset? offsetFromCenter,
 
   /// Visual customization for the overlay border, corner radius, etc.
   ScannerOverlayStyle? overlayStyle,
@@ -1036,28 +1171,26 @@ void showPosBarcodeScanner(
 
   /// The initial zoom scale for the camera (0.0 – 1.0).
   double? initialZoom,
-}) async {
-  try {
-    await Navigator.of(context, rootNavigator: true).push(
-      MaterialPageRoute<void>(
-        builder: (_) => PosBarcodeScannerScreen(
-          onScan: onScan,
-          overlayStyle: overlayStyle,
-          allowedFormats: allowedFormats,
-          closeButtonLabel: closeButtonLabel,
-          offsetFromCenter: offsetFromCenter,
-          detectionTimeoutMs: detectionTimeoutMs,
-          sameItemCooldownMs: sameItemCooldownMs,
-          enableSoundAndVibration: enableSoundAndVibration,
-          useDarkModeButtonTheme: useDarkModeButtonTheme,
-          qtyButtonsBottomPadding: qtyButtonsBottomPadding,
-          successPulseColor: successPulseColor,
-          lensType: lensType,
-          initialZoom: initialZoom,
-        ),
-      ),
-    );
-  } catch (e, stackTrace) {
-    debugPrint('$kTag Error on pos barcode scanning: $e\n$stackTrace');
-  }
+}) {
+  // `offsetFromCenter` is forwarded as-is, including `null`: the screen owns
+  // the fallback so it can fit the window to `windowShape`.
+  showPosScanner(
+    context,
+    onScan: onScan,
+    scannerViewConfig: ScannerViewConfig.barcode(
+      overlayStyle: overlayStyle,
+      offsetFromCenter: offsetFromCenter,
+      allowedFormats: allowedFormats,
+      windowShape: windowShape,
+    ),
+    closeButtonLabel: closeButtonLabel,
+    detectionTimeoutMs: detectionTimeoutMs,
+    sameItemCooldownMs: sameItemCooldownMs,
+    enableSoundAndVibration: enableSoundAndVibration,
+    useDarkModeButtonTheme: useDarkModeButtonTheme,
+    qtyButtonsBottomPadding: qtyButtonsBottomPadding,
+    successPulseColor: successPulseColor,
+    lensType: lensType,
+    initialZoom: initialZoom,
+  );
 }

@@ -1,3 +1,16 @@
+## [Unreleased]
+
+* **Feature (Scan Window):** Added `BarcodeWindowShape` — `standard`, `tall` and `square` — exposed as a `windowShape` parameter on `scanBarcode`, `scanBarcodeBatch`, `scanBarcodeStream`, `showPosBarcodeScanner`, `PosBarcodeScannerScreen` and `ScannerViewConfig.barcode`. It lets an app offer a larger, easier-to-aim 1D scan window without hand-building a `Rect`. **Geometry only:** the window still decodes exclusively the standard horizontal 1D retail symbologies, so `BarcodeWindowShape.square` never starts reading QR codes. The window's width is unchanged in every shape.
+* **Feature (POS):** Added `showPosScanner()`, the unopinionated POS primitive taking a `ScannerViewConfig?`. `showPosBarcodeScanner()` is now a thin wrapper around it that builds `ScannerViewConfig.barcode(...)`, mirroring how `scanBarcode` delegates to `scanCustom`. `PosBarcodeScannerScreen` gained a matching `scannerViewConfig` parameter. When a custom config is supplied it is used verbatim and `overlayStyle`, `offsetFromCenter`, `allowedFormats` and `windowShape` are ignored.
+* **Feature (POS):** The POS scan window is now fitted automatically between the toolbar and the +/− quantity row when `windowShape` is `tall` or `square`, so a larger window cannot overlap the controls on any screen size.
+* **Fix (POS):** `PosBarcodeScannerScreen`'s scan-list badge now takes its border tint from whichever `ScannerOverlayStyle` actually reaches the overlay, so a custom `scannerViewConfig` no longer leaves the badge on the default blue.
+* **Docs:** Corrected `PosBarcodeScannerScreen.offsetFromCenter`'s dartdoc, which claimed it fell back to the barcode preset's `Offset(0, -80)` when the facade in fact applied `Offset(0, -180)`.
+* **Test:** Added unit coverage for the scan-window geometry, including a regression lock asserting that `BarcodeWindowShape.standard` reproduces the historic 1.2.0 rect exactly.
+
+> **Upgrade note:** `showPosBarcodeScanner`'s `offsetFromCenter` changed from `Offset offsetFromCenter = const Offset(0, -180)` to `Offset? offsetFromCenter` (default `null`), which is what lets the screen fit the window to the chosen shape. This is source-compatible: passing a value behaves as before, and passing nothing still resolves to `Offset(0, -180)` for the default `standard` shape. The default POS and barcode screens are unchanged.
+>
+> Note also that `standard` deliberately keeps its historic geometry *without* the new vertical fit. On very short screens the default POS offset can already tuck the window slightly under the toolbar; that pre-existing behavior is preserved rather than silently corrected, so upgrading changes nothing visually. Switch to `tall` or `square` to get the fitted placement.
+
 ## 1.2.0
 
 * **Dependency:** Upgraded `native_haptics_and_audio` to `^2.0.0`. If your app also depends on it directly, bump your own constraint to `^2.0.0` — otherwise this release will not resolve.

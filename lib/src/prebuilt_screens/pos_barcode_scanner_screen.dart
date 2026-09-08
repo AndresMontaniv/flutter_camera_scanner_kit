@@ -5,6 +5,11 @@ import '../scanner_lens_type.dart';
 import '../scanner_screen/scanner_screen.dart';
 import '../widgets/action_button.dart';
 import '../widgets/scanner_overlay.dart';
+// Imported for the shared scan-window geometry. Neither `scanner_view.dart`
+// (beyond `BarcodeWindowShape`) nor `pos_window_geometry.dart` is exported from
+// the package barrel, so nothing here leaks into the public API.
+import '../widgets/scanner_view.dart';
+import 'pos_window_geometry.dart';
 
 const _defaultBorderColor = Colors.blue;
 const _defaultPulseColor = Colors.cyanAccent;
@@ -43,8 +48,19 @@ const _defaultCloseButtonLabel = 'Close Camera';
 ///   [onScan] again. Defaults to `1500`.
 /// * [enableSoundAndVibration] — Haptic and audio feedback on success.
 ///   Defaults to `true`.
+/// * [scannerViewConfig] — **Escape hatch.** A fully custom
+///   [ScannerViewConfig]. When supplied it is used verbatim and
+///   [overlayStyle], [offsetFromCenter], [allowedFormats] and [windowShape]
+///   are all ignored — you own the geometry, including keeping the window
+///   clear of the toolbar and the quantity row. Defaults to `null`, which
+///   builds a [ScannerViewConfig.barcode] from the individual parameters.
+/// * [windowShape] — How tall the scan window is. See [BarcodeWindowShape].
+///   Defaults to [BarcodeWindowShape.standard]. Geometry only: a square
+///   window still decodes 1D retail symbologies exclusively.
 /// * [offsetFromCenter] — Vertical/horizontal nudge for the scan window.
-///   Defaults to `null` (uses the barcode preset default).
+///   Defaults to `null`, meaning the screen picks an offset that fits the
+///   chosen [windowShape] between the toolbar and the quantity buttons —
+///   `Offset(0, -180)` for [BarcodeWindowShape.standard].
 /// * [overlayStyle] — Visual overlay customization (border color, dimming,
 ///   corner radius). See [ScannerOverlayStyle].
 /// * [useDarkModeButtonTheme] — Dark translucent button backgrounds.
@@ -86,6 +102,19 @@ class PosBarcodeScannerScreen extends StatefulWidget {
 
   /// The active set of barcode formats to restrict scan detection to.
   final List<BarcodeFormat> allowedFormats;
+
+  /// A fully custom scanner view configuration.
+  ///
+  /// When non-null this is passed to [ScannerScreen.multiscan] verbatim and
+  /// takes full precedence over [overlayStyle], [offsetFromCenter],
+  /// [allowedFormats] and [windowShape]. The automatic vertical fit is also
+  /// skipped — a custom config owns its own geometry.
+  final ScannerViewConfig? scannerViewConfig;
+
+  /// How tall the scan window is. See [BarcodeWindowShape].
+  ///
+  /// Geometry only — it never widens [allowedFormats].
+  final BarcodeWindowShape windowShape;
 
   /// The minimum delay in milliseconds before a new barcode can be scanned.
   final int detectionTimeoutMs;
@@ -133,6 +162,8 @@ class PosBarcodeScannerScreen extends StatefulWidget {
   const PosBarcodeScannerScreen({
     super.key,
     required this.onScan,
+    this.scannerViewConfig,
+    this.windowShape = BarcodeWindowShape.standard,
     this.allowedFormats = const <BarcodeFormat>[],
     this.detectionTimeoutMs = 250,
     this.sameItemCooldownMs = 1500,
@@ -299,7 +330,12 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
     final actionButtonTheme = widget.useDarkModeButtonTheme
         ? ActionButtonTheme.dark
         : ActionButtonTheme.light;
-    final borderColor = widget.overlayStyle?.borderColor ?? _defaultBorderColor;
+    // Track whichever style actually reaches the overlay, so a custom
+    // `scannerViewConfig` tints the badge to match its own border.
+    final borderColor =
+        (widget.scannerViewConfig?.overlayStyle ?? widget.overlayStyle)
+            ?.borderColor ??
+        _defaultBorderColor;
     return ValueListenableBuilder<int>(
       valueListenable: totalItemsNotifier,
       builder: (ctx, total, _) {
@@ -404,8 +440,43 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
     super.dispose();
   }
 
+  /// Picks the vertical offset for the built-in barcode preset.
+  ///
+  /// An explicit [PosBarcodeScannerScreen.offsetFromCenter] always wins. The
+  /// [BarcodeWindowShape.standard] shape short-circuits to the historic
+  /// `Offset(0, -180)` so the default screen is unchanged; taller shapes get
+  /// fitted between the toolbar and the quantity row.
+  Offset _resolveOffsetFromCenter(BuildContext context) {
+    final explicit = widget.offsetFromCenter;
+    if (explicit != null) return explicit;
+    if (widget.windowShape == BarcodeWindowShape.standard) {
+      return kStandardPosOffset;
+    }
+
+    final screenSize = MediaQuery.sizeOf(context);
+    return resolvePosWindowOffset(
+      screenSize: screenSize,
+      viewPadding: MediaQuery.viewPaddingOf(context),
+      windowHeight: barcodeWindowSize(screenSize, widget.windowShape).height,
+      qtyButtonsBottomPadding: widget.qtyButtonsBottomPadding,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // A caller-supplied config is used verbatim; otherwise assemble the
+    // barcode preset from the individual parameters.
+    final scannerViewConfig =
+        widget.scannerViewConfig ??
+        ScannerViewConfig.barcode(
+          overlayStyle:
+              widget.overlayStyle ??
+              const ScannerOverlayStyle(borderColor: _defaultBorderColor),
+          offsetFromCenter: _resolveOffsetFromCenter(context),
+          allowedFormats: widget.allowedFormats,
+          windowShape: widget.windowShape,
+        );
+
     return ScannerScreen.multiscan(
       lensType: widget.lensType,
       initialZoom: widget.initialZoom,
@@ -418,13 +489,7 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
       sameItemCooldownMs: widget.sameItemCooldownMs,
       enableSoundAndVibration: widget.enableSoundAndVibration,
       useDarkModeButtonTheme: widget.useDarkModeButtonTheme,
-      scannerViewConfig: ScannerViewConfig.barcode(
-        overlayStyle:
-            widget.overlayStyle ??
-            const ScannerOverlayStyle(borderColor: _defaultBorderColor),
-        offsetFromCenter: widget.offsetFromCenter,
-        allowedFormats: widget.allowedFormats,
-      ),
+      scannerViewConfig: scannerViewConfig,
       onCameraScan: _onCameraScan,
       stackChildren: [
         // Ghost Pulse overlay

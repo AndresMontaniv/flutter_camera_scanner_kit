@@ -29,6 +29,11 @@ class TestMatrixScreen extends StatefulWidget {
 class _TestMatrixScreenState extends State<TestMatrixScreen> {
   bool _useDarkModeButtonTheme = true;
 
+  /// Applied to every barcode-preset entry point below, so the three window
+  /// shapes can be compared side by side in single, batch, stream and POS
+  /// modes without touching any other parameter.
+  BarcodeWindowShape _windowShape = BarcodeWindowShape.standard;
+
   void _showResult(BuildContext context, String message) {
     ScaffoldMessenger.of(
       context,
@@ -49,6 +54,25 @@ class _TestMatrixScreenState extends State<TestMatrixScreen> {
                 _useDarkModeButtonTheme = value ?? true;
               });
             },
+          ),
+          ListTile(
+            title: const Text('1D scan window shape'),
+            subtitle: Text('Applies to every barcode preset: $_windowShape'),
+            trailing: DropdownButton<BarcodeWindowShape>(
+              value: _windowShape,
+              onChanged: (value) {
+                if (value == null) return;
+                setState(() => _windowShape = value);
+              },
+              items: BarcodeWindowShape.values
+                  .map(
+                    (shape) => DropdownMenuItem(
+                      value: shape,
+                      child: Text(shape.name),
+                    ),
+                  )
+                  .toList(),
+            ),
           ),
           const Divider(),
           const Padding(
@@ -82,6 +106,7 @@ class _TestMatrixScreenState extends State<TestMatrixScreen> {
             onTap: () {
               showPosBarcodeScanner(
                 context,
+                windowShape: _windowShape,
                 useDarkModeButtonTheme: _useDarkModeButtonTheme,
                 closeButtonLabel: 'Cerrar Cámara',
                 onScan: (barcode, qty) {
@@ -125,6 +150,7 @@ class _TestMatrixScreenState extends State<TestMatrixScreen> {
             onTap: () async {
               final result = await scanBarcode(
                 context,
+                windowShape: _windowShape,
                 useDarkModeButtonTheme: _useDarkModeButtonTheme,
                 // Test .wide on iOS
                 // lensType: ScannerLensType.wide,
@@ -190,6 +216,7 @@ class _TestMatrixScreenState extends State<TestMatrixScreen> {
             onTap: () async {
               final result = await scanBarcodeBatch(
                 context,
+                windowShape: _windowShape,
                 useDarkModeButtonTheme: _useDarkModeButtonTheme,
                 allowDuplicates: true,
               );
@@ -254,6 +281,7 @@ class _TestMatrixScreenState extends State<TestMatrixScreen> {
             onTap: () async {
               await scanBarcodeStream(
                 context,
+                windowShape: _windowShape,
                 useDarkModeButtonTheme: _useDarkModeButtonTheme,
                 allowDuplicates: false,
                 onCameraScan: (barcode) {

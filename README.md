@@ -188,6 +188,60 @@ class _MyInlineFormState extends State<MyInlineForm> {
 | `scanBarcodeStream()` | Stream | 1D Horizontal | `Future<void>` (fires `onCameraScan`) |
 | `scanQrCodeStream()` | Stream | 1:1 Square | `Future<void>` (fires `onCameraScan`) |
 | `scanCustomStream()` | Stream | Custom Rect | `Future<void>` (fires `onCameraScan`) |
+| `showPosBarcodeScanner()` | POS | 1D Horizontal | `void` (fires `onScan`) |
+| `showPosScanner()` | POS | Custom Rect | `void` (fires `onScan`) |
+
+In each row the `*Custom` function is the primitive; the barcode and QR variants
+are thin preset wrappers around it.
+
+---
+
+## Scan Window Shape
+
+The 1D barcode presets draw a wide, narrow strip — ideal for a well-aligned
+retail barcode, but unforgiving if the user tilts the product. Pass a
+`BarcodeWindowShape` to trade that precision for an easier target:
+
+| Shape | Height | Use for |
+|---|---|---|
+| `BarcodeWindowShape.standard` | Fixed 130 lp (the default) | Trained operators, fastest decode |
+| `BarcodeWindowShape.tall` | 60 % of the window width | A gentler target without a huge cut-out |
+| `BarcodeWindowShape.square` | Equal to the window width (1:1) | Casual users, angled or awkward products |
+
+The width is identical in all three (85 % of the shortest screen side, clamped
+to 250–400 lp), and every shape stays fully responsive — the window is
+recomputed on each build, so it survives rotation and split-screen.
+
+```dart
+// Drive it from a user preference — no Rect math, no format list, no extra
+// dependency on `mobile_scanner`.
+final shape = prefs.getBool('bigScanWindow') ?? false
+    ? BarcodeWindowShape.square
+    : BarcodeWindowShape.standard;
+
+await scanBarcode(context, windowShape: shape);
+
+showPosBarcodeScanner(
+  context,
+  windowShape: shape,
+  onScan: (barcode, qty) => cart.addItem(barcode, quantity: qty),
+);
+```
+
+> **This is a viewport setting, not a scan mode.** Format filtering is entirely
+> independent of window geometry: `BarcodeWindowShape.square` renders a square
+> window that still decodes *only* the standard horizontal 1D retail
+> symbologies. To scan QR codes, use `scanQrCode()` / `ScannerViewConfig.qrCode`.
+
+In POS mode the window is fitted automatically between the toolbar and the +/−
+quantity buttons for the `tall` and `square` shapes, so a larger window never
+collides with the controls. Pass an explicit `offsetFromCenter` to override
+that placement.
+
+If none of the presets fit, `scanCustom()` and `showPosScanner()` accept a
+`ScannerViewConfig` with an arbitrary `Rect`. Note that a hand-built `Rect` is
+fixed at construction — it will not track rotation or a resize, and you become
+responsible for keeping it clear of the toolbar and any overlaid controls.
 
 ---
 
