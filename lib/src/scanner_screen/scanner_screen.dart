@@ -642,6 +642,9 @@ class _ScannerScreenState extends State<ScannerScreen>
           overlayStyle: widget.scannerViewConfig?.overlayStyle,
           offsetFromCenter:
               widget.scannerViewConfig?.offsetFromCenter ?? _barcodeOffset,
+          windowShape:
+              widget.scannerViewConfig?.windowShape ?? BarcodeWindowShape.slim,
+          scanWindow: widget.scannerViewConfig?.scanWindow,
           stackChildren: stackChildren,
         );
         break;

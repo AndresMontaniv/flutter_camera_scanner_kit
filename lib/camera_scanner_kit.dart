@@ -22,3 +22,7 @@ export 'src/scanner_screen/scanner_screen.dart';
 
 // Shared UI
 export 'src/widgets/scanner_overlay.dart' show ScannerOverlayStyle;
+
+// Scan-window geometry. Only the shape enum is public; `ScannerView` and the
+// layout helpers stay package-internal.
+export 'src/widgets/scanner_view.dart' show BarcodeWindowShape;

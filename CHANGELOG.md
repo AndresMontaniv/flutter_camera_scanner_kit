@@ -1,3 +1,36 @@
+## [Unreleased]
+
+### Scan window shape
+
+* **Feature:** Added `BarcodeWindowShape` — `slim`, `tall` and `square` — exposed as a `windowShape` parameter on `scanBarcode`, `scanBarcodeBatch`, `scanBarcodeStream`, `showPosBarcodeScanner`, `PosBarcodeScannerScreen` and `ScannerViewConfig.barcode`. It lets an app offer a larger, easier-to-aim 1D scan window without hand-building a `Rect`. **Geometry only:** the window still decodes exclusively the standard horizontal 1D retail symbologies, so `BarcodeWindowShape.square` never starts reading QR codes. The window's width is identical in every shape.
+* **Feature:** `ScannerViewConfig.barcode` now accepts an explicit `scanWindow`. Unlike the default constructor, this keeps the 1D format filter — useful for screens that solve their own layout.
+
+### POS screen
+
+* **Feature:** Added `showPosScanner()`, the unopinionated POS primitive taking a `ScannerViewConfig?`, mirroring how `scanCustom` sits behind `scanBarcode`. `PosBarcodeScannerScreen` gained a matching `scannerViewConfig` parameter. When a custom config is supplied it is used verbatim and `overlayStyle`, `offsetFromCenter`, `allowedFormats` and `windowShape` are ignored — the caller owns the geometry. The quantity row is still placed around that window rather than on top of it.
+* **Fix:** The POS screen now solves its vertical layout instead of positioning the scan window and the quantity row against independent hardcoded offsets. With `square` selected, the two **overlapped** on iPhone SE 2/3 (by 11.9 lp) and 360×640 Android (by 21.0 lp), and came within 28–40 lp on several other phones. The window, the quantity row and the close button are now guaranteed 16 lp of clearance on every screen size.
+* **Fix:** On iPhone SE 2/3 and 360×640 Android the default scan window sat partly *underneath* the toolbar. It is now pushed clear (by 20.5 lp and 38.0 lp respectively). On every other device tested the default geometry is byte-identical to 1.2.0.
+* **Fix:** The scan-list badge takes its border tint from whichever `ScannerOverlayStyle` actually reaches the overlay, so a custom `scannerViewConfig` no longer leaves the badge on the default blue.
+* **Docs:** Corrected `PosBarcodeScannerScreen.offsetFromCenter`'s dartdoc, which claimed it fell back to the barcode preset's `Offset(0, -80)` when the facade in fact applied `Offset(0, -180)`.
+
+### POS landscape
+
+* **Fix:** The POS screen now has a dedicated landscape layout. Previously the toolbar, scan window, quantity row and close button all competed for one vertical axis, so on a 891×411 dp landscape screen the chrome consumed 340 of 411 lp and the scan window was squeezed to a nearly flat **71 lp** strip. In landscape the quantity controls now become a vertical rail on the right edge and the close button moves to the bottom-left corner — both off the centre line — which leaves the window **331 lp** on the same device.
+* **Fix:** The landscape scan window is kept clear of every edge control by a single width clamp rather than by reserving vertical space. Because the toolbar's buttons hug the left and right screen edges while the window stays horizontally centred, they cannot collide, so the toolbar's height no longer has to be subtracted. `square` is now genuinely square in landscape on most devices (0.95 on a 891×411 screen, where the band is the limit).
+* **Fix:** In landscape the close button's label is capped and ellipsised. A long custom `closeButtonLabel` would otherwise grow past the space the layout reserves for it and reach the scan window.
+* **Note:** Portrait is untouched. The portrait solver is the same code, moved behind an orientation dispatch rather than edited, and its regression tests still pass unchanged.
+
+### Documentation & tests
+
+* **Docs:** The README gained an **Orientation** section covering the portrait design target, the new landscape POS layout, and why locking orientation stays the host app's job (`SystemChrome` has no getter for the current preferred orientations, so a package cannot restore what it overwrites).
+* **Test:** Added unit coverage for the scan-window geometry and both POS layout solvers across a 7-device portrait matrix and a 7-device landscape matrix — including a regression lock asserting the portrait geometry is unchanged on every device where 1.2.0 was already correct.
+
+> **Upgrade notes**
+>
+> * `showPosBarcodeScanner`'s `offsetFromCenter` changed from `Offset offsetFromCenter = const Offset(0, -180)` to `Offset? offsetFromCenter` (default `null`), which is what lets the screen fit the window to the chosen shape. Source-compatible: passing a value behaves as before, and passing nothing resolves to the same `Offset(0, -180)` for the default `slim` shape.
+> * `qtyButtonsBottomPadding` is now the quantity row's **preferred** position rather than an absolute one. It is honoured exactly unless a taller scan window needs the space, in which case the row slides down toward the close button.
+> * `BarcodeWindowShape.square` means *square where the layout budget allows, and as tall as the budget allows otherwise*. On a 360×640 screen it resolves to a 0.98 ratio.
+
 ## 1.2.0
 
 * **Dependency:** Upgraded `native_haptics_and_audio` to `^2.0.0`. If your app also depends on it directly, bump your own constraint to `^2.0.0` — otherwise this release will not resolve.

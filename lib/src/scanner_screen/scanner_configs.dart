@@ -179,11 +179,15 @@ enum _OverlayMode { custom, qrCode, barcode }
 ///
 /// * **[ScannerViewConfig.barcode]** — optimized for horizontal 1D
 ///   product barcodes (EAN-13, UPC-A, Code 128, etc.).  Renders a wide
-///   landscape-oriented overlay.  When [allowedFormats] is left empty, the
-///   controller defaults to the full [_horizontal1DFormats] set; when a
-///   subset is passed, only formats that *also* appear in that allow-list
-///   are kept — preventing callers from accidentally enabling 2D codes
-///   through this constructor.
+///   landscape-oriented overlay whose height follows [windowShape].  When
+///   [allowedFormats] is left empty, the controller defaults to the full
+///   [_horizontal1DFormats] set; when a subset is passed, only formats that
+///   *also* appear in that allow-list are kept — preventing callers from
+///   accidentally enabling 2D codes through this constructor.
+///
+///   Note that [windowShape] is purely visual: even
+///   [BarcodeWindowShape.square] keeps the 1D-only format filter, so a square
+///   *window* never starts decoding QR codes.
 class ScannerViewConfig {
   /// Internal overlay shape discriminator set by the chosen constructor.
   final _OverlayMode _mode;
@@ -205,6 +209,14 @@ class ScannerViewConfig {
   /// An empty list means "accept everything the device supports."
   final List<BarcodeFormat> allowedFormats;
 
+  /// The vertical proportion of the scan window.
+  ///
+  /// Only meaningful for [ScannerViewConfig.barcode]; the QR and custom
+  /// constructors pin it to [BarcodeWindowShape.slim] and ignore it.
+  ///
+  /// This affects **geometry only** — it never widens [allowedFormats].
+  final BarcodeWindowShape windowShape;
+
   /// Creates a scanner with a **custom** scan window and format list.
   ///
   /// [scanWindow] lets the caller supply an arbitrary [Rect] for the detection
@@ -218,6 +230,7 @@ class ScannerViewConfig {
     this.overlayStyle,
     this.allowedFormats = const <BarcodeFormat>[],
   }) : _mode = _OverlayMode.custom,
+       windowShape = BarcodeWindowShape.slim,
        offsetFromCenter = null;
 
   /// Creates a scanner optimized for **QR / 2D matrix codes**.
@@ -228,16 +241,29 @@ class ScannerViewConfig {
     this.offsetFromCenter,
   }) : _mode = _OverlayMode.qrCode,
        scanWindow = null,
+       windowShape = BarcodeWindowShape.slim,
        allowedFormats = const [BarcodeFormat.qrCode];
 
   /// Creates a scanner optimized for **1D product barcodes**.
   ///
   /// [allowedFormats] defaults to the standard set of store-product 1D
   /// symbologies. The caller may pass a subset to narrow detection further.
+  ///
+  /// [windowShape] controls how tall the overlay is — see
+  /// [BarcodeWindowShape]. It is a viewport setting only and does not change
+  /// which symbologies are decoded.
+  ///
+  /// [scanWindow] pins the overlay to an explicit [Rect] while **keeping** the
+  /// 1D format filter, which the default constructor cannot do. It is intended
+  /// for screens that solve their own layout — `PosBarcodeScannerScreen` uses
+  /// it to keep the window and its quantity controls in agreement. When
+  /// supplied it overrides [windowShape] and [offsetFromCenter], and the
+  /// window stops being responsive: recompute it whenever the metrics change.
   const ScannerViewConfig.barcode({
     this.overlayStyle,
     this.offsetFromCenter,
     this.allowedFormats = const [],
-  }) : _mode = _OverlayMode.barcode,
-       scanWindow = null;
+    this.windowShape = BarcodeWindowShape.slim,
+    this.scanWindow,
+  }) : _mode = _OverlayMode.barcode;
 }
