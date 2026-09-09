@@ -55,21 +55,151 @@ const double kGap = 16.0;
 /// *preference* and relaxes it only when a constraint would be violated.
 const Offset kPreferredPosOffset = Offset(0, -180);
 
-/// A resolved POS layout: where the scan window goes and where the quantity
-/// row goes, solved together so the two can never disagree.
+// ─── Landscape chrome ───────────────────────────────────────────────────────
+// In landscape every control moves to a screen *edge*: the toolbar buttons
+// already hug the left and right edges, the quantity controls become a rail on
+// the right, and the close button moves to the bottom-left corner. Because the
+// scan window stays horizontally centred, keeping it clear of all of them is a
+// single horizontal clamp — so no vertical space has to be reserved at all.
+
+/// Maximum width of the close-camera button in landscape.
+///
+/// The button is the widest edge chrome — wider than the toolbar's 113 lp
+/// flash+badge cluster and the 73 lp quantity rail — so it governs
+/// [kLandscapeEdgeReserve]. The screen enforces this cap, which is what stops a
+/// long custom `closeButtonLabel` from growing into the scan window.
+const double kLandscapeCloseButtonMaxWidth = 138.0;
+
+/// Horizontal space reserved at each screen edge in landscape.
+///
+/// The window stays centred, so the larger of the two sides' chrome governs
+/// both. Clamping the window width to `screenWidth - 2 * this` guarantees it
+/// clears the toolbar, the quantity rail and the close button simultaneously.
+const double kLandscapeEdgeReserve = kLandscapeCloseButtonMaxWidth + kGap;
+
+/// Bottom inset for the close button in landscape.
+///
+/// The portrait [kCloseMinBottomInset] of 100 lp exists for thumb reach on a
+/// tall screen; on a ~400 lp landscape screen it would eat a quarter of the
+/// height for no benefit.
+const double kLandscapeCloseBottomInset = 13.0;
+
+/// A resolved POS layout.
+///
+/// Two shapes, chosen by orientation:
+///
+/// * **Portrait** — everything shares one vertical axis, so the scan window and
+///   the horizontal +/− row are solved together against a fixed height budget.
+/// * **Landscape** — the controls live on the screen edges, so only the window
+///   needs solving; the quantity rail and close button are positioned
+///   declaratively by the screen.
 @immutable
 class PosLayout {
   /// The scan window rectangle, in logical pixels.
   final Rect scanWindow;
 
-  /// The top edge of the +/− quantity row, in logical pixels.
-  final double qtyRowTop;
+  /// The top edge of the horizontal +/− quantity row, in logical pixels.
+  ///
+  /// **Null in landscape**, where the controls become a vertical rail anchored
+  /// to the right edge rather than a row at a solved offset.
+  final double? qtyRowTop;
 
-  /// Creates a resolved layout.
-  const PosLayout({required this.scanWindow, required this.qtyRowTop});
+  /// Whether this layout describes the landscape arrangement.
+  final bool isLandscape;
+
+  /// Creates the portrait layout, where the quantity row is solved alongside
+  /// the window.
+  const PosLayout.portrait({
+    required this.scanWindow,
+    required double this.qtyRowTop,
+  }) : isLandscape = false;
+
+  /// Creates the landscape layout, where only the window needs solving.
+  const PosLayout.landscape({required this.scanWindow})
+    : qtyRowTop = null,
+      isLandscape = true;
 }
 
-/// Solves the POS screen's vertical budget.
+/// Solves the POS screen's layout for the current metrics.
+///
+/// Dispatches on orientation. The two arrangements are genuinely different —
+/// portrait stacks everything on one axis and has to budget for it, landscape
+/// pushes the controls to the edges and only has to keep the window clear of
+/// them — so they are solved by separate functions rather than one branching
+/// body.
+PosLayout resolvePosLayout({
+  required Size screenSize,
+  required EdgeInsets viewPadding,
+  required BarcodeWindowShape shape,
+  required double qtyButtonsBottomPadding,
+  Rect? scanWindowOverride,
+}) {
+  return screenSize.width > screenSize.height
+      ? _resolveLandscapeLayout(
+          screenSize: screenSize,
+          viewPadding: viewPadding,
+          shape: shape,
+          scanWindowOverride: scanWindowOverride,
+        )
+      : _resolvePortraitLayout(
+          screenSize: screenSize,
+          viewPadding: viewPadding,
+          shape: shape,
+          qtyButtonsBottomPadding: qtyButtonsBottomPadding,
+          scanWindowOverride: scanWindowOverride,
+        );
+}
+
+/// Solves the **landscape** layout.
+///
+/// Every control sits on a screen edge here: the toolbar's buttons already hug
+/// the left and right (`_SharedButtonsRow` is a `Row(spaceBetween)`), the
+/// quantity controls become a right-hand rail, and the close button moves to
+/// the bottom-left corner. The scan window stays horizontally centred, so
+/// keeping it clear of all of them reduces to **one width clamp** — and that in
+/// turn means no vertical chrome has to be reserved, which is what buys the
+/// height back.
+///
+/// The height still gives way to the available band as a last resort, exactly
+/// as in portrait, so `square` means "square where it fits".
+PosLayout _resolveLandscapeLayout({
+  required Size screenSize,
+  required EdgeInsets viewPadding,
+  required BarcodeWindowShape shape,
+  Rect? scanWindowOverride,
+}) {
+  if (scanWindowOverride != null) {
+    return PosLayout.landscape(scanWindow: scanWindowOverride);
+  }
+
+  // Keep the window clear of the edge controls on both sides.
+  final double maxWidth = math.max(
+    0.0,
+    screenSize.width - 2 * kLandscapeEdgeReserve,
+  );
+  final double width = math.min(
+    barcodeWindowSize(screenSize, shape).width,
+    maxWidth,
+  );
+
+  // Nothing is subtracted for the toolbar, the rail or the close button.
+  final double bandTop = viewPadding.top + kGap;
+  final double bandBottom = screenSize.height - viewPadding.bottom - kGap;
+  final double band = bandBottom - bandTop;
+
+  final double desired = barcodeWindowHeightFor(width, shape);
+  final double height = band <= 0.0 ? desired : math.min(desired, band);
+
+  return PosLayout.landscape(
+    scanWindow: Rect.fromCenter(
+      center: Offset(screenSize.width / 2, bandTop + band / 2),
+      width: width,
+      height: height,
+    ),
+  );
+}
+
+/// Solves the **portrait** vertical budget.
 ///
 /// Portrait height is fixed, so the chrome claims its space first and the scan
 /// window takes what is left. The solve is a **constraint relaxation**: it
@@ -88,7 +218,7 @@ class PosLayout {
 /// through `showPosScanner` — steps 1, 2 and 4 are skipped entirely: the rect
 /// is used verbatim. Step 3 still runs, so the quantity row is placed as well
 /// as it can be rather than landing on top of the window.
-PosLayout resolvePosLayout({
+PosLayout _resolvePortraitLayout({
   required Size screenSize,
   required EdgeInsets viewPadding,
   required BarcodeWindowShape shape,
@@ -156,5 +286,5 @@ PosLayout resolvePosLayout({
       ? qtyTopPreferred
       : qtyTopWanted.clamp(qtyTopPreferred, qtyTopMax);
 
-  return PosLayout(scanWindow: window, qtyRowTop: qtyTop);
+  return PosLayout.portrait(scanWindow: window, qtyRowTop: qtyTop);
 }

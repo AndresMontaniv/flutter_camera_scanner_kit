@@ -255,15 +255,29 @@ responsible for keeping it clear of the toolbar and any overlaid controls.
 
 **The full-screen scanners are designed for portrait.** Every default in this
 package — the scan-window offsets, `qtyButtonsBottomPadding`, the close
-button's bottom inset — is tuned for a portrait phone, and the POS layout
-budget assumes a tall screen. This is a deliberate scope decision: a cashier
-holds a phone upright, and a barcode is easiest to aim at with the rear camera
-above the product.
+button's bottom inset — is tuned for a portrait phone. This is a deliberate
+scope decision: a cashier holds a phone upright, and a barcode is easiest to
+aim at with the rear camera above the product.
 
-If a device does rotate, the scanner keeps working — `mobile_scanner` updates
-its decode region on every layout change, so nothing crashes and nothing stops
-decoding. But the window will be short and the POS controls cramped, because a
-landscape phone simply does not have the vertical room the layout wants.
+**Landscape is supported as a guard, not as a headline feature.** If a device
+rotates, the scanner keeps working and stays usable rather than degrading into
+a squashed window:
+
+* The nine `scan*` functions have no bottom chrome, so their window simply
+  centres itself in the available height.
+* `showPosBarcodeScanner` switches to a dedicated landscape layout. The +/−
+  quantity controls become a **vertical rail on the right edge** and the close
+  button moves to the **bottom-left corner** — one thumb per side. The toolbar
+  stays where it is.
+
+Because the toolbar's buttons hug the left and right screen edges while the
+scan window stays horizontally centred, the two never collide, so the window is
+free to use the full height of the screen. On a 891×411 dp landscape phone that
+is a 331 lp tall window instead of the 71 lp a naive vertical stack would leave.
+
+> `BarcodeWindowShape` still applies in landscape, but the shorter axis can
+> constrain it: `square` resolves to a true 1:1 on most screens and to about
+> 0.95 on a 891×411 phone, where the available height runs out first.
 
 **Locking orientation is the host app's job, not the package's.** Flutter's
 `SystemChrome.setPreferredOrientations` is app-global and has no getter, so a

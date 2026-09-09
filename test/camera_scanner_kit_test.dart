@@ -193,12 +193,12 @@ void main() {
             reason: '$label / ${shape.name}: window under the toolbar',
           );
           expect(
-            l.qtyRowTop - l.scanWindow.bottom,
+            l.qtyRowTop! - l.scanWindow.bottom,
             greaterThanOrEqualTo(kGap - 0.001),
             reason: '$label / ${shape.name}: qty row crowds the window',
           );
           expect(
-            l.qtyRowTop + kQtyRowHeight,
+            l.qtyRowTop! + kQtyRowHeight,
             lessThanOrEqualTo(closeTop - kGap + 0.001),
             reason: '$label / ${shape.name}: qty row crowds the close button',
           );
@@ -265,7 +265,7 @@ void main() {
       expect(l.scanWindow.height, closeTo(l.scanWindow.width, 0.001));
 
       final qtyTopPreferred = size.height - pad.bottom - 230 - kQtyRowHeight;
-      expect(l.qtyRowTop - qtyTopPreferred, closeTo(60.0, 0.5));
+      expect(l.qtyRowTop! - qtyTopPreferred, closeTo(60.0, 0.5));
     });
 
     test('shrinking is the last resort, and stays near-square', () {
@@ -294,6 +294,156 @@ void main() {
       );
       expect(l.scanWindow, override, reason: 'caller owns their rect');
       expect(l.qtyRowTop, greaterThanOrEqualTo(override.bottom + kGap - 0.001));
+    });
+  });
+
+  group('resolvePosLayout — landscape', () {
+    // (label, size, viewPadding)
+    const devices = <(String, Size, EdgeInsets)>[
+      ('Galaxy A24', Size(891, 411), EdgeInsets.only(top: 24, bottom: 24)),
+      ('iPhone 14', Size(844, 390), EdgeInsets.only(bottom: 21)),
+      ('iPhone SE1', Size(568, 320), EdgeInsets.only(top: 20)),
+      ('Small 640x360', Size(640, 360), EdgeInsets.only(top: 24, bottom: 24)),
+      ('Z Fold unfolded', Size(841, 673), EdgeInsets.only(top: 24, bottom: 24)),
+      ('Near-square', Size(800, 780), EdgeInsets.only(top: 24, bottom: 24)),
+      ('iPad 10.2"', Size(1080, 810), EdgeInsets.only(top: 20, bottom: 20)),
+    ];
+
+    PosLayout layoutFor(Size size, EdgeInsets pad, BarcodeWindowShape shape) =>
+        resolvePosLayout(
+          screenSize: size,
+          viewPadding: pad,
+          shape: shape,
+          qtyButtonsBottomPadding: 230,
+        );
+
+    test('dispatches on orientation', () {
+      final landscape = layoutFor(
+        const Size(891, 411),
+        EdgeInsets.zero,
+        BarcodeWindowShape.slim,
+      );
+      expect(landscape.isLandscape, isTrue);
+      expect(
+        landscape.qtyRowTop,
+        isNull,
+        reason: 'the landscape rail is positioned declaratively',
+      );
+
+      final portrait = layoutFor(
+        _phone,
+        _phonePadding,
+        BarcodeWindowShape.slim,
+      );
+      expect(portrait.isLandscape, isFalse);
+      expect(portrait.qtyRowTop, isNotNull);
+    });
+
+    test('the window clears the edge controls on every device and shape', () {
+      // This is the property the whole landscape layout rests on: because the
+      // window keeps `kLandscapeEdgeReserve` clear on both sides, it cannot
+      // reach the toolbar clusters, the quantity rail or the close button —
+      // which is why no vertical chrome has to be reserved.
+      for (final (label, size, pad) in devices) {
+        for (final shape in BarcodeWindowShape.values) {
+          final l = layoutFor(size, pad, shape);
+
+          expect(
+            l.scanWindow.left,
+            greaterThanOrEqualTo(kLandscapeEdgeReserve - 0.001),
+            reason: '$label / ${shape.name}: window reaches the left chrome',
+          );
+          expect(
+            size.width - l.scanWindow.right,
+            greaterThanOrEqualTo(kLandscapeEdgeReserve - 0.001),
+            reason: '$label / ${shape.name}: window reaches the right chrome',
+          );
+          expect(
+            l.scanWindow.top,
+            greaterThanOrEqualTo(pad.top + kGap - 0.001),
+            reason: '$label / ${shape.name}: window above the safe area',
+          );
+          expect(
+            l.scanWindow.bottom,
+            lessThanOrEqualTo(size.height - pad.bottom - kGap + 0.001),
+            reason: '$label / ${shape.name}: window below the safe area',
+          );
+        }
+      }
+    });
+
+    test('the width clamp fires only where it is needed', () {
+      // Untouched on a normal phone...
+      final a24 = layoutFor(
+        const Size(891, 411),
+        const EdgeInsets.only(top: 24, bottom: 24),
+        BarcodeWindowShape.square,
+      );
+      expect(a24.scanWindow.width, closeTo(349.35, 0.01));
+
+      // ...and trims 12 lp on the one device that needs it.
+      final se1 = layoutFor(
+        const Size(568, 320),
+        const EdgeInsets.only(top: 20),
+        BarcodeWindowShape.square,
+      );
+      expect(
+        se1.scanWindow.width,
+        closeTo(568 - 2 * kLandscapeEdgeReserve, 0.01),
+        reason: 'natural 272 lp would reach the close button',
+      );
+    });
+
+    test('height follows the clamped width, not the natural one', () {
+      // A square on SE1 must be square at the *clamped* 260 lp, not 272.
+      final l = layoutFor(
+        const Size(568, 320),
+        const EdgeInsets.only(top: 20),
+        BarcodeWindowShape.square,
+      );
+      expect(l.scanWindow.height, closeTo(l.scanWindow.width, 0.001));
+    });
+
+    test('the A24 recovers the height the old layout lost', () {
+      // The bug that started this: 71 lp of band on a 411 lp screen.
+      final l = layoutFor(
+        const Size(891, 411),
+        const EdgeInsets.only(top: 24, bottom: 24),
+        BarcodeWindowShape.square,
+      );
+      expect(l.scanWindow.height, greaterThan(300));
+      expect(
+        l.scanWindow.height / l.scanWindow.width,
+        greaterThan(0.9),
+        reason: 'square should still read as square',
+      );
+    });
+
+    test('slim and tall fit outright on a real landscape phone', () {
+      const size = Size(891, 411);
+      const pad = EdgeInsets.only(top: 24, bottom: 24);
+      final slim = layoutFor(size, pad, BarcodeWindowShape.slim);
+      final tall = layoutFor(size, pad, BarcodeWindowShape.tall);
+
+      expect(slim.scanWindow.height, 130.0);
+      expect(
+        tall.scanWindow.height,
+        closeTo(tall.scanWindow.width * 0.60, 0.001),
+        reason: 'tall is not squeezed by the band on this screen',
+      );
+    });
+
+    test('an explicit rect is used verbatim in landscape too', () {
+      const override = Rect.fromLTWH(300, 60, 300, 200);
+      final l = resolvePosLayout(
+        screenSize: const Size(891, 411),
+        viewPadding: const EdgeInsets.only(top: 24, bottom: 24),
+        shape: BarcodeWindowShape.square,
+        qtyButtonsBottomPadding: 230,
+        scanWindowOverride: override,
+      );
+      expect(l.scanWindow, override);
+      expect(l.isLandscape, isTrue);
     });
   });
 

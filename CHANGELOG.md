@@ -13,10 +13,17 @@
 * **Fix:** The scan-list badge takes its border tint from whichever `ScannerOverlayStyle` actually reaches the overlay, so a custom `scannerViewConfig` no longer leaves the badge on the default blue.
 * **Docs:** Corrected `PosBarcodeScannerScreen.offsetFromCenter`'s dartdoc, which claimed it fell back to the barcode preset's `Offset(0, -80)` when the facade in fact applied `Offset(0, -180)`.
 
+### POS landscape
+
+* **Fix:** The POS screen now has a dedicated landscape layout. Previously the toolbar, scan window, quantity row and close button all competed for one vertical axis, so on a 891×411 dp landscape screen the chrome consumed 340 of 411 lp and the scan window was squeezed to a nearly flat **71 lp** strip. In landscape the quantity controls now become a vertical rail on the right edge and the close button moves to the bottom-left corner — both off the centre line — which leaves the window **331 lp** on the same device.
+* **Fix:** The landscape scan window is kept clear of every edge control by a single width clamp rather than by reserving vertical space. Because the toolbar's buttons hug the left and right screen edges while the window stays horizontally centred, they cannot collide, so the toolbar's height no longer has to be subtracted. `square` is now genuinely square in landscape on most devices (0.95 on a 891×411 screen, where the band is the limit).
+* **Fix:** In landscape the close button's label is capped and ellipsised. A long custom `closeButtonLabel` would otherwise grow past the space the layout reserves for it and reach the scan window.
+* **Note:** Portrait is untouched. The portrait solver is the same code, moved behind an orientation dispatch rather than edited, and its regression tests still pass unchanged.
+
 ### Documentation & tests
 
-* **Docs:** The README now states that this package is designed for **portrait orientation**, and explains what happens if a device rotates anyway.
-* **Test:** Added unit coverage for the scan-window geometry and the POS layout solver across a 7-device matrix — including a regression lock asserting the default geometry is unchanged on every device where 1.2.0 was already correct.
+* **Docs:** The README gained an **Orientation** section covering the portrait design target, the new landscape POS layout, and why locking orientation stays the host app's job (`SystemChrome` has no getter for the current preferred orientations, so a package cannot restore what it overwrites).
+* **Test:** Added unit coverage for the scan-window geometry and both POS layout solvers across a 7-device portrait matrix and a 7-device landscape matrix — including a regression lock asserting the portrait geometry is unchanged on every device where 1.2.0 was already correct.
 
 > **Upgrade notes**
 >

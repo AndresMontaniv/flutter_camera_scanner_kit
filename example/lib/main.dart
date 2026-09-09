@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:camera_scanner_kit/camera_scanner_kit.dart';
+
 import 'inline_scanner_example.dart';
 
 void main() {

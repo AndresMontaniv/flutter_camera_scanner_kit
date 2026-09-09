@@ -328,13 +328,23 @@ Size barcodeWindowSize(Size screenSize, BarcodeWindowShape shape) {
   final double baseWidth = screenSize.shortestSide * _barcodeWidthRatio;
   final double width = baseWidth.clamp(_barcodeMinWidth, _barcodeMaxWidth);
 
-  final double height = switch (shape) {
+  return Size(width, barcodeWindowHeightFor(width, shape));
+}
+
+/// Resolves a barcode window's height from its [width] and [shape].
+///
+/// Split out of [barcodeWindowSize] because the landscape POS layout clamps the
+/// width to keep the window clear of the screen-edge controls, and then has to
+/// derive the height from that clamped value rather than the natural one.
+///
+/// Pure by design so the geometry can be unit-tested without a `BuildContext`.
+/// Library-internal — see [kToolbarClearance].
+double barcodeWindowHeightFor(double width, BarcodeWindowShape shape) {
+  return switch (shape) {
     BarcodeWindowShape.slim => _barcodeHeight,
     BarcodeWindowShape.tall => width * _barcodeTallRatio,
     BarcodeWindowShape.square => width,
   };
-
-  return Size(width, height);
 }
 
 /// Computes the 1D barcode scan window rectangle.

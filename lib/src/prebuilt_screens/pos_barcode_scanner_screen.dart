@@ -24,9 +24,10 @@ const _defaultCloseButtonLabel = 'Close Camera';
 ///
 /// ### Features
 ///
-/// * **Quantity buttons** (+ / −) positioned below the scan window. The
-///   cashier sets the desired quantity *before* scanning. After each
-///   successful scan the quantity resets to `1`.
+/// * **Quantity buttons** (+ / −) positioned below the scan window in portrait,
+///   or as a vertical rail on the right edge in landscape. The cashier sets the
+///   desired quantity *before* scanning. After each successful scan the
+///   quantity resets to `1`.
 /// * **Ghost pulse animation** — a brief full-screen colour flash
 ///   (controlled by [successPulseColor]) that gives instant visual
 ///   confirmation of a successful scan.
@@ -34,7 +35,19 @@ const _defaultCloseButtonLabel = 'Close Camera';
 ///   scanned items. Tapping it opens a [DraggableScrollableSheet] with
 ///   barcode × quantity breakdowns.
 /// * **Close button** — a labelled text button anchored to the bottom safe
-///   area for quick dismissal.
+///   area for quick dismissal; bottom-centre in portrait, bottom-left in
+///   landscape.
+///
+/// ### Orientation
+///
+/// The screen is designed for **portrait**, and every default here is tuned for
+/// it. Landscape is supported as a guard rather than a headline feature: the
+/// quantity controls move to a right-hand rail and the close button to the
+/// bottom-left corner, both clear of the centred scan window, so the window
+/// keeps a usable height instead of collapsing into a flat strip.
+///
+/// Locking orientation is the host app's job — see the README's *Orientation*
+/// section.
 ///
 /// ### Parameters
 ///
@@ -60,14 +73,17 @@ const _defaultCloseButtonLabel = 'Close Camera';
 /// * [offsetFromCenter] — Vertical/horizontal nudge for the scan window.
 ///   Defaults to `null`, meaning the screen picks an offset that fits the
 ///   chosen [windowShape] between the toolbar and the quantity buttons —
-///   `Offset(0, -180)` for [BarcodeWindowShape.slim].
+///   `Offset(0, -180)` for [BarcodeWindowShape.slim]. Portrait only; the
+///   landscape layout centres the window instead.
 /// * [overlayStyle] — Visual overlay customization (border color, dimming,
 ///   corner radius). See [ScannerOverlayStyle].
 /// * [useDarkModeButtonTheme] — Dark translucent button backgrounds.
 ///   Defaults to `true`.
-/// * [qtyButtonsBottomPadding] — Bottom padding in logical pixels for
-///   positioning the quantity buttons. Must be greater than `0`.
-///   Defaults to `230`.
+/// * [qtyButtonsBottomPadding] — The quantity row's *preferred* bottom padding
+///   in logical pixels. Honoured exactly unless a taller scan window needs the
+///   space, in which case the row slides down toward the close button. Portrait
+///   only — the landscape rail is anchored to the right edge instead. Must be
+///   greater than `0`. Defaults to `230`.
 /// * [closeButtonLabel] — Custom label for the close button. Defaults to
 ///   `'Close Camera'`.
 /// * [successPulseColor] — The ghost-pulse overlay color. Defaults to
@@ -134,7 +150,11 @@ class PosBarcodeScannerScreen extends StatefulWidget {
   /// Whether to render the control buttons with dark backgrounds.
   final bool useDarkModeButtonTheme;
 
-  /// The bottom padding for placing the quantity adjustment buttons.
+  /// The quantity row's *preferred* bottom padding, in logical pixels.
+  ///
+  /// Honoured exactly unless a taller scan window needs the space, in which
+  /// case the row slides down toward the close button. Ignored in landscape,
+  /// where the controls are a rail anchored to the right edge.
   ///
   /// **Asserts** that this value is greater than `0`.
   final double qtyButtonsBottomPadding;
@@ -182,12 +202,10 @@ class PosBarcodeScannerScreen extends StatefulWidget {
        );
 
   @override
-  State<PosBarcodeScannerScreen> createState() =>
-      _PosBarcodeScannerScreenState();
+  State<PosBarcodeScannerScreen> createState() => _PosBarcodeScannerScreenState();
 }
 
-class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
-    with SingleTickerProviderStateMixin {
+class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> with SingleTickerProviderStateMixin {
   final ValueNotifier<int> qtyNotifier = ValueNotifier<int>(1);
   final ValueNotifier<int> totalItemsNotifier = ValueNotifier<int>(0);
   Map<String, int> scannedBarcodes = {};
@@ -291,8 +309,7 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
                             child: ListView.separated(
                               controller: scrollController,
                               itemCount: scannedBarcodes.length,
-                              separatorBuilder: (_, _) =>
-                                  const Divider(height: 1),
+                              separatorBuilder: (_, _) => const Divider(height: 1),
                               itemBuilder: (context, index) {
                                 final item = list[index];
                                 final qty = item.value;
@@ -327,15 +344,10 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
   }
 
   Widget _buildScanListButton() {
-    final actionButtonTheme = widget.useDarkModeButtonTheme
-        ? ActionButtonTheme.dark
-        : ActionButtonTheme.light;
+    final actionButtonTheme = widget.useDarkModeButtonTheme ? ActionButtonTheme.dark : ActionButtonTheme.light;
     // Track whichever style actually reaches the overlay, so a custom
     // `scannerViewConfig` tints the badge to match its own border.
-    final borderColor =
-        (widget.scannerViewConfig?.overlayStyle ?? widget.overlayStyle)
-            ?.borderColor ??
-        _defaultBorderColor;
+    final borderColor = (widget.scannerViewConfig?.overlayStyle ?? widget.overlayStyle)?.borderColor ?? _defaultBorderColor;
     return ValueListenableBuilder<int>(
       valueListenable: totalItemsNotifier,
       builder: (ctx, total, _) {
@@ -372,19 +384,31 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
     );
   }
 
-  Widget _buildCloseCameraTextButton() {
-    final actionButtonTheme = widget.useDarkModeButtonTheme
-        ? ActionButtonTheme.dark
-        : ActionButtonTheme.light;
+  /// The close-camera button.
+  ///
+  /// Portrait keeps it at bottom-centre with a generous 100 lp inset for thumb
+  /// reach. Landscape moves it to the **bottom-left corner** — off the centre
+  /// line, so it never overlaps the centred scan window and therefore costs no
+  /// vertical space. Its width is capped there, because
+  /// [kLandscapeEdgeReserve] assumes the button cannot grow: without the cap a
+  /// long [PosBarcodeScannerScreen.closeButtonLabel] would punch into the
+  /// window.
+  Widget _buildCloseCameraTextButton({required bool isLandscape}) {
+    final actionButtonTheme = widget.useDarkModeButtonTheme ? ActionButtonTheme.dark : ActionButtonTheme.light;
     final borderColor = actionButtonTheme.borderColor;
     return Align(
-      alignment: Alignment.bottomCenter,
+      alignment: isLandscape ? Alignment.bottomLeft : Alignment.bottomCenter,
       child: SafeArea(
         bottom: true,
         top: false,
         right: false,
-        left: false,
-        minimum: const EdgeInsets.only(bottom: 100),
+        left: isLandscape,
+        minimum: isLandscape
+            ? const EdgeInsets.only(
+                left: kGap,
+                bottom: kLandscapeCloseBottomInset,
+              )
+            : const EdgeInsets.only(bottom: kCloseMinBottomInset),
         child: Material(
           color: actionButtonTheme.backgroundColor,
           clipBehavior: Clip.antiAlias,
@@ -398,16 +422,24 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
             // That PopScope will intercept this programmatic pop, execute the hardware teardown
             // safely, and then perform the actual final pop.
             onTap: () => Navigator.of(context).pop(),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
-                vertical: 12.0,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: isLandscape ? kLandscapeCloseButtonMaxWidth : double.infinity,
               ),
-              child: Text(
-                widget.closeButtonLabel ?? _defaultCloseButtonLabel,
-                style: TextStyle(
-                  color: actionButtonTheme.foregroundColor,
-                  fontWeight: FontWeight.w500,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20.0,
+                  vertical: 12.0,
+                ),
+                child: Text(
+                  widget.closeButtonLabel ?? _defaultCloseButtonLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: actionButtonTheme.foregroundColor,
+                    fontSize: isLandscape ? 13.0 : 13.0,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ),
@@ -454,9 +486,7 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
       // A caller-supplied config owns its own rect; we only place the
       // quantity row around it. An explicit `offsetFromCenter` likewise opts
       // out of the solve for the window itself.
-      scanWindowOverride:
-          widget.scannerViewConfig?.scanWindow ??
-          _offsetOverrideWindow(screenSize),
+      scanWindowOverride: widget.scannerViewConfig?.scanWindow ?? _offsetOverrideWindow(screenSize),
     );
   }
 
@@ -485,9 +515,7 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
     final scannerViewConfig =
         widget.scannerViewConfig ??
         ScannerViewConfig.barcode(
-          overlayStyle:
-              widget.overlayStyle ??
-              const ScannerOverlayStyle(borderColor: _defaultBorderColor),
+          overlayStyle: widget.overlayStyle ?? const ScannerOverlayStyle(borderColor: _defaultBorderColor),
           allowedFormats: widget.allowedFormats,
           windowShape: widget.windowShape,
           scanWindow: layout.scanWindow,
@@ -519,49 +547,106 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
             ),
           ),
         ),
-        Positioned(
-          // Anchored to the solved top rather than the screen bottom, so the
-          // row can yield ground when a taller scan window needs it.
-          top: layout.qtyRowTop,
-          left: 0,
-          right: 0,
+        if (layout.isLandscape) _buildQtyRail() else _buildQtyRow(layout.qtyRowTop!),
+        _buildCloseCameraTextButton(isLandscape: layout.isLandscape),
+      ],
+    );
+  }
+
+  /// The portrait quantity controls: a horizontal row spanning the screen.
+  ///
+  /// Anchored to the solved [top] rather than the screen bottom, so the row can
+  /// yield ground when a taller scan window needs it.
+  Widget _buildQtyRow(double top) {
+    return Positioned(
+      top: top,
+      left: 0,
+      right: 0,
+      child: ValueListenableBuilder<int>(
+        valueListenable: qtyNotifier,
+        builder: (context, qty, child) {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildQtyDecrementButton(qty),
+              _buildQtyLabel(qty),
+              _buildQtyIncrementButton(),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  /// The landscape quantity controls: a vertical rail on the right edge.
+  ///
+  /// Positioned declaratively rather than from a solved offset — in landscape
+  /// the rail sits beside the scan window instead of below it, so it costs no
+  /// vertical budget and needs no arithmetic.
+  ///
+  /// The top inset clears the toolbar's flash and scan-list badge, which share
+  /// this edge. Increment is on top (up = more), matching the reviewed mockups;
+  /// the portrait row keeps its left-to-right `[−, qty, +]` order.
+  Widget _buildQtyRail() {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: SafeArea(
+        top: true,
+        right: true,
+        bottom: true,
+        left: false,
+        child: Padding(
+          padding: const EdgeInsets.only(
+            right: 20.0,
+            top: kToolbarPadding + kPosToolbarRowHeight + kGap,
+            bottom: kGap,
+          ),
           child: ValueListenableBuilder<int>(
             valueListenable: qtyNotifier,
             builder: (context, qty, child) {
-              return Row(
+              return Column(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  CircleButton(
-                    icon: Icons.remove,
-                    size: 35,
-                    darkMode: widget.useDarkModeButtonTheme,
-                    onPressed: () {
-                      if (qty > 1) qtyNotifier.value--;
-                    },
-                  ),
-                  Text(
-                    qty.toString(),
-                    style: const TextStyle(
-                      fontSize: 40,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  CircleButton(
-                    icon: Icons.add,
-                    size: 35,
-                    darkMode: widget.useDarkModeButtonTheme,
-                    onPressed: () {
-                      qtyNotifier.value++;
-                    },
-                  ),
+                  _buildQtyIncrementButton(),
+                  _buildQtyLabel(qty),
+                  _buildQtyDecrementButton(qty),
                 ],
               );
             },
           ),
         ),
-        _buildCloseCameraTextButton(),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildQtyIncrementButton() {
+    return CircleButton(
+      icon: Icons.add,
+      size: 35,
+      darkMode: widget.useDarkModeButtonTheme,
+      onPressed: () => qtyNotifier.value++,
+    );
+  }
+
+  Widget _buildQtyDecrementButton(int qty) {
+    return CircleButton(
+      icon: Icons.remove,
+      size: 35,
+      darkMode: widget.useDarkModeButtonTheme,
+      onPressed: () {
+        if (qty > 1) qtyNotifier.value--;
+      },
+    );
+  }
+
+  Widget _buildQtyLabel(int qty) {
+    return Text(
+      qty.toString(),
+      style: const TextStyle(
+        fontSize: 40,
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+      ),
     );
   }
 }
