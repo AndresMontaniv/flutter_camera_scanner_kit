@@ -19,12 +19,12 @@ enum BarcodeWindowShape {
   /// The classic narrow strip — a fixed 130 lp height.
   ///
   /// This is the default and reproduces the historic 1.2.0 geometry exactly.
-  standard,
+  slim,
 
   /// A taller window whose height is 60 % of the responsive width.
   ///
   /// A middle ground for users who struggle to align a barcode inside the
-  /// narrow [standard] strip.
+  /// narrow [slim] strip.
   tall,
 
   /// A responsive 1:1 square — height equals the responsive width.
@@ -139,7 +139,7 @@ class ScannerView extends StatelessWidget {
   /// The vertical proportion of the scan window.
   ///
   /// Only honoured by [ScannerView.barcode]; the other constructors pin it to
-  /// [BarcodeWindowShape.standard] and ignore it.
+  /// [BarcodeWindowShape.slim] and ignore it.
   final BarcodeWindowShape windowShape;
 
   /// Internal function reference used by named constructors to calculate a
@@ -176,7 +176,7 @@ class ScannerView extends StatelessWidget {
     this.scanWindowUpdateThreshold = 0.0,
     this.stackChildren = const <Widget>[],
   }) : _calculateScanWindow = null,
-       windowShape = BarcodeWindowShape.standard,
+       windowShape = BarcodeWindowShape.slim,
        offsetFromCenter = Offset.zero;
 
   /// Creates a scanner with an automatically calculated, responsive **1:1
@@ -202,7 +202,7 @@ class ScannerView extends StatelessWidget {
   }) : scanWindow = null,
        overlayBuilder = null,
        autoDrawOverlay = true,
-       windowShape = BarcodeWindowShape.standard,
+       windowShape = BarcodeWindowShape.slim,
        _calculateScanWindow = _calculateQrCodeScanWindow;
 
   /// Creates a scanner with an automatically calculated, responsive
@@ -211,7 +211,7 @@ class ScannerView extends StatelessWidget {
   ///
   /// The scan window width is derived from the device's shortest side and
   /// clamped to sane min/max bounds.  Its height follows [windowShape], which
-  /// defaults to the fixed, narrow [BarcodeWindowShape.standard] strip that
+  /// defaults to the fixed, narrow [BarcodeWindowShape.slim] strip that
   /// encourages the user to align the barcode horizontally. An overlay is
   /// drawn by default.
   const ScannerView.barcode({
@@ -227,21 +227,24 @@ class ScannerView extends StatelessWidget {
     this.useAppLifecycleState = true,
     this.scanWindowUpdateThreshold = 0.0,
     this.stackChildren = const <Widget>[],
-    this.windowShape = BarcodeWindowShape.standard,
-  }) : scanWindow = null,
-       overlayBuilder = null,
+    this.windowShape = BarcodeWindowShape.slim,
+    this.scanWindow,
+  }) : overlayBuilder = null,
        autoDrawOverlay = true,
        _calculateScanWindow = _calculateBarcodeScanWindow;
 
   @override
   Widget build(BuildContext context) {
+    // An explicit rect wins over the responsive calculators. Only
+    // [ScannerView.barcode] can supply both; the QR constructor pins
+    // `scanWindow` to null, so it always computes its own square.
     final overlayRect =
+        scanWindow ??
         _calculateScanWindow?.call(
           context,
           offsetFromCenter: offsetFromCenter,
           windowShape: windowShape,
-        ) ??
-        scanWindow;
+        );
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
@@ -292,7 +295,7 @@ const double _qrMaxSize = 350.0;
 // Barcode scan window sizing.
 // The window width equals 85 % of the shortest side, clamped between 250 lp
 // and 400 lp. Height depends on the requested [BarcodeWindowShape]:
-// `standard` keeps the historic fixed 130 lp strip, while `tall` and `square`
+// `slim` keeps the historic fixed 130 lp strip, while `tall` and `square`
 // derive their height from that responsive width.
 const double _barcodeWidthRatio = 0.85;
 const double _barcodeMinWidth = 250.0;
@@ -326,7 +329,7 @@ Size barcodeWindowSize(Size screenSize, BarcodeWindowShape shape) {
   final double width = baseWidth.clamp(_barcodeMinWidth, _barcodeMaxWidth);
 
   final double height = switch (shape) {
-    BarcodeWindowShape.standard => _barcodeHeight,
+    BarcodeWindowShape.slim => _barcodeHeight,
     BarcodeWindowShape.tall => width * _barcodeTallRatio,
     BarcodeWindowShape.square => width,
   };
@@ -336,7 +339,7 @@ Size barcodeWindowSize(Size screenSize, BarcodeWindowShape shape) {
 
 /// Computes the 1D barcode scan window rectangle.
 ///
-/// For [BarcodeWindowShape.standard] this is exactly the 1.2.0 formula —
+/// For [BarcodeWindowShape.slim] this is exactly the 1.2.0 formula —
 /// a plain `Rect.fromCenter` with no fitting — so existing callers are
 /// guaranteed a byte-identical rect.
 ///
@@ -356,7 +359,7 @@ Rect barcodeScanWindow(
   final Size windowSize = barcodeWindowSize(screenSize, shape);
   final Offset center = screenSize.center(offsetFromCenter ?? Offset.zero);
 
-  if (shape == BarcodeWindowShape.standard) {
+  if (shape == BarcodeWindowShape.slim) {
     // Historic path, deliberately untouched.
     return Rect.fromCenter(
       center: center,
@@ -397,7 +400,7 @@ Rect _calculateQrCodeScanWindow(
   Offset? offsetFromCenter,
   // Accepted to satisfy the shared `_calculateScanWindow` signature; the QR
   // window is always a 1:1 square, so the shape is meaningless here.
-  BarcodeWindowShape windowShape = BarcodeWindowShape.standard,
+  BarcodeWindowShape windowShape = BarcodeWindowShape.slim,
 }) {
   final offset = offsetFromCenter ?? Offset.zero;
   final screenSize = MediaQuery.sizeOf(context);
@@ -418,7 +421,7 @@ Rect _calculateQrCodeScanWindow(
 Rect _calculateBarcodeScanWindow(
   BuildContext context, {
   Offset? offsetFromCenter,
-  BarcodeWindowShape windowShape = BarcodeWindowShape.standard,
+  BarcodeWindowShape windowShape = BarcodeWindowShape.slim,
 }) {
   return barcodeScanWindow(
     MediaQuery.sizeOf(context),

@@ -55,12 +55,12 @@ const _defaultCloseButtonLabel = 'Close Camera';
 ///   clear of the toolbar and the quantity row. Defaults to `null`, which
 ///   builds a [ScannerViewConfig.barcode] from the individual parameters.
 /// * [windowShape] — How tall the scan window is. See [BarcodeWindowShape].
-///   Defaults to [BarcodeWindowShape.standard]. Geometry only: a square
+///   Defaults to [BarcodeWindowShape.slim]. Geometry only: a square
 ///   window still decodes 1D retail symbologies exclusively.
 /// * [offsetFromCenter] — Vertical/horizontal nudge for the scan window.
 ///   Defaults to `null`, meaning the screen picks an offset that fits the
 ///   chosen [windowShape] between the toolbar and the quantity buttons —
-///   `Offset(0, -180)` for [BarcodeWindowShape.standard].
+///   `Offset(0, -180)` for [BarcodeWindowShape.slim].
 /// * [overlayStyle] — Visual overlay customization (border color, dimming,
 ///   corner radius). See [ScannerOverlayStyle].
 /// * [useDarkModeButtonTheme] — Dark translucent button backgrounds.
@@ -163,7 +163,7 @@ class PosBarcodeScannerScreen extends StatefulWidget {
     super.key,
     required this.onScan,
     this.scannerViewConfig,
-    this.windowShape = BarcodeWindowShape.standard,
+    this.windowShape = BarcodeWindowShape.slim,
     this.allowedFormats = const <BarcodeFormat>[],
     this.detectionTimeoutMs = 250,
     this.sameItemCooldownMs = 1500,
@@ -440,41 +440,57 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
     super.dispose();
   }
 
-  /// Picks the vertical offset for the built-in barcode preset.
+  /// Solves this screen's vertical budget for the current metrics.
   ///
-  /// An explicit [PosBarcodeScannerScreen.offsetFromCenter] always wins. The
-  /// [BarcodeWindowShape.standard] shape short-circuits to the historic
-  /// `Offset(0, -180)` so the default screen is unchanged; taller shapes get
-  /// fitted between the toolbar and the quantity row.
-  Offset _resolveOffsetFromCenter(BuildContext context) {
-    final explicit = widget.offsetFromCenter;
-    if (explicit != null) return explicit;
-    if (widget.windowShape == BarcodeWindowShape.standard) {
-      return kStandardPosOffset;
-    }
-
+  /// Runs on every build, so the layout tracks rotation and resize the same
+  /// way the responsive presets do.
+  PosLayout _resolveLayout(BuildContext context) {
     final screenSize = MediaQuery.sizeOf(context);
-    return resolvePosWindowOffset(
+    return resolvePosLayout(
       screenSize: screenSize,
       viewPadding: MediaQuery.viewPaddingOf(context),
-      windowHeight: barcodeWindowSize(screenSize, widget.windowShape).height,
+      shape: widget.windowShape,
       qtyButtonsBottomPadding: widget.qtyButtonsBottomPadding,
+      // A caller-supplied config owns its own rect; we only place the
+      // quantity row around it. An explicit `offsetFromCenter` likewise opts
+      // out of the solve for the window itself.
+      scanWindowOverride:
+          widget.scannerViewConfig?.scanWindow ??
+          _offsetOverrideWindow(screenSize),
+    );
+  }
+
+  /// Honours a caller-supplied [PosBarcodeScannerScreen.offsetFromCenter] by
+  /// resolving it to an explicit rect, so the quantity row can still be placed
+  /// relative to wherever the caller put the window.
+  Rect? _offsetOverrideWindow(Size screenSize) {
+    final explicit = widget.offsetFromCenter;
+    if (explicit == null || widget.scannerViewConfig != null) return null;
+    final size = barcodeWindowSize(screenSize, widget.windowShape);
+    return Rect.fromCenter(
+      center: screenSize.center(explicit),
+      width: size.width,
+      height: size.height,
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final layout = _resolveLayout(context);
+
     // A caller-supplied config is used verbatim; otherwise assemble the
-    // barcode preset from the individual parameters.
+    // barcode preset around the solved window. Passing the rect through the
+    // *barcode* constructor keeps the 1D format filter, which the custom
+    // constructor would silently drop.
     final scannerViewConfig =
         widget.scannerViewConfig ??
         ScannerViewConfig.barcode(
           overlayStyle:
               widget.overlayStyle ??
               const ScannerOverlayStyle(borderColor: _defaultBorderColor),
-          offsetFromCenter: _resolveOffsetFromCenter(context),
           allowedFormats: widget.allowedFormats,
           windowShape: widget.windowShape,
+          scanWindow: layout.scanWindow,
         );
 
     return ScannerScreen.multiscan(
@@ -504,9 +520,9 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
           ),
         ),
         Positioned(
-          bottom:
-              MediaQuery.of(context).padding.bottom +
-              widget.qtyButtonsBottomPadding,
+          // Anchored to the solved top rather than the screen bottom, so the
+          // row can yield ground when a taller scan window needs it.
+          top: layout.qtyRowTop,
           left: 0,
           right: 0,
           child: ValueListenableBuilder<int>(

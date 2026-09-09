@@ -212,7 +212,7 @@ class ScannerViewConfig {
   /// The vertical proportion of the scan window.
   ///
   /// Only meaningful for [ScannerViewConfig.barcode]; the QR and custom
-  /// constructors pin it to [BarcodeWindowShape.standard] and ignore it.
+  /// constructors pin it to [BarcodeWindowShape.slim] and ignore it.
   ///
   /// This affects **geometry only** — it never widens [allowedFormats].
   final BarcodeWindowShape windowShape;
@@ -230,7 +230,7 @@ class ScannerViewConfig {
     this.overlayStyle,
     this.allowedFormats = const <BarcodeFormat>[],
   }) : _mode = _OverlayMode.custom,
-       windowShape = BarcodeWindowShape.standard,
+       windowShape = BarcodeWindowShape.slim,
        offsetFromCenter = null;
 
   /// Creates a scanner optimized for **QR / 2D matrix codes**.
@@ -241,7 +241,7 @@ class ScannerViewConfig {
     this.offsetFromCenter,
   }) : _mode = _OverlayMode.qrCode,
        scanWindow = null,
-       windowShape = BarcodeWindowShape.standard,
+       windowShape = BarcodeWindowShape.slim,
        allowedFormats = const [BarcodeFormat.qrCode];
 
   /// Creates a scanner optimized for **1D product barcodes**.
@@ -252,11 +252,18 @@ class ScannerViewConfig {
   /// [windowShape] controls how tall the overlay is — see
   /// [BarcodeWindowShape]. It is a viewport setting only and does not change
   /// which symbologies are decoded.
+  ///
+  /// [scanWindow] pins the overlay to an explicit [Rect] while **keeping** the
+  /// 1D format filter, which the default constructor cannot do. It is intended
+  /// for screens that solve their own layout — `PosBarcodeScannerScreen` uses
+  /// it to keep the window and its quantity controls in agreement. When
+  /// supplied it overrides [windowShape] and [offsetFromCenter], and the
+  /// window stops being responsive: recompute it whenever the metrics change.
   const ScannerViewConfig.barcode({
     this.overlayStyle,
     this.offsetFromCenter,
     this.allowedFormats = const [],
-    this.windowShape = BarcodeWindowShape.standard,
-  }) : _mode = _OverlayMode.barcode,
-       scanWindow = null;
+    this.windowShape = BarcodeWindowShape.slim,
+    this.scanWindow,
+  }) : _mode = _OverlayMode.barcode;
 }

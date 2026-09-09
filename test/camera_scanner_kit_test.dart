@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:camera_scanner_kit/camera_scanner_kit.dart';
 // Internal imports: the scan-window geometry is deliberately not part of the
 // public API, but it is pure arithmetic and worth testing directly.
@@ -23,8 +25,8 @@ void main() {
   });
 
   group('barcodeWindowSize', () {
-    test('standard keeps the historic fixed 130 lp height', () {
-      final size = barcodeWindowSize(_phone, BarcodeWindowShape.standard);
+    test('slim keeps the historic fixed 130 lp height', () {
+      final size = barcodeWindowSize(_phone, BarcodeWindowShape.slim);
       expect(size.width, _phoneWindowWidth);
       expect(size.height, 130.0);
     });
@@ -68,7 +70,7 @@ void main() {
   });
 
   group('barcodeScanWindow', () {
-    test('standard reproduces the historic 1.2.0 rect exactly', () {
+    test('slim reproduces the historic 1.2.0 rect exactly', () {
       // The 1.2.0 formula was an unconditional
       //   Rect.fromCenter(center: size.center(offset), width: w, height: 130)
       // with no fitting. On a 390x844 screen at the POS offset of (0, -180):
@@ -78,7 +80,7 @@ void main() {
         _phone,
         _phonePadding,
         const Offset(0, -180),
-        BarcodeWindowShape.standard,
+        BarcodeWindowShape.slim,
       );
 
       expect(rect.left, closeTo(195 - 165.75, 0.001));
@@ -87,16 +89,16 @@ void main() {
       expect(rect.height, 130.0);
     });
 
-    test('standard is never repositioned, even where it would overlap', () {
+    test('slim is never repositioned, even where it would overlap', () {
       // A small device at the POS offset genuinely overlaps the toolbar today.
-      // The fit deliberately does NOT run for `standard`, so that pre-existing
+      // The fit deliberately does NOT run for `slim`, so that pre-existing
       // geometry is preserved byte-for-byte rather than silently corrected.
       const small = Size(320, 568);
       final rect = barcodeScanWindow(
         small,
         const EdgeInsets.only(top: 20),
         const Offset(0, -180),
-        BarcodeWindowShape.standard,
+        BarcodeWindowShape.slim,
       );
       expect(rect.center.dy, closeTo(568 / 2 - 180, 0.001));
     });
@@ -150,46 +152,148 @@ void main() {
     });
   });
 
-  group('resolvePosWindowOffset', () {
-    test('centres a square window between the toolbar and the qty row', () {
-      final height = barcodeWindowSize(
-        _phone,
-        BarcodeWindowShape.square,
-      ).height;
-      final offset = resolvePosWindowOffset(
-        screenSize: _phone,
-        viewPadding: _phonePadding,
-        windowHeight: height,
-        qtyButtonsBottomPadding: 230,
-      );
+  group('resolvePosLayout', () {
+    // (label, size, viewPadding)
+    const devices = <(String, Size, EdgeInsets)>[
+      ('iPhone SE 2/3', Size(375, 667), EdgeInsets.only(top: 20)),
+      ('iPhone 13 mini', Size(375, 812), EdgeInsets.only(top: 50, bottom: 34)),
+      ('iPhone 14', Size(390, 844), EdgeInsets.only(top: 47, bottom: 34)),
+      (
+        'iPhone 14 Pro Max',
+        Size(430, 932),
+        EdgeInsets.only(top: 59, bottom: 34),
+      ),
+      ('Android 360x640', Size(360, 640), EdgeInsets.only(top: 24)),
+      ('Android common', Size(412, 915), EdgeInsets.only(top: 24, bottom: 24)),
+      ('iPad 10.2"', Size(810, 1080), EdgeInsets.only(top: 24, bottom: 20)),
+    ];
 
-      final rect = barcodeScanWindow(
-        _phone,
-        _phonePadding,
-        offset,
-        BarcodeWindowShape.square,
-      );
+    PosLayout layoutFor(Size size, EdgeInsets pad, BarcodeWindowShape shape) =>
+        resolvePosLayout(
+          screenSize: size,
+          viewPadding: pad,
+          shape: shape,
+          qtyButtonsBottomPadding: 230,
+        );
 
-      // Toolbar band starts at 47 + 72 = 119.
-      expect(rect.top, greaterThan(_phonePadding.top + kToolbarClearance));
-      // The qty row's top edge: 844 - (34 + 230) - ~47 row height.
-      const qtyRowTop = 844 - (34 + 230) - 47;
+    test('nothing ever collides, on any device or shape', () {
+      for (final (label, size, pad) in devices) {
+        for (final shape in BarcodeWindowShape.values) {
+          final l = layoutFor(size, pad, shape);
+          final toolbarBottom =
+              pad.top + kToolbarPadding + kPosToolbarRowHeight;
+          final closeTop =
+              size.height -
+              math.max(pad.bottom, kCloseMinBottomInset) -
+              kCloseButtonHeight;
+
+          expect(
+            l.scanWindow.top,
+            greaterThanOrEqualTo(toolbarBottom + kGap - 0.001),
+            reason: '$label / ${shape.name}: window under the toolbar',
+          );
+          expect(
+            l.qtyRowTop - l.scanWindow.bottom,
+            greaterThanOrEqualTo(kGap - 0.001),
+            reason: '$label / ${shape.name}: qty row crowds the window',
+          );
+          expect(
+            l.qtyRowTop + kQtyRowHeight,
+            lessThanOrEqualTo(closeTop - kGap + 0.001),
+            reason: '$label / ${shape.name}: qty row crowds the close button',
+          );
+        }
+      }
+    });
+
+    test('slim reproduces the 1.2.0 geometry where 1.2.0 was correct', () {
+      // The five devices whose historic layout already fit. Anything that
+      // moves here is a regression for existing consumers.
+      const unchanged = {
+        'iPhone 13 mini',
+        'iPhone 14',
+        'iPhone 14 Pro Max',
+        'Android common',
+        'iPad 10.2"',
+      };
+      for (final (label, size, pad) in devices) {
+        if (!unchanged.contains(label)) continue;
+        final l = layoutFor(size, pad, BarcodeWindowShape.slim);
+        final legacyTop = size.height / 2 - 180 - 65;
+        final legacyQtyTop = size.height - pad.bottom - 230 - kQtyRowHeight;
+
+        expect(l.scanWindow.top, closeTo(legacyTop, 0.001), reason: label);
+        expect(l.scanWindow.height, 130.0, reason: label);
+        expect(l.qtyRowTop, closeTo(legacyQtyTop, 0.001), reason: label);
+      }
+    });
+
+    test(
+      'slim is corrected on the two devices where it sat under the toolbar',
+      () {
+        // These are the only back-compat changes, and both fix a real overlap.
+        for (final (label, size, pad, shift)
+            in const <(String, Size, EdgeInsets, double)>[
+              ('iPhone SE 2/3', Size(375, 667), EdgeInsets.only(top: 20), 20.5),
+              (
+                'Android 360x640',
+                Size(360, 640),
+                EdgeInsets.only(top: 24),
+                38.0,
+              ),
+            ]) {
+          final l = layoutFor(size, pad, BarcodeWindowShape.slim);
+          final legacyTop = size.height / 2 - 180 - 65;
+          expect(
+            l.scanWindow.top - legacyTop,
+            closeTo(shift, 0.01),
+            reason: '$label should move down by $shift lp',
+          );
+        }
+      },
+    );
+
+    test('the qty row yields before the window shrinks', () {
+      // iPhone SE 2/3 + square: the row slides down 60 lp and the window
+      // keeps its full 1:1 height. Step 3 must be tried before step 4.
+      const size = Size(375, 667);
+      const pad = EdgeInsets.only(top: 20);
+      final l = layoutFor(size, pad, BarcodeWindowShape.square);
+      final expected = barcodeWindowSize(size, BarcodeWindowShape.square);
+
+      expect(l.scanWindow.height, closeTo(expected.height, 0.001));
+      expect(l.scanWindow.height, closeTo(l.scanWindow.width, 0.001));
+
+      final qtyTopPreferred = size.height - pad.bottom - 230 - kQtyRowHeight;
+      expect(l.qtyRowTop - qtyTopPreferred, closeTo(60.0, 0.5));
+    });
+
+    test('shrinking is the last resort, and stays near-square', () {
+      // Android 360x640 has 6 lp less than a true square needs.
+      const size = Size(360, 640);
+      const pad = EdgeInsets.only(top: 24);
+      final l = layoutFor(size, pad, BarcodeWindowShape.square);
+
+      expect(l.scanWindow.width, 306.0);
+      expect(l.scanWindow.height, closeTo(300.0, 0.001));
       expect(
-        rect.bottom,
-        lessThan(qtyRowTop),
-        reason: 'the window must clear the +/- quantity controls',
+        l.scanWindow.height / l.scanWindow.width,
+        greaterThan(0.97),
+        reason: 'a shrunk square must still read as square',
       );
     });
 
-    test('falls back to the historic offset on a degenerate layout', () {
-      // A qty padding large enough to erase the band entirely.
-      final offset = resolvePosWindowOffset(
+    test('an explicit rect is used verbatim, qty row placed around it', () {
+      const override = Rect.fromLTWH(40, 300, 300, 300);
+      final l = resolvePosLayout(
         screenSize: _phone,
         viewPadding: _phonePadding,
-        windowHeight: 300,
-        qtyButtonsBottomPadding: 900,
+        shape: BarcodeWindowShape.square,
+        qtyButtonsBottomPadding: 230,
+        scanWindowOverride: override,
       );
-      expect(offset, const Offset(0, -180));
+      expect(l.scanWindow, override, reason: 'caller owns their rect');
+      expect(l.qtyRowTop, greaterThanOrEqualTo(override.bottom + kGap - 0.001));
     });
   });
 

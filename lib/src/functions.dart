@@ -203,7 +203,7 @@ Future<String?> scanBarcode(
   List<BarcodeFormat> allowedFormats = const [],
 
   /// How tall the scan window is. Geometry only — never widens detection.
-  BarcodeWindowShape windowShape = BarcodeWindowShape.standard,
+  BarcodeWindowShape windowShape = BarcodeWindowShape.slim,
 
   /// Whether to trigger haptic feedback and an audible beep on success.
   bool enableSoundAndVibration = true,
@@ -504,7 +504,7 @@ Future<List<String>?> scanBarcodeBatch(
   List<BarcodeFormat> allowedFormats = const [],
 
   /// How tall the scan window is. Geometry only — never widens detection.
-  BarcodeWindowShape windowShape = BarcodeWindowShape.standard,
+  BarcodeWindowShape windowShape = BarcodeWindowShape.slim,
 
   /// When `true`, toolbar buttons use a dark translucent background.
   bool useDarkModeButtonTheme = true,
@@ -824,7 +824,7 @@ Future<void> scanBarcodeStream(
   List<BarcodeFormat> allowedFormats = const [],
 
   /// How tall the scan window is. Geometry only — never widens detection.
-  BarcodeWindowShape windowShape = BarcodeWindowShape.standard,
+  BarcodeWindowShape windowShape = BarcodeWindowShape.slim,
 
   /// When `true`, toolbar buttons use a dark translucent background.
   bool useDarkModeButtonTheme = true,
@@ -1036,6 +1036,47 @@ void showPosScanner(
 
   /// The initial zoom scale for the camera (0.0 – 1.0).
   double? initialZoom,
+}) {
+  _pushPosScreen(
+    context,
+    onScan: onScan,
+    scannerViewConfig: scannerViewConfig,
+    closeButtonLabel: closeButtonLabel,
+    detectionTimeoutMs: detectionTimeoutMs,
+    sameItemCooldownMs: sameItemCooldownMs,
+    enableSoundAndVibration: enableSoundAndVibration,
+    useDarkModeButtonTheme: useDarkModeButtonTheme,
+    qtyButtonsBottomPadding: qtyButtonsBottomPadding,
+    successPulseColor: successPulseColor,
+    lensType: lensType,
+    initialZoom: initialZoom,
+  );
+}
+
+/// Pushes [PosBarcodeScannerScreen] and swallows camera errors.
+///
+/// Shared by [showPosScanner] and [showPosBarcodeScanner]. The preset facade
+/// deliberately forwards its *ingredients* rather than a pre-built
+/// [ScannerViewConfig]: the screen treats a non-null config as "the caller owns
+/// the geometry" and skips its own layout solve, which is exactly what the
+/// preset does not want.
+Future<void> _pushPosScreen(
+  BuildContext context, {
+  required void Function(String barcode, int quantity) onScan,
+  ScannerViewConfig? scannerViewConfig,
+  BarcodeWindowShape windowShape = BarcodeWindowShape.slim,
+  Offset? offsetFromCenter,
+  ScannerOverlayStyle? overlayStyle,
+  List<BarcodeFormat> allowedFormats = const <BarcodeFormat>[],
+  int detectionTimeoutMs = 250,
+  int sameItemCooldownMs = 1500,
+  bool enableSoundAndVibration = true,
+  bool useDarkModeButtonTheme = true,
+  double qtyButtonsBottomPadding = 230,
+  String? closeButtonLabel,
+  Color? successPulseColor,
+  ScannerLensType lensType = ScannerLensType.any,
+  double? initialZoom,
 }) async {
   try {
     await Navigator.of(context, rootNavigator: true).push(
@@ -1043,6 +1084,10 @@ void showPosScanner(
         builder: (_) => PosBarcodeScannerScreen(
           onScan: onScan,
           scannerViewConfig: scannerViewConfig,
+          windowShape: windowShape,
+          offsetFromCenter: offsetFromCenter,
+          overlayStyle: overlayStyle,
+          allowedFormats: allowedFormats,
           closeButtonLabel: closeButtonLabel,
           detectionTimeoutMs: detectionTimeoutMs,
           sameItemCooldownMs: sameItemCooldownMs,
@@ -1090,13 +1135,13 @@ void showPosScanner(
 ///   again. Defaults to `1500`.
 /// * [enableSoundAndVibration] — Haptic and audio feedback. Defaults to `true`.
 /// * [windowShape] — How tall the scan window is; see [BarcodeWindowShape].
-///   Defaults to [BarcodeWindowShape.standard], the narrow 1D strip. This is
+///   Defaults to [BarcodeWindowShape.slim], the narrow 1D strip. This is
 ///   a **viewport setting only** — [BarcodeWindowShape.square] renders a
 ///   square window that still decodes 1D retail symbologies exclusively.
 /// * [offsetFromCenter] — Vertical/horizontal nudge for the scan window.
 ///   Defaults to `null`, which lets the screen fit the window between the
 ///   toolbar and the quantity buttons — resolving to `Offset(0, -180)` for
-///   [BarcodeWindowShape.standard], unchanged from earlier releases.
+///   [BarcodeWindowShape.slim], unchanged from earlier releases.
 /// * [overlayStyle] — Visual overlay customization. See [ScannerOverlayStyle].
 /// * [useDarkModeButtonTheme] — Dark button backgrounds. Defaults to `true`.
 /// * [qtyButtonsBottomPadding] — Bottom padding for the quantity buttons.
@@ -1144,7 +1189,7 @@ void showPosBarcodeScanner(
   bool enableSoundAndVibration = true,
 
   /// How tall the scan window is. Geometry only — never widens detection.
-  BarcodeWindowShape windowShape = BarcodeWindowShape.standard,
+  BarcodeWindowShape windowShape = BarcodeWindowShape.slim,
 
   /// Vertical/horizontal nudge applied to the scan window position.
   ///
@@ -1172,17 +1217,17 @@ void showPosBarcodeScanner(
   /// The initial zoom scale for the camera (0.0 – 1.0).
   double? initialZoom,
 }) {
-  // `offsetFromCenter` is forwarded as-is, including `null`: the screen owns
-  // the fallback so it can fit the window to `windowShape`.
-  showPosScanner(
+  // Ingredients, not a config: a non-null `scannerViewConfig` would tell the
+  // screen the caller owns the geometry and disable its layout solve.
+  // `offsetFromCenter` is forwarded as-is, including `null`, so the screen can
+  // fit the window to `windowShape`.
+  _pushPosScreen(
     context,
     onScan: onScan,
-    scannerViewConfig: ScannerViewConfig.barcode(
-      overlayStyle: overlayStyle,
-      offsetFromCenter: offsetFromCenter,
-      allowedFormats: allowedFormats,
-      windowShape: windowShape,
-    ),
+    windowShape: windowShape,
+    offsetFromCenter: offsetFromCenter,
+    overlayStyle: overlayStyle,
+    allowedFormats: allowedFormats,
     closeButtonLabel: closeButtonLabel,
     detectionTimeoutMs: detectionTimeoutMs,
     sameItemCooldownMs: sameItemCooldownMs,

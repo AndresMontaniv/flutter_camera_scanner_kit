@@ -204,7 +204,7 @@ retail barcode, but unforgiving if the user tilts the product. Pass a
 
 | Shape | Height | Use for |
 |---|---|---|
-| `BarcodeWindowShape.standard` | Fixed 130 lp (the default) | Trained operators, fastest decode |
+| `BarcodeWindowShape.slim` | Fixed 130 lp (the default) | Trained operators, fastest decode |
 | `BarcodeWindowShape.tall` | 60 % of the window width | A gentler target without a huge cut-out |
 | `BarcodeWindowShape.square` | Equal to the window width (1:1) | Casual users, angled or awkward products |
 
@@ -217,7 +217,7 @@ recomputed on each build, so it survives rotation and split-screen.
 // dependency on `mobile_scanner`.
 final shape = prefs.getBool('bigScanWindow') ?? false
     ? BarcodeWindowShape.square
-    : BarcodeWindowShape.standard;
+    : BarcodeWindowShape.slim;
 
 await scanBarcode(context, windowShape: shape);
 
@@ -233,15 +233,56 @@ showPosBarcodeScanner(
 > window that still decodes *only* the standard horizontal 1D retail
 > symbologies. To scan QR codes, use `scanQrCode()` / `ScannerViewConfig.qrCode`.
 
-In POS mode the window is fitted automatically between the toolbar and the +/−
-quantity buttons for the `tall` and `square` shapes, so a larger window never
-collides with the controls. Pass an explicit `offsetFromCenter` to override
-that placement.
+In POS mode the scan window, the +/− quantity row and the close button are laid
+out from a single solved vertical budget, so they are guaranteed to clear one
+another on every screen size. `square` therefore means *square where the budget
+allows, and as tall as the budget allows otherwise* — on a very short screen it
+may resolve to a 0.98 ratio rather than overlap the controls.
+
+`qtyButtonsBottomPadding` is the quantity row's **preferred** position. It is
+honoured exactly unless a taller scan window needs the space, in which case the
+row slides down toward the close button. Pass an explicit `offsetFromCenter` to
+place the window yourself and opt out of the solve.
 
 If none of the presets fit, `scanCustom()` and `showPosScanner()` accept a
 `ScannerViewConfig` with an arbitrary `Rect`. Note that a hand-built `Rect` is
 fixed at construction — it will not track rotation or a resize, and you become
 responsible for keeping it clear of the toolbar and any overlaid controls.
+
+---
+
+## Orientation
+
+**The full-screen scanners are designed for portrait.** Every default in this
+package — the scan-window offsets, `qtyButtonsBottomPadding`, the close
+button's bottom inset — is tuned for a portrait phone, and the POS layout
+budget assumes a tall screen. This is a deliberate scope decision: a cashier
+holds a phone upright, and a barcode is easiest to aim at with the rear camera
+above the product.
+
+If a device does rotate, the scanner keeps working — `mobile_scanner` updates
+its decode region on every layout change, so nothing crashes and nothing stops
+decoding. But the window will be short and the POS controls cramped, because a
+landscape phone simply does not have the vertical room the layout wants.
+
+**Locking orientation is the host app's job, not the package's.** Flutter's
+`SystemChrome.setPreferredOrientations` is app-global and has no getter, so a
+package that locked portrait on push could not know what to restore on pop —
+it would silently clobber an app that had deliberately locked itself. If you
+want the scanner pinned to portrait, do it in your own app:
+
+```dart
+await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+await scanBarcode(context);
+await SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+```
+
+> On iPad this is ignored unless the app disables multitasking
+> (“Requires full screen” in Xcode).
+
+The **inline** `BarcodeScannerView` is unaffected by any of this. It is a
+bounded box sized from its own width, not the screen height, so it reflows with
+its parent in either orientation.
 
 ---
 

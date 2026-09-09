@@ -32,7 +32,7 @@ class _TestMatrixScreenState extends State<TestMatrixScreen> {
   /// Applied to every barcode-preset entry point below, so the three window
   /// shapes can be compared side by side in single, batch, stream and POS
   /// modes without touching any other parameter.
-  BarcodeWindowShape _windowShape = BarcodeWindowShape.standard;
+  BarcodeWindowShape _windowShape = BarcodeWindowShape.slim;
 
   void _showResult(BuildContext context, String message) {
     ScaffoldMessenger.of(

@@ -643,8 +643,8 @@ class _ScannerScreenState extends State<ScannerScreen>
           offsetFromCenter:
               widget.scannerViewConfig?.offsetFromCenter ?? _barcodeOffset,
           windowShape:
-              widget.scannerViewConfig?.windowShape ??
-              BarcodeWindowShape.standard,
+              widget.scannerViewConfig?.windowShape ?? BarcodeWindowShape.slim,
+          scanWindow: widget.scannerViewConfig?.scanWindow,
           stackChildren: stackChildren,
         );
         break;
