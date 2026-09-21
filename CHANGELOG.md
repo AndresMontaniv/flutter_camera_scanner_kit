@@ -1,50 +1,40 @@
-## [Unreleased]
+## 2.0.0
 
-### Static image decoding
+### Breaking
 
-* **Feature:** Added `scanImageFile(filePath, {allowedFormats})` and `scanImageFileAll(filePath, {allowedFormats})` to decode a barcode or QR code from an existing image file — a saved QR code, a screenshot, a photo of a shelf label — with no camera and no full-screen scanner. `scanImageFile` returns the first value found (`String?`), matching `scanBarcode`/`scanQrCode`; `scanImageFileAll` returns every value found (`List<String>`) for images that may hold more than one code. Both take the same `List<ScannerBarcodeFormat> allowedFormats` used elsewhere in the package, so filtering by format never requires a direct dependency on `mobile_scanner`. Picking the file remains the host app's responsibility — see the README's *Scanning from an Image File* section for an `image_picker` recipe.
-* **Supported on Android and physical iOS devices only** — this is a limitation of the underlying `mobile_scanner`/ML Kit/Vision analysis, not something this package can work around. The iOS Simulator cannot analyze image files at all. On any unsupported platform (Simulator, web, desktop), both functions return `null` / `[]` and log the reason via `debugPrint` — they never throw.
-* **Internal:** No `MobileScannerController` is created for these calls — they talk to `MobileScannerPlatform.instance` directly, so a static-image analysis cannot disturb a `BarcodeScannerView` or `ScannerScreen` that happens to be live at the same time. Calls are also serialized internally, working around a native Android limitation where two overlapping `analyzeImage` calls can leave the first caller's `Future` pending forever.
-* **Dependencies:** Upgraded `mobile_scanner` from `^7.4.0` to `^7.4.2`.
+* **`allowedFormats` now takes `List<ScannerBarcodeFormat>`** instead of `mobile_scanner`'s `List<BarcodeFormat>` — on `scanBarcode`, `scanBarcodeBatch`, `scanBarcodeStream`, `showPosBarcodeScanner`, `PosBarcodeScannerScreen` and `ScannerViewConfig`. Restricting formats previously forced a direct `mobile_scanner` dependency, contradicting the README's claim that none was needed.
+  **Migration:** replace `BarcodeFormat.` with `ScannerBarcodeFormat.` — the values carry the same names — and drop `mobile_scanner` from your `pubspec.yaml` if you added it only for this.
+* `ScannerBarcodeFormat` covers all 20 real symbologies, but omits `unknown` and `all` (the first identifies a decode *result*; the second is already expressed by an empty allow-list) along with the deprecated `itf` and `codebar` aliases.
+* **Removed `ScannerLensType.mobileScannerLens`.** It returned `mobile_scanner`'s `CameraLensType` despite being documented as internal, and is now a package-private mapper. `ScannerLensType` itself is unchanged.
+* **Removed `assertMsg`**, an internal string a `part` directive had made public by accident. It was never referenced anywhere in the package.
+* `showPosBarcodeScanner`'s `offsetFromCenter` is now `Offset?` (default `null`), which lets the screen fit the window to the chosen shape. Passing a value behaves as before; passing nothing resolves to the previous `Offset(0, -180)` for the default `slim` shape.
 
-### Barcode formats
+### Added
 
-* **Breaking:** `allowedFormats` now takes `List<ScannerBarcodeFormat>` instead of `mobile_scanner`'s `List<BarcodeFormat>`. This affects `scanBarcode`, `scanBarcodeBatch`, `scanBarcodeStream`, `showPosBarcodeScanner`, `PosBarcodeScannerScreen` and `ScannerViewConfig`. **Migration:** replace `BarcodeFormat.` with `ScannerBarcodeFormat.` and drop `mobile_scanner` from your `pubspec.yaml` if you added it only for this. Nothing else changes — the values carry the same names.
-* **Fix:** Restricting formats no longer requires a direct dependency on `mobile_scanner`. `BarcodeFormat` is `mobile_scanner`'s enum and was never re-exported, so naming a value like `BarcodeFormat.ean13` forced consumers to add that package to their own `pubspec.yaml` — contradicting the README's claim that the package needs no such dependency. Enum constants must be spelled out, so type inference could not paper over it. The new `ScannerBarcodeFormat` is owned by this package and mapped internally at the single point where formats reach the camera controller. The example app now filters formats while depending on nothing but `camera_scanner_kit`, which keeps the leak from reappearing.
-* **Breaking:** `ScannerBarcodeFormat` omits `BarcodeFormat`'s `unknown` and `all` sentinels. `unknown` identifies a decode *result*, and `all` is already expressed by an empty allow-list — passing either was accepted before and produced meaningless filtering. It also omits the deprecated `itf` (a duplicate of `itf14`) and `codebar` (an alias of `codabar`). All 20 real symbologies are covered, and a test asserts that coverage stays complete against future `mobile_scanner` releases.
-* **Breaking:** Removed `ScannerLensType.mobileScannerLens`. This public getter returned `mobile_scanner`'s `CameraLensType` despite being documented as internal; it is now a package-private mapper. `ScannerLensType` itself is unchanged.
-* **Internal:** Barcode-format filtering moved out of `_ScannerScreenState` into `resolveEffectiveFormats`, and is now unit-tested. The 1D intersection rule — which keeps a `square` window from decoding QR codes — previously had no coverage at all. Behaviour is unchanged.
+* **Static image decoding.** `scanImageFile(filePath)` returns the first code found in an existing image — a saved QR code, a screenshot, a photo of a shelf label — and `scanImageFileAll(filePath)` returns every code found. Both accept `allowedFormats`, and need no camera, no scanner screen and no `BuildContext`. Picking the file stays the host app's job; the README's *Scanning from an Image File* section has an `image_picker` recipe.
+  **Android and physical iOS devices only** — a limitation of the underlying ML Kit/Vision analysis; the iOS Simulator cannot analyze image files at all. Elsewhere both return `null` / `[]` and log why, and never throw.
+* **`BarcodeWindowShape`** — `slim`, `tall` and `square` — a `windowShape` parameter on every barcode entry point and on `ScannerViewConfig.barcode`, for a larger, easier-to-aim 1D window without hand-building a `Rect`. **Geometry only:** all three shapes decode exclusively the 1D retail symbologies, so `square` never starts reading QR codes, and the width is identical in each.
+* **`showPosScanner()`** — the unopinionated POS primitive taking a `ScannerViewConfig?`, mirroring how `scanCustom` sits behind `scanBarcode`. `PosBarcodeScannerScreen` gained a matching `scannerViewConfig`. When one is supplied the caller owns the geometry, and `overlayStyle`, `offsetFromCenter`, `allowedFormats` and `windowShape` are ignored.
+* `ScannerViewConfig.barcode` now accepts an explicit `scanWindow`, keeping the 1D format filter for screens that solve their own layout.
 
-### Scan window shape
+### Fixed
 
-* **Feature:** Added `BarcodeWindowShape` — `slim`, `tall` and `square` — exposed as a `windowShape` parameter on `scanBarcode`, `scanBarcodeBatch`, `scanBarcodeStream`, `showPosBarcodeScanner`, `PosBarcodeScannerScreen` and `ScannerViewConfig.barcode`. It lets an app offer a larger, easier-to-aim 1D scan window without hand-building a `Rect`. **Geometry only:** the window still decodes exclusively the standard horizontal 1D retail symbologies, so `BarcodeWindowShape.square` never starts reading QR codes. The window's width is identical in every shape.
-* **Feature:** `ScannerViewConfig.barcode` now accepts an explicit `scanWindow`. Unlike the default constructor, this keeps the 1D format filter — useful for screens that solve their own layout.
+* **A 1D scanner could silently widen to every format.** In barcode mode the allow-list is intersected against the 1D retail set; an all-2D list left that intersection empty, and an empty list reaches `MobileScannerController` as *"detect every supported format"*. So `scanBarcode(allowedFormats: [ScannerBarcodeFormat.qrCode])` decoded everything rather than nothing. It now falls back to the full 1D set.
+* **The POS screen solves its portrait layout** instead of positioning the scan window and quantity row against independent hardcoded offsets. With `square` the two could overlap on smaller phones, and the default window sat partly under the toolbar there. All three elements now get 16 lp of clearance on every screen size; geometry is unchanged on every device where 1.2.0 was already correct.
+* **The POS screen has a dedicated landscape layout.** Chrome previously ate 340 of 411 lp on an 891×411 dp screen, squeezing the window to a 71 lp strip. The quantity controls now become a right-edge rail and the close button moves to the bottom-left, leaving the window 331 lp on the same device. Long `closeButtonLabel`s are capped and ellipsised so they cannot reach the window. Portrait is untouched.
+* `qtyButtonsBottomPadding` is now the quantity row's **preferred** position — honoured exactly unless a taller window needs the space, in which case the row slides toward the close button.
+* The scan-list badge takes its border tint from whichever `ScannerOverlayStyle` reaches the overlay, so a custom `scannerViewConfig` no longer leaves it on the default blue.
+* Corrected `PosBarcodeScannerScreen.offsetFromCenter`'s dartdoc, which named the wrong default.
 
-### POS screen
+### Dependencies
 
-* **Feature:** Added `showPosScanner()`, the unopinionated POS primitive taking a `ScannerViewConfig?`, mirroring how `scanCustom` sits behind `scanBarcode`. `PosBarcodeScannerScreen` gained a matching `scannerViewConfig` parameter. When a custom config is supplied it is used verbatim and `overlayStyle`, `offsetFromCenter`, `allowedFormats` and `windowShape` are ignored — the caller owns the geometry. The quantity row is still placed around that window rather than on top of it.
-* **Fix:** The POS screen now solves its vertical layout instead of positioning the scan window and the quantity row against independent hardcoded offsets. With `square` selected, the two **overlapped** on iPhone SE 2/3 (by 11.9 lp) and 360×640 Android (by 21.0 lp), and came within 28–40 lp on several other phones. The window, the quantity row and the close button are now guaranteed 16 lp of clearance on every screen size.
-* **Fix:** On iPhone SE 2/3 and 360×640 Android the default scan window sat partly *underneath* the toolbar. It is now pushed clear (by 20.5 lp and 38.0 lp respectively). On every other device tested the default geometry is byte-identical to 1.2.0.
-* **Fix:** The scan-list badge takes its border tint from whichever `ScannerOverlayStyle` actually reaches the overlay, so a custom `scannerViewConfig` no longer leaves the badge on the default blue.
-* **Docs:** Corrected `PosBarcodeScannerScreen.offsetFromCenter`'s dartdoc, which claimed it fell back to the barcode preset's `Offset(0, -80)` when the facade in fact applied `Offset(0, -180)`.
+* Upgraded `mobile_scanner` from `^7.4.0` to `^7.4.2`.
 
-### POS landscape
+### Docs & tests
 
-* **Fix:** The POS screen now has a dedicated landscape layout. Previously the toolbar, scan window, quantity row and close button all competed for one vertical axis, so on a 891×411 dp landscape screen the chrome consumed 340 of 411 lp and the scan window was squeezed to a nearly flat **71 lp** strip. In landscape the quantity controls now become a vertical rail on the right edge and the close button moves to the bottom-left corner — both off the centre line — which leaves the window **331 lp** on the same device.
-* **Fix:** The landscape scan window is kept clear of every edge control by a single width clamp rather than by reserving vertical space. Because the toolbar's buttons hug the left and right screen edges while the window stays horizontally centred, they cannot collide, so the toolbar's height no longer has to be subtracted. `square` is now genuinely square in landscape on most devices (0.95 on a 891×411 screen, where the band is the limit).
-* **Fix:** In landscape the close button's label is capped and ellipsised. A long custom `closeButtonLabel` would otherwise grow past the space the layout reserves for it and reach the scan window.
-* **Note:** Portrait is untouched. The portrait solver is the same code, moved behind an orientation dispatch rather than edited, and its regression tests still pass unchanged.
-
-### Documentation & tests
-
-* **Docs:** The README gained an **Orientation** section covering the portrait design target, the new landscape POS layout, and why locking orientation stays the host app's job (`SystemChrome` has no getter for the current preferred orientations, so a package cannot restore what it overwrites).
-* **Test:** Added unit coverage for the scan-window geometry and both POS layout solvers across a 7-device portrait matrix and a 7-device landscape matrix — including a regression lock asserting the portrait geometry is unchanged on every device where 1.2.0 was already correct.
-
-> **Upgrade notes**
->
-> * `showPosBarcodeScanner`'s `offsetFromCenter` changed from `Offset offsetFromCenter = const Offset(0, -180)` to `Offset? offsetFromCenter` (default `null`), which is what lets the screen fit the window to the chosen shape. Source-compatible: passing a value behaves as before, and passing nothing resolves to the same `Offset(0, -180)` for the default `slim` shape.
-> * `qtyButtonsBottomPadding` is now the quantity row's **preferred** position rather than an absolute one. It is honoured exactly unless a taller scan window needs the space, in which case the row slides down toward the close button.
-> * `BarcodeWindowShape.square` means *square where the layout budget allows, and as tall as the budget allows otherwise*. On a 360×640 screen it resolves to a 0.98 ratio.
+* README gained **Upgrading from 1.2.0** and **Orientation** sections, and the static-image API is now in the reference tables.
+* Log lines use a single `[CameraScannerKit]` tag; thirteen had drifted to `[camera_scanner_kit]`.
+* Format filtering moved into a unit-tested `resolveEffectiveFormats` — the 1D intersection rule previously had no coverage. Added scan-window and POS-solver geometry tests across 7-device portrait and landscape matrices, plus a regression lock on the unchanged portrait geometry.
 
 ## 1.2.0
 

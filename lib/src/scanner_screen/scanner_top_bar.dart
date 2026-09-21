@@ -1,8 +1,5 @@
 part of 'scanner_screen.dart';
 
-const assertMsg =
-    'Scanner Package Error: ScannerTopBar must show at least one button (close or flash or camera_toogle). If you want an empty top bar, remove the ScannerTopBar from the widget tree entirely for better performance.';
-
 class _ScannerTopBar extends StatelessWidget {
   final ScannerToolBar toolBar;
   final MobileScannerController? controller;

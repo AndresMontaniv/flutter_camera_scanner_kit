@@ -23,7 +23,13 @@ const List<ScannerBarcodeFormat> horizontal1DFormats = [
 /// * **[restrictTo1D] with an empty [allowed] list:** returns
 ///   [horizontal1DFormats].
 /// * **[restrictTo1D] with a caller-supplied subset:** intersects the subset
-///   against [horizontal1DFormats] to prevent accidental 2D inclusion.
+///   against [horizontal1DFormats] to prevent accidental 2D inclusion.  If
+///   nothing survives that intersection — the caller asked a 1D overlay for
+///   2D-only formats — the full [horizontal1DFormats] set is returned rather
+///   than the empty intersection.  An empty list reaches
+///   `MobileScannerController` as "detect every supported format", so
+///   returning it here would widen the scanner to *all* symbologies, which is
+///   the exact opposite of what the caller asked for.
 /// * **Otherwise:** passes [allowed] through unchanged.
 ///
 /// Lives here rather than inside `_ScannerScreenState` so the filtering rules
@@ -36,7 +42,9 @@ List<ScannerBarcodeFormat> resolveEffectiveFormats({
     if (allowed.isEmpty) {
       return horizontal1DFormats;
     }
-    return allowed.where(horizontal1DFormats.contains).toList();
+    final intersection = allowed.where(horizontal1DFormats.contains).toList();
+    // Never hand an empty list downstream — see the dartdoc above.
+    return intersection.isEmpty ? horizontal1DFormats : intersection;
   }
   return allowed;
 }

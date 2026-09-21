@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import '../_constants.dart';
+
 /// Controller that manages and synchronizes the active/transitioning state
 /// of an embeddable `BarcodeScannerView`.
 ///
@@ -160,19 +162,19 @@ class BarcodeScannerController extends ChangeNotifier {
 
     if (_toggleCallback == null) {
       debugPrint(
-        '[camera_scanner_kit] WARN: Cannot toggle. BarcodeScannerController is not attached to a BarcodeScannerView.',
+        '$kTag WARN: Cannot toggle. BarcodeScannerController is not attached to a BarcodeScannerView.',
       );
       return;
     }
 
     if (_isTransitioning) {
       debugPrint(
-        '[camera_scanner_kit] INFO: Camera is currently transitioning. Ignoring toggle request.',
+        '$kTag INFO: Camera is currently transitioning. Ignoring toggle request.',
       );
       return;
     }
 
-    debugPrint('[camera_scanner_kit] INFO: Toggling camera state.');
+    debugPrint('$kTag INFO: Toggling camera state.');
     await _toggleCallback!();
   }
 
@@ -185,19 +187,19 @@ class BarcodeScannerController extends ChangeNotifier {
 
     if (_isCameraActive) {
       debugPrint(
-        '[camera_scanner_kit] INFO: Camera is already active. Ignoring start().',
+        '$kTag INFO: Camera is already active. Ignoring start().',
       );
       return;
     }
 
     if (_isTransitioning) {
       debugPrint(
-        '[camera_scanner_kit] INFO: Camera is transitioning. Ignoring start().',
+        '$kTag INFO: Camera is transitioning. Ignoring start().',
       );
       return;
     }
 
-    debugPrint('[camera_scanner_kit] INFO: Programmatically starting camera.');
+    debugPrint('$kTag INFO: Programmatically starting camera.');
     await toggle();
   }
 
@@ -210,19 +212,19 @@ class BarcodeScannerController extends ChangeNotifier {
 
     if (!_isCameraActive) {
       debugPrint(
-        '[camera_scanner_kit] INFO: Camera is already stopped. Ignoring stop().',
+        '$kTag INFO: Camera is already stopped. Ignoring stop().',
       );
       return;
     }
 
     if (_isTransitioning) {
       debugPrint(
-        '[camera_scanner_kit] INFO: Camera is transitioning. Ignoring stop().',
+        '$kTag INFO: Camera is transitioning. Ignoring stop().',
       );
       return;
     }
 
-    debugPrint('[camera_scanner_kit] INFO: Programmatically stopping camera.');
+    debugPrint('$kTag INFO: Programmatically stopping camera.');
     await toggle();
   }
 }

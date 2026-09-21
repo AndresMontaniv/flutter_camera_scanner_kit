@@ -126,9 +126,20 @@ class BatchToolBar extends StandardToolBar {
 
 /// A fully custom toolbar configuration which lets you build the entire toolbar
 /// widget hierarchy manually.
+///
+/// Reach for this only when [StandardToolBar] and [BatchToolBar] cannot express
+/// the layout you need — they already cover the flash, close, camera-switch and
+/// scanned-list buttons, and they handle the camera wiring for you.
 class CustomToolBar extends ScannerToolBar {
-  /// Builder function providing the active [MobileScannerController] to build
-  /// customized controls.
+  /// Builds the toolbar, receiving the live `MobileScannerController` driving
+  /// the camera (`null` until it is ready).
+  ///
+  /// Note that this is the one place where a `mobile_scanner` type reaches
+  /// this package's public API. Writing the builder as an inline closure —
+  /// `toolbarBuilder: (context, controller) => ...` — infers the type and
+  /// needs no import; declaring it as a named function or `typedef` does
+  /// require `package:mobile_scanner`. Replacing this with a package-owned
+  /// facade is planned for a future major release.
   final Widget Function(BuildContext, MobileScannerController?) toolbarBuilder;
 
   /// Creates a custom toolbar config.
@@ -155,9 +166,9 @@ enum _OverlayMode { custom, qrCode, barcode }
 ///
 /// Three named constructors provide opinionated presets:
 ///
-/// * **[ScannerViewConfig.new]** (`.custom()`) — full manual control.  The
-///   caller supplies an arbitrary [Rect] scan window and an unrestricted
-///   format list.  Use this when the built-in presets don't fit.
+/// * **[ScannerViewConfig.new]** — the unnamed constructor, for full manual
+///   control.  The caller supplies an arbitrary [Rect] scan window and an
+///   unrestricted format list.  Use this when the built-in presets don't fit.
 ///
 /// * **[ScannerViewConfig.qrCode]** — optimized for 2D/matrix codes.
 ///   Renders a responsive **1 : 1 square** overlay and locks
@@ -167,10 +178,13 @@ enum _OverlayMode { custom, qrCode, barcode }
 /// * **[ScannerViewConfig.barcode]** — optimized for horizontal 1D
 ///   product barcodes (EAN-13, UPC-A, Code 128, etc.).  Renders a wide
 ///   landscape-oriented overlay whose height follows [windowShape].  When
-///   [allowedFormats] is left empty, the controller defaults to the full
-///   [horizontal1DFormats] set; when a subset is passed, only formats that
-///   *also* appear in that allow-list are kept — preventing callers from
-///   accidentally enabling 2D codes through this constructor.
+///   [allowedFormats] is left empty, the controller defaults to the standard
+///   horizontal 1D retail set (Code 128, Code 39, Code 93, EAN-13, EAN-8,
+///   UPC-A, UPC-E, ITF-14 and Codabar); when a subset is passed, only formats
+///   that *also* appear in that set are kept — preventing callers from
+///   accidentally enabling 2D codes through this constructor.  A subset that
+///   names no 1D format at all falls back to the full 1D set rather than to
+///   "everything".
 ///
 ///   Note that [windowShape] is purely visual: even
 ///   [BarcodeWindowShape.square] keeps the 1D-only format filter, so a square
@@ -209,7 +223,8 @@ class ScannerViewConfig {
   /// [scanWindow] lets the caller supply an arbitrary [Rect] for the detection
   /// region. When `null`, no scan-window restriction is applied.
   ///
-  /// [allowedFormats] will passed directly to the controller with no filtering.
+  /// [allowedFormats] will be passed directly to the controller with no
+  /// filtering.
   /// When empty (the default), all formats supported by the device are
   /// detected.
   const ScannerViewConfig({

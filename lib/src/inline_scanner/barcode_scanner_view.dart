@@ -5,12 +5,13 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import 'package:native_haptics_and_audio/native_haptics_and_audio.dart';
 
+import '../_constants.dart';
 import '../mobile_scanner_interop.dart';
 import '../scanner_lens_type.dart';
 import '../widgets/action_button.dart';
 import 'barcode_scanner_controller.dart';
 
-const assetMessage =
+const _assertMessage =
     'BarcodeScannerView: maxWidth must be between 200.0 and 600.0 to ensure scanning performance.';
 
 /// An embeddable, inline barcode scanner widget that can be placed anywhere
@@ -186,7 +187,7 @@ class BarcodeScannerView extends StatefulWidget {
     this.lensType = ScannerLensType.any,
     this.initialZoom,
     this.stopCameraOnBackground = true,
-  }) : assert(maxWidth >= 200.0 && maxWidth <= 600.0, assetMessage);
+  }) : assert(maxWidth >= 200.0 && maxWidth <= 600.0, _assertMessage);
 
   @override
   State<BarcodeScannerView> createState() => _BarcodeScannerViewState();
@@ -212,7 +213,7 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
     await _effects.initialize();
     if (!await _effects.preload(NativeSound.scannerBeep)) {
       debugPrint(
-        '[camera_scanner_kit] BarcodeScannerView: beep failed to preload.',
+        '$kTag BarcodeScannerView: beep failed to preload.',
       );
     }
   }
@@ -281,7 +282,7 @@ class _BarcodeScannerViewState extends State<BarcodeScannerView> {
   void _onAppBackgrounded() {
     if (!_isCameraActive) return;
     debugPrint(
-      '[camera_scanner_kit] BarcodeScannerView: App backgrounded — auto-stopping camera.',
+      '$kTag BarcodeScannerView: App backgrounded — auto-stopping camera.',
     );
     _cancelIdleTimer();
     unawaited(_controller.stop());
