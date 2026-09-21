@@ -8,6 +8,9 @@ library;
 
 export 'src/functions.dart';
 
+// Headless static-image decoding — no BuildContext, no Navigator.
+export 'src/image_analysis.dart';
+
 // Inline Scanner Engine
 export 'src/inline_scanner/inline_scanner.dart'
     show BarcodeScannerView, BarcodeScannerController;

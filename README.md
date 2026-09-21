@@ -311,6 +311,64 @@ The 1D retail set used by the barcode presets is `code128`, `code39`, `code93`,
 
 ---
 
+## Scanning from an Image File
+
+Sometimes the code isn't in front of the camera — it's a QR code the user already
+saved, a screenshot, or a photo of a shelf label. `scanImageFile` decodes a file
+the host app already has a path to, with no camera and no full-screen scanner.
+
+Because `camera_scanner_kit` doesn't include gallery UI or permission handling,
+picking the file is your app's job — use a package like
+[`image_picker`](https://pub.dev/packages/image_picker) to get a path, then hand
+it to `scanImageFile`:
+
+```dart
+import 'package:camera_scanner_kit/camera_scanner_kit.dart';
+import 'package:image_picker/image_picker.dart';
+
+Future<void> scanFromGallery() async {
+  final XFile? image = await ImagePicker().pickImage(source: ImageSource.gallery);
+  if (image == null) return;
+
+  final String? code = await scanImageFile(image.path);
+
+  if (code != null) {
+    print('Found: $code');
+  } else {
+    print('No barcode found in image.');
+  }
+}
+```
+
+That's the only import you need — `ScannerBarcodeFormat` is ours, so filtering
+formats never requires adding `mobile_scanner` to your own `pubspec.yaml`:
+
+```dart
+final code = await scanImageFile(
+  image.path,
+  allowedFormats: const [ScannerBarcodeFormat.qrCode],
+);
+```
+
+If the image might contain more than one code — a shelf photo, a screenshot with
+several tickets — use `scanImageFileAll`, which returns every value found instead
+of just the first:
+
+```dart
+final List<String> codes = await scanImageFileAll(image.path);
+```
+
+**Platform support: Android and physical iOS devices only.** The iOS Simulator
+cannot analyze image files at all — this is a Simulator limitation, not a bug, so
+test this feature on a real device. On an unsupported platform (Simulator, web,
+desktop), both functions return `null` / `[]` rather than throwing, and log the
+reason via `debugPrint`.
+
+Neither function ever throws — a missing file, a corrupt image, or an
+unsupported platform all resolve to "nothing found" rather than an exception.
+
+---
+
 ## Orientation
 
 **The full-screen scanners are designed for portrait.** Every default in this

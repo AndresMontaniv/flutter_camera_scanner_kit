@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Static image decoding
+
+* **Feature:** Added `scanImageFile(filePath, {allowedFormats})` and `scanImageFileAll(filePath, {allowedFormats})` to decode a barcode or QR code from an existing image file — a saved QR code, a screenshot, a photo of a shelf label — with no camera and no full-screen scanner. `scanImageFile` returns the first value found (`String?`), matching `scanBarcode`/`scanQrCode`; `scanImageFileAll` returns every value found (`List<String>`) for images that may hold more than one code. Both take the same `List<ScannerBarcodeFormat> allowedFormats` used elsewhere in the package, so filtering by format never requires a direct dependency on `mobile_scanner`. Picking the file remains the host app's responsibility — see the README's *Scanning from an Image File* section for an `image_picker` recipe.
+* **Supported on Android and physical iOS devices only** — this is a limitation of the underlying `mobile_scanner`/ML Kit/Vision analysis, not something this package can work around. The iOS Simulator cannot analyze image files at all. On any unsupported platform (Simulator, web, desktop), both functions return `null` / `[]` and log the reason via `debugPrint` — they never throw.
+* **Internal:** No `MobileScannerController` is created for these calls — they talk to `MobileScannerPlatform.instance` directly, so a static-image analysis cannot disturb a `BarcodeScannerView` or `ScannerScreen` that happens to be live at the same time. Calls are also serialized internally, working around a native Android limitation where two overlapping `analyzeImage` calls can leave the first caller's `Future` pending forever.
+* **Dependencies:** Upgraded `mobile_scanner` from `^7.4.0` to `^7.4.2`.
+
 ### Barcode formats
 
 * **Breaking:** `allowedFormats` now takes `List<ScannerBarcodeFormat>` instead of `mobile_scanner`'s `List<BarcodeFormat>`. This affects `scanBarcode`, `scanBarcodeBatch`, `scanBarcodeStream`, `showPosBarcodeScanner`, `PosBarcodeScannerScreen` and `ScannerViewConfig`. **Migration:** replace `BarcodeFormat.` with `ScannerBarcodeFormat.` and drop `mobile_scanner` from your `pubspec.yaml` if you added it only for this. Nothing else changes — the values carry the same names.
