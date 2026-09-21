@@ -95,7 +95,11 @@ void main() {
       expect(result, [ScannerBarcodeFormat.ean13]);
     });
 
-    test('1D mode with an all-2D subset yields nothing', () {
+    test('1D mode with an all-2D subset falls back to the 1D set', () {
+      // The intersection is empty, but an empty list reaches
+      // `MobileScannerController` as "detect every supported format" — which
+      // would enable the very 2D codes the caller's overlay excludes. Fall
+      // back to the 1D set instead.
       final result = resolveEffectiveFormats(
         allowed: const [
           ScannerBarcodeFormat.qrCode,
@@ -104,7 +108,26 @@ void main() {
         restrictTo1D: true,
       );
 
-      expect(result, isEmpty);
+      expect(result, horizontal1DFormats);
+      expect(result, isNot(contains(ScannerBarcodeFormat.qrCode)));
+      expect(result, isNot(contains(ScannerBarcodeFormat.aztec)));
+    });
+
+    test('1D mode never resolves to an empty list', () {
+      // Guards the invariant directly: whatever the caller passes, a barcode
+      // overlay must never widen the scanner to all formats.
+      for (final allowed in <List<ScannerBarcodeFormat>>[
+        const [],
+        const [ScannerBarcodeFormat.qrCode],
+        const [ScannerBarcodeFormat.dataMatrix, ScannerBarcodeFormat.pdf417],
+        ScannerBarcodeFormat.values,
+      ]) {
+        expect(
+          resolveEffectiveFormats(allowed: allowed, restrictTo1D: true),
+          isNotEmpty,
+          reason: 'restrictTo1D must never yield an empty (= all) list',
+        );
+      }
     });
 
     test('1D mode preserves a valid subset without widening it', () {

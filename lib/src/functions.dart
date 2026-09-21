@@ -163,7 +163,12 @@ Future<String?> scanCustom(
 ///   window position relative to the screen center.
 /// * [toolBar] — Toolbar config. Defaults to a [StandardToolBar].
 /// * [allowedFormats] — Restricts detection to specific [ScannerBarcodeFormat]s.
-///   Values are intersected with the built-in 1D set.
+///   Values are intersected with the built-in 1D set; a list naming no 1D
+///   format falls back to that set rather than to every format.
+/// * [windowShape] — How tall the scan window is; see [BarcodeWindowShape].
+///   Geometry only — every shape still decodes the 1D set, so
+///   [BarcodeWindowShape.square] does not start reading QR codes. Defaults to
+///   [BarcodeWindowShape.slim].
 /// * [enableSoundAndVibration] — Haptic and audio feedback on success.
 ///   Defaults to `true`.
 /// * [useDarkModeButtonTheme] — Dark translucent button backgrounds.
@@ -454,7 +459,12 @@ Future<List<String>?> scanCustomBatch(
 /// * [offsetFromCenter] — Scan window position nudge.
 /// * [overlayStyle] — Visual overlay customization. See [ScannerOverlayStyle].
 /// * [allowedFormats] — Restricts detection. Intersected with the built-in
-///   1D format set. An empty list (default) uses the full 1D set.
+///   1D format set. An empty list (default) uses the full 1D set, as does a
+///   list that names no 1D format at all.
+/// * [windowShape] — How tall the scan window is; see [BarcodeWindowShape].
+///   Geometry only — every shape still decodes the 1D set, so
+///   [BarcodeWindowShape.square] does not start reading QR codes. Defaults to
+///   [BarcodeWindowShape.slim].
 /// * [useDarkModeButtonTheme] — Dark button backgrounds. Defaults to `true`.
 /// * [lensType] — Physical camera lens. Defaults to [ScannerLensType.any].
 ///   See [ScannerLensType] for hardware fragmentation warnings.
@@ -770,7 +780,12 @@ Future<void> scanCustomStream(
 /// * [overlayStyle] — Visual overlay customization. See [ScannerOverlayStyle].
 /// * [offsetFromCenter] — Scan window position nudge.
 /// * [allowedFormats] — Restricts detection. Intersected with the built-in
-///   1D format set. An empty list (default) uses the full 1D set.
+///   1D format set. An empty list (default) uses the full 1D set, as does a
+///   list that names no 1D format at all.
+/// * [windowShape] — How tall the scan window is; see [BarcodeWindowShape].
+///   Geometry only — every shape still decodes the 1D set, so
+///   [BarcodeWindowShape.square] does not start reading QR codes. Defaults to
+///   [BarcodeWindowShape.slim].
 /// * [useDarkModeButtonTheme] — Dark button backgrounds. Defaults to `true`.
 /// * [lensType] — Physical camera lens. Defaults to [ScannerLensType.any].
 ///   See [ScannerLensType] for hardware fragmentation warnings.

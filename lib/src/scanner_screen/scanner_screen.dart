@@ -25,14 +25,19 @@ part 'scanner_top_bar.dart';
 
 // ─── ScannerScreen ──────────────────────────────────────────────────────────
 
-/// A production-grade, unified barcode-scanner widget that supports **nine**
-/// visual × data-routing combinations through two named constructors and
-/// two configuration objects.
+/// A production-grade, unified barcode-scanner widget that combines any visual
+/// preset with any data-routing mode through two named constructors and two
+/// configuration objects.
+///
+/// It is the engine the package's eleven navigation functions are built on;
+/// most apps should reach for those (`scanBarcode`, `scanQrCodeBatch`,
+/// `showPosBarcodeScanner`, …) rather than mounting this directly.
 ///
 /// ### Visual/Hardware Configuration
 /// Handled entirely by [ScannerToolBar] (toolbar buttons and callbacks)
-/// and [ScannerViewConfig] (scan window shape, overlay styling, and allowed
-/// barcode formats).  This keeps every constructor's parameter list short.
+/// and [ScannerViewConfig] (scan window geometry — shape or an explicit
+/// rectangle — overlay styling, and allowed barcode formats).  This keeps
+/// every constructor's parameter list short.
 ///
 /// ### Data-Routing Modes (named constructors)
 ///
@@ -66,8 +71,8 @@ class ScannerScreen extends StatefulWidget {
   /// because the scanner locks immediately after the first read.
   final int sameItemCooldownMs;
 
-  /// Additional widgets layered on top of the camera preview inside the
-  /// [ScannerView] stack (e.g., instructional text, brand logos).
+  /// Additional widgets layered on top of the camera preview, inside the same
+  /// stack as the scan-window overlay (e.g., instructional text, brand logos).
   final List<Widget>? stackChildren;
 
   /// Toolbar configuration object.  Pass `null` or omit to hide the toolbar
@@ -96,8 +101,9 @@ class ScannerScreen extends StatefulWidget {
   /// not start the engine — assign a new [Key] to force a remount instead.
   final bool enableSoundAndVibration;
 
-  /// The visual theme applied to the toolbar action buttons (close, flash,
-  /// switch camera). Defaults to [ActionButtonTheme.dark].
+  /// Whether the toolbar action buttons (close, flash, switch camera) use the
+  /// dark button theme. Defaults to `true`; set `false` for light chrome over
+  /// a bright preview.
   final bool useDarkModeButtonTheme;
 
   /// The physical camera lens to use. Defaults to [ScannerLensType.any].
@@ -293,7 +299,7 @@ class _ScannerScreenState extends State<ScannerScreen>
       }
     } catch (e) {
       debugPrint(
-        '[camera_scanner_kit] Camera boot intercepted (likely OS permissions): $e',
+        '$kTag Camera boot intercepted (likely OS permissions): $e',
       );
     }
   }
@@ -356,7 +362,7 @@ class _ScannerScreenState extends State<ScannerScreen>
           // Check mounted AND our safety tripwire before booting
           if (mounted && !_isPopping) {
             controller.start().catchError((Object e) {
-              debugPrint('[camera_scanner_kit] Error resuming camera: $e');
+              debugPrint('$kTag Error resuming camera: $e');
             });
           }
         });

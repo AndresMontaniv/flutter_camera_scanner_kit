@@ -12,7 +12,9 @@ A production-grade, highly optimized Flutter UI toolkit for barcode and QR scann
 While packages like `mobile_scanner` provide the raw camera stream, integrating them into a real-world app is notoriously error-prone. Developers constantly fight with native camera-lock hangs, "ghost scans" during exit animations, deactivated-widget context crashes, and lack of visual overlays. 
 
 `camera_scanner_kit` wraps the raw scanner in an enterprise-ready shell featuring:
-- **9-in-1 Routing Matrix**: Instantly launch single-scan, batch-accumulate, or streaming modes with customized barcode, QR, or manual overlays.
+- **11-in-1 Routing Matrix**: Instantly launch single-scan, batch-accumulate, or streaming modes with customized barcode, QR, or manual overlays.
+- **Static Image Decoding**: `scanImageFile()` reads a barcode out of a saved photo, screenshot or gallery pick — no camera, no scanner screen, no `BuildContext`.
+- **Aimable Scan Windows**: `BarcodeWindowShape` offers `slim`, `tall` and `square` 1D windows, so hard-to-aim barcodes get a bigger target without ever widening detection to 2D codes.
 - **Hardware-Safe Tripwires**: Failsafe hooks that guarantee the camera sensor is fully detached and released before screen transitions begin, ending "deactivated widget" crashes forever.
 - **Built-in POS Mode**: A complete Point of Sale scanning interface featuring live quantity increment/decrement controls, ghost success pulses, and a reactive checkout cart summary.
 - **Low-Latency Native Feedback**: Direct integration with native haptic and audio APIs for ultra-low latency scan confirmation beeps.
@@ -27,7 +29,7 @@ Add `camera_scanner_kit` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  camera_scanner_kit: ^1.2.0
+  camera_scanner_kit: ^2.0.0
 ```
 
 ### Platform Setup
@@ -44,6 +46,34 @@ Add the camera usage description to your `Info.plist` (usually under `ios/Runner
 <key>NSCameraUsageDescription</key>
 <string>This app requires camera access to scan barcodes.</string>
 ```
+
+### Upgrading from 1.2.0
+
+`2.0.0` closes a dependency leak: restricting formats used to require adding
+`mobile_scanner` to your own `pubspec.yaml`, even though this package promised
+otherwise. Three changes, each a one-line fix:
+
+1. **`allowedFormats` now takes `ScannerBarcodeFormat`.** Replace the `BarcodeFormat.`
+   prefix with `ScannerBarcodeFormat.` — every value keeps its name.
+
+   ```diff
+   - allowedFormats: const [BarcodeFormat.ean13, BarcodeFormat.code128],
+   + allowedFormats: const [ScannerBarcodeFormat.ean13, ScannerBarcodeFormat.code128],
+   ```
+
+   There is no `ScannerBarcodeFormat.all` or `.unknown` — use an empty list for
+   "all", and see [Barcode Formats](#barcode-formats) for why.
+
+2. **Drop `mobile_scanner` from your `pubspec.yaml`** if you added it only to name
+   formats or lens types. You should no longer need it.
+
+3. **`ScannerLensType.mobileScannerLens` was removed.** It was documented as
+   internal but was publicly reachable. `ScannerLensType` itself is unchanged, so
+   `lensType: ScannerLensType.wide` keeps working — only the getter is gone.
+
+If you passed `offsetFromCenter` to `showPosBarcodeScanner`, nothing changes: it
+became nullable so the POS screen can size its own window, and an explicit value
+still wins.
 
 ---
 
@@ -167,7 +197,7 @@ class _MyInlineFormState extends State<MyInlineForm> {
 }
 ```
 
-> **💡 Programmatic Control (v1.0.2+):** In addition to `toggle()`, you can call `_controller.start()` and `_controller.stop()` for explicit, idempotent control. Both are safe to call repeatedly — calling `start()` on an already-active camera (or `stop()` on an already-stopped one) is a no-op.
+> **💡 Programmatic Control:** In addition to `toggle()`, you can call `_controller.start()` and `_controller.stop()` for explicit, idempotent control. Both are safe to call repeatedly — calling `start()` on an already-active camera (or `stop()` on an already-stopped one) is a no-op.
 
 > **Advanced Routing (GoRouter & Nested Navigators):** When using advanced routing packages like `GoRouter`, or when embedding the scanner inside a tab-based layout (like `IndexedStack` or `BottomNavigationBar`), you must be careful not to leave the camera hardware running when the user navigates away from the active tab. Leaving the camera active in the background will drain the user's battery and can cause native hardware crashes if another screen tries to claim the camera sensor. To see a complete, production-ready example of how to orchestrate the `BarcodeScannerView` with `GoRouter` and RouteAware mixins, check out our official **[Route Aware Sandbox](https://github.com/andresmontaniv/route_aware_sandbox/blob/main/lib/camera_scanner_screen.dart)** on GitHub.
 
@@ -189,10 +219,24 @@ class _MyInlineFormState extends State<MyInlineForm> {
 | `scanQrCodeStream()` | Stream | 1:1 Square | `Future<void>` (fires `onCameraScan`) |
 | `scanCustomStream()` | Stream | Custom Rect | `Future<void>` (fires `onCameraScan`) |
 | `showPosBarcodeScanner()` | POS | 1D Horizontal | `void` (fires `onScan`) |
-| `showPosScanner()` | POS | Custom Rect | `void` (fires `onScan`) |
+| `showPosScanner()` | POS | Custom Rect (defaults to the 1D preset) | `void` (fires `onScan`) |
 
 In each row the `*Custom` function is the primitive; the barcode and QR variants
 are thin preset wrappers around it.
+
+### Headless Functions — no camera, no `BuildContext`
+
+These decode an image file the host app already has a path to. See
+[Scanning from an Image File](#scanning-from-an-image-file).
+
+| Function | Reads | Return Type |
+|----------|-------|-------------|
+| `scanImageFile()` | First code found | `Future<String?>` (`null` if none) |
+| `scanImageFileAll()` | Every code found | `Future<List<String>>` (empty if none) |
+
+> **Android and physical iOS devices only.** The iOS Simulator cannot analyze
+> image files at all. On any unsupported platform both return empty and log the
+> reason — they never throw.
 
 ---
 
@@ -340,8 +384,9 @@ Future<void> scanFromGallery() async {
 }
 ```
 
-That's the only import you need — `ScannerBarcodeFormat` is ours, so filtering
-formats never requires adding `mobile_scanner` to your own `pubspec.yaml`:
+`image_picker` is the only extra dependency, and it is yours to choose — swap in
+any file picker you prefer. Format filtering works exactly as it does for the
+camera ([Barcode Formats](#barcode-formats)), and adds no dependency of its own:
 
 ```dart
 final code = await scanImageFile(
@@ -381,8 +426,8 @@ aim at with the rear camera above the product.
 rotates, the scanner keeps working and stays usable rather than degrading into
 a squashed window:
 
-* The nine `scan*` functions have no bottom chrome, so their window simply
-  centres itself in the available height.
+* The `scan*` functions have no bottom chrome, so their window simply centres
+  itself in the available height.
 * `showPosBarcodeScanner` switches to a dedicated landscape layout. The +/−
   quantity controls become a **vertical rail on the right edge** and the close
   button moves to the **bottom-left corner** — one thumb per side. The toolbar
