@@ -9,23 +9,10 @@ const Offset _qrOffset = Offset(0.0, -50.0);
 const Offset _barcodeOffset = Offset(0.0, -80.0);
 
 // ─── Barcode Format Allow-List ──────────────────────────────────────────────
-/// The canonical set of horizontal 1D barcode symbologies commonly found on
-/// retail and warehouse products.  Used as the default format list when the
-/// caller selects [ScannerViewConfig.barcode] without specifying a custom
-/// subset.  Keeping this explicit (instead of an empty list which means
-/// "accept all") prevents the controller from wasting decode cycles on 2D
-/// matrix codes when the overlay is clearly a horizontal strip.
-const List<BarcodeFormat> _horizontal1DFormats = [
-  BarcodeFormat.code128,
-  BarcodeFormat.code39,
-  BarcodeFormat.code93,
-  BarcodeFormat.ean13,
-  BarcodeFormat.ean8,
-  BarcodeFormat.upcA,
-  BarcodeFormat.upcE,
-  BarcodeFormat.itf14,
-  BarcodeFormat.codabar,
-];
+// The canonical 1D retail set and the filtering rules that use it now live in
+// `src/format_resolution.dart` (as `horizontal1DFormats` and
+// `resolveEffectiveFormats`) so they can be unit-tested without pumping a
+// camera widget.
 
 // MARK: - ToolBar classes
 
@@ -174,14 +161,14 @@ enum _OverlayMode { custom, qrCode, barcode }
 ///
 /// * **[ScannerViewConfig.qrCode]** — optimized for 2D/matrix codes.
 ///   Renders a responsive **1 : 1 square** overlay and locks
-///   [allowedFormats] to `[BarcodeFormat.qrCode]`, eliminating accidental
-///   1D reads that would otherwise waste decode cycles.
+///   [allowedFormats] to `[ScannerBarcodeFormat.qrCode]`, eliminating
+///   accidental 1D reads that would otherwise waste decode cycles.
 ///
 /// * **[ScannerViewConfig.barcode]** — optimized for horizontal 1D
 ///   product barcodes (EAN-13, UPC-A, Code 128, etc.).  Renders a wide
 ///   landscape-oriented overlay whose height follows [windowShape].  When
 ///   [allowedFormats] is left empty, the controller defaults to the full
-///   [_horizontal1DFormats] set; when a subset is passed, only formats that
+///   [horizontal1DFormats] set; when a subset is passed, only formats that
 ///   *also* appear in that allow-list are kept — preventing callers from
 ///   accidentally enabling 2D codes through this constructor.
 ///
@@ -207,7 +194,7 @@ class ScannerViewConfig {
 
   /// Barcode symbologies the controller will attempt to decode.
   /// An empty list means "accept everything the device supports."
-  final List<BarcodeFormat> allowedFormats;
+  final List<ScannerBarcodeFormat> allowedFormats;
 
   /// The vertical proportion of the scan window.
   ///
@@ -228,7 +215,7 @@ class ScannerViewConfig {
   const ScannerViewConfig({
     this.scanWindow,
     this.overlayStyle,
-    this.allowedFormats = const <BarcodeFormat>[],
+    this.allowedFormats = const <ScannerBarcodeFormat>[],
   }) : _mode = _OverlayMode.custom,
        windowShape = BarcodeWindowShape.slim,
        offsetFromCenter = null;
@@ -242,7 +229,7 @@ class ScannerViewConfig {
   }) : _mode = _OverlayMode.qrCode,
        scanWindow = null,
        windowShape = BarcodeWindowShape.slim,
-       allowedFormats = const [BarcodeFormat.qrCode];
+       allowedFormats = const [ScannerBarcodeFormat.qrCode];
 
   /// Creates a scanner optimized for **1D product barcodes**.
   ///

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
 
+import '../scanner_barcode_format.dart';
 import '../scanner_lens_type.dart';
 import '../scanner_screen/scanner_screen.dart';
 import '../widgets/action_button.dart';
@@ -53,7 +53,7 @@ const _defaultCloseButtonLabel = 'Close Camera';
 ///
 /// * [onScan] — **Required.** Called with `(String barcode, int quantity)`
 ///   each time a barcode is accepted.
-/// * [allowedFormats] — Restricts detection to specific [BarcodeFormat]s.
+/// * [allowedFormats] — Restricts detection to specific [ScannerBarcodeFormat]s.
 ///   Empty list (default) accepts the standard horizontal 1D set.
 /// * [detectionTimeoutMs] — Minimum ms between decode callbacks from the
 ///   native pipeline. Defaults to `250`.
@@ -117,7 +117,7 @@ class PosBarcodeScannerScreen extends StatefulWidget {
   final void Function(String barcode, int qty) onScan;
 
   /// The active set of barcode formats to restrict scan detection to.
-  final List<BarcodeFormat> allowedFormats;
+  final List<ScannerBarcodeFormat> allowedFormats;
 
   /// A fully custom scanner view configuration.
   ///
@@ -184,7 +184,7 @@ class PosBarcodeScannerScreen extends StatefulWidget {
     required this.onScan,
     this.scannerViewConfig,
     this.windowShape = BarcodeWindowShape.slim,
-    this.allowedFormats = const <BarcodeFormat>[],
+    this.allowedFormats = const <ScannerBarcodeFormat>[],
     this.detectionTimeoutMs = 250,
     this.sameItemCooldownMs = 1500,
     this.enableSoundAndVibration = true,
@@ -202,10 +202,12 @@ class PosBarcodeScannerScreen extends StatefulWidget {
        );
 
   @override
-  State<PosBarcodeScannerScreen> createState() => _PosBarcodeScannerScreenState();
+  State<PosBarcodeScannerScreen> createState() =>
+      _PosBarcodeScannerScreenState();
 }
 
-class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> with SingleTickerProviderStateMixin {
+class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen>
+    with SingleTickerProviderStateMixin {
   final ValueNotifier<int> qtyNotifier = ValueNotifier<int>(1);
   final ValueNotifier<int> totalItemsNotifier = ValueNotifier<int>(0);
   Map<String, int> scannedBarcodes = {};
@@ -309,7 +311,8 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> with 
                             child: ListView.separated(
                               controller: scrollController,
                               itemCount: scannedBarcodes.length,
-                              separatorBuilder: (_, _) => const Divider(height: 1),
+                              separatorBuilder: (_, _) =>
+                                  const Divider(height: 1),
                               itemBuilder: (context, index) {
                                 final item = list[index];
                                 final qty = item.value;
@@ -344,10 +347,15 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> with 
   }
 
   Widget _buildScanListButton() {
-    final actionButtonTheme = widget.useDarkModeButtonTheme ? ActionButtonTheme.dark : ActionButtonTheme.light;
+    final actionButtonTheme = widget.useDarkModeButtonTheme
+        ? ActionButtonTheme.dark
+        : ActionButtonTheme.light;
     // Track whichever style actually reaches the overlay, so a custom
     // `scannerViewConfig` tints the badge to match its own border.
-    final borderColor = (widget.scannerViewConfig?.overlayStyle ?? widget.overlayStyle)?.borderColor ?? _defaultBorderColor;
+    final borderColor =
+        (widget.scannerViewConfig?.overlayStyle ?? widget.overlayStyle)
+            ?.borderColor ??
+        _defaultBorderColor;
     return ValueListenableBuilder<int>(
       valueListenable: totalItemsNotifier,
       builder: (ctx, total, _) {
@@ -394,7 +402,9 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> with 
   /// long [PosBarcodeScannerScreen.closeButtonLabel] would punch into the
   /// window.
   Widget _buildCloseCameraTextButton({required bool isLandscape}) {
-    final actionButtonTheme = widget.useDarkModeButtonTheme ? ActionButtonTheme.dark : ActionButtonTheme.light;
+    final actionButtonTheme = widget.useDarkModeButtonTheme
+        ? ActionButtonTheme.dark
+        : ActionButtonTheme.light;
     final borderColor = actionButtonTheme.borderColor;
     return Align(
       alignment: isLandscape ? Alignment.bottomLeft : Alignment.bottomCenter,
@@ -424,7 +434,9 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> with 
             onTap: () => Navigator.of(context).pop(),
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                maxWidth: isLandscape ? kLandscapeCloseButtonMaxWidth : double.infinity,
+                maxWidth: isLandscape
+                    ? kLandscapeCloseButtonMaxWidth
+                    : double.infinity,
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -486,7 +498,9 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> with 
       // A caller-supplied config owns its own rect; we only place the
       // quantity row around it. An explicit `offsetFromCenter` likewise opts
       // out of the solve for the window itself.
-      scanWindowOverride: widget.scannerViewConfig?.scanWindow ?? _offsetOverrideWindow(screenSize),
+      scanWindowOverride:
+          widget.scannerViewConfig?.scanWindow ??
+          _offsetOverrideWindow(screenSize),
     );
   }
 
@@ -515,7 +529,9 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> with 
     final scannerViewConfig =
         widget.scannerViewConfig ??
         ScannerViewConfig.barcode(
-          overlayStyle: widget.overlayStyle ?? const ScannerOverlayStyle(borderColor: _defaultBorderColor),
+          overlayStyle:
+              widget.overlayStyle ??
+              const ScannerOverlayStyle(borderColor: _defaultBorderColor),
           allowedFormats: widget.allowedFormats,
           windowShape: widget.windowShape,
           scanWindow: layout.scanWindow,
@@ -547,7 +563,10 @@ class _PosBarcodeScannerScreenState extends State<PosBarcodeScannerScreen> with 
             ),
           ),
         ),
-        if (layout.isLandscape) _buildQtyRail() else _buildQtyRow(layout.qtyRowTop!),
+        if (layout.isLandscape)
+          _buildQtyRail()
+        else
+          _buildQtyRow(layout.qtyRowTop!),
         _buildCloseCameraTextButton(isLandscape: layout.isLandscape),
       ],
     );

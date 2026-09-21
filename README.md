@@ -251,6 +251,124 @@ responsible for keeping it clear of the toolbar and any overlaid controls.
 
 ---
 
+## Barcode Formats
+
+Restricting a scanner to specific symbologies makes decoding faster and stops
+the camera locking onto the wrong code when several are in frame. Pass an
+`allowedFormats` list:
+
+```dart
+import 'package:camera_scanner_kit/camera_scanner_kit.dart';
+
+final code = await scanBarcode(
+  context,
+  allowedFormats: const [
+    ScannerBarcodeFormat.ean13,
+    ScannerBarcodeFormat.code128,
+  ],
+);
+```
+
+That import is the only one you need. **`ScannerBarcodeFormat` is owned by this
+package**, so filtering formats never requires adding `mobile_scanner` to your
+own `pubspec.yaml` — the enum you write is ours, and the translation to the
+underlying engine happens internally.
+
+`allowedFormats` is accepted by `scanBarcode()`, `scanBarcodeBatch()`,
+`scanBarcodeStream()`, `showPosBarcodeScanner()`, `PosBarcodeScannerScreen` and
+`ScannerViewConfig`.
+
+**An empty list — the default — means "accept every format the device
+supports."** That is the only way to express *all*: there is deliberately no
+`ScannerBarcodeFormat.all`, because a list containing it alongside other entries
+has no coherent meaning. There is likewise no `unknown` value, since that
+identifies a decode result rather than something you can ask the camera to look
+for.
+
+Two rules worth knowing:
+
+- The **1D presets** (`scanBarcode`, `ScannerViewConfig.barcode` and the POS
+  screens) intersect whatever you pass against their built-in retail set, so a
+  2D format supplied there is dropped rather than honoured. This is what
+  guarantees a `square` window never starts reading QR codes. Use `scanQrCode()`
+  or `ScannerViewConfig.qrCode` for 2D.
+- `ScannerViewConfig.qrCode` locks the list to `ScannerBarcodeFormat.qrCode` and
+  ignores anything you pass.
+
+<details>
+<summary>All supported formats</summary>
+
+**1D:** `code128`, `code39`, `code93`, `codabar`, `ean13`, `ean8`, `upcA`,
+`upcE`, `itf14`, `itf2of5`, `itf2of5WithChecksum`, `dataBar`,
+`dataBarExpanded`, `dataBarLimited`
+
+**2D:** `qrCode`, `microQrCode`, `dataMatrix`, `aztec`, `pdf417`, `maxiCode`
+
+The 1D retail set used by the barcode presets is `code128`, `code39`, `code93`,
+`ean13`, `ean8`, `upcA`, `upcE`, `itf14` and `codabar`.
+
+</details>
+
+---
+
+## Scanning from an Image File
+
+Sometimes the code isn't in front of the camera — it's a QR code the user already
+saved, a screenshot, or a photo of a shelf label. `scanImageFile` decodes a file
+the host app already has a path to, with no camera and no full-screen scanner.
+
+Because `camera_scanner_kit` doesn't include gallery UI or permission handling,
+picking the file is your app's job — use a package like
+[`image_picker`](https://pub.dev/packages/image_picker) to get a path, then hand
+it to `scanImageFile`:
+
+```dart
+import 'package:camera_scanner_kit/camera_scanner_kit.dart';
+import 'package:image_picker/image_picker.dart';
+
+Future<void> scanFromGallery() async {
+  final XFile? image = await ImagePicker().pickImage(source: ImageSource.gallery);
+  if (image == null) return;
+
+  final String? code = await scanImageFile(image.path);
+
+  if (code != null) {
+    print('Found: $code');
+  } else {
+    print('No barcode found in image.');
+  }
+}
+```
+
+That's the only import you need — `ScannerBarcodeFormat` is ours, so filtering
+formats never requires adding `mobile_scanner` to your own `pubspec.yaml`:
+
+```dart
+final code = await scanImageFile(
+  image.path,
+  allowedFormats: const [ScannerBarcodeFormat.qrCode],
+);
+```
+
+If the image might contain more than one code — a shelf photo, a screenshot with
+several tickets — use `scanImageFileAll`, which returns every value found instead
+of just the first:
+
+```dart
+final List<String> codes = await scanImageFileAll(image.path);
+```
+
+**Platform support: Android and physical iOS devices only.** The iOS Simulator
+cannot analyze image files at all — this is a Simulator limitation, not a bug, so
+test this feature on a real device. On an unsupported platform (Simulator, web,
+desktop), both functions return `null` / `[]` rather than throwing, and log the
+reason via `debugPrint`.
+
+Neither function ever throws — a missing file, a corrupt image, or an
+unsupported platform all resolve to "nothing found" rather than an exception.
+
+---
+
 ## Orientation
 
 **The full-screen scanners are designed for portrait.** Every default in this

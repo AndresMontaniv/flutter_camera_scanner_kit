@@ -8,6 +8,9 @@ library;
 
 export 'src/functions.dart';
 
+// Headless static-image decoding — no BuildContext, no Navigator.
+export 'src/image_analysis.dart';
+
 // Inline Scanner Engine
 export 'src/inline_scanner/inline_scanner.dart'
     show BarcodeScannerView, BarcodeScannerController;
@@ -15,6 +18,11 @@ export 'src/inline_scanner/inline_scanner.dart'
 // Ready-to-use Screens
 export 'src/prebuilt_screens/pos_barcode_scanner_screen.dart';
 
+// Public enums owned by this package. The mappers that translate them into
+// `mobile_scanner` types live in `src/mobile_scanner_interop.dart`, which is
+// deliberately NOT exported — that is what keeps `mobile_scanner` out of this
+// package's public API contract.
+export 'src/scanner_barcode_format.dart';
 export 'src/scanner_lens_type.dart';
 
 // The Template Engine

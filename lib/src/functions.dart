@@ -20,10 +20,10 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '_constants.dart';
 import 'prebuilt_screens/pos_barcode_scanner_screen.dart';
+import 'scanner_barcode_format.dart';
 import 'scanner_lens_type.dart';
 import 'scanner_screen/scanner_screen.dart';
 import 'widgets/scanner_overlay.dart';
@@ -162,7 +162,7 @@ Future<String?> scanCustom(
 /// * [offsetFromCenter] — Vertical/horizontal nudge applied to the scan
 ///   window position relative to the screen center.
 /// * [toolBar] — Toolbar config. Defaults to a [StandardToolBar].
-/// * [allowedFormats] — Restricts detection to specific [BarcodeFormat]s.
+/// * [allowedFormats] — Restricts detection to specific [ScannerBarcodeFormat]s.
 ///   Values are intersected with the built-in 1D set.
 /// * [enableSoundAndVibration] — Haptic and audio feedback on success.
 ///   Defaults to `true`.
@@ -177,7 +177,7 @@ Future<String?> scanCustom(
 /// ```dart
 /// final barcode = await scanBarcode(
 ///   context,
-///   allowedFormats: [BarcodeFormat.ean13, BarcodeFormat.code128],
+///   allowedFormats: [ScannerBarcodeFormat.ean13, ScannerBarcodeFormat.code128],
 /// );
 /// ```
 Future<String?> scanBarcode(
@@ -199,8 +199,8 @@ Future<String?> scanBarcode(
   /// Toolbar configuration. Defaults to a [StandardToolBar].
   ScannerToolBar? toolBar = const StandardToolBar(),
 
-  /// Restricts detection to specific [BarcodeFormat]s.
-  List<BarcodeFormat> allowedFormats = const [],
+  /// Restricts detection to specific [ScannerBarcodeFormat]s.
+  List<ScannerBarcodeFormat> allowedFormats = const [],
 
   /// How tall the scan window is. Geometry only — never widens detection.
   BarcodeWindowShape windowShape = BarcodeWindowShape.slim,
@@ -238,7 +238,7 @@ Future<String?> scanBarcode(
 /// Opens the scanner for a **single** scan optimized for **QR codes**.
 ///
 /// Pushes a full-screen [ScannerScreen.singleScan] with a responsive 1:1
-/// square overlay. Detection is locked to [BarcodeFormat.qrCode] to
+/// square overlay. Detection is locked to [ScannerBarcodeFormat.qrCode] to
 /// eliminate accidental 1D reads.
 ///
 /// Returns the decoded `String?`, or `null` if the user dismisses the
@@ -466,7 +466,7 @@ Future<List<String>?> scanCustomBatch(
 /// final barcodes = await scanBarcodeBatch(
 ///   context,
 ///   allowDuplicates: false,
-///   allowedFormats: [BarcodeFormat.ean13],
+///   allowedFormats: [ScannerBarcodeFormat.ean13],
 /// );
 /// ```
 Future<List<String>?> scanBarcodeBatch(
@@ -500,8 +500,8 @@ Future<List<String>?> scanBarcodeBatch(
   /// Visual customization for the overlay border, corner radius, etc.
   ScannerOverlayStyle? overlayStyle,
 
-  /// Restricts detection to specific [BarcodeFormat]s.
-  List<BarcodeFormat> allowedFormats = const [],
+  /// Restricts detection to specific [ScannerBarcodeFormat]s.
+  List<ScannerBarcodeFormat> allowedFormats = const [],
 
   /// How tall the scan window is. Geometry only — never widens detection.
   BarcodeWindowShape windowShape = BarcodeWindowShape.slim,
@@ -540,7 +540,7 @@ Future<List<String>?> scanBarcodeBatch(
 ///
 /// Combines the batch accumulation behaviour of [scanCustomBatch] with the
 /// QR-optimised square overlay and format lock of [scanQrCode]. Detection is
-/// restricted to [BarcodeFormat.qrCode].
+/// restricted to [ScannerBarcodeFormat.qrCode].
 ///
 /// ### Parameters
 ///
@@ -820,8 +820,8 @@ Future<void> scanBarcodeStream(
   /// Vertical/horizontal nudge applied to the scan window position.
   Offset? offsetFromCenter,
 
-  /// Restricts detection to specific [BarcodeFormat]s.
-  List<BarcodeFormat> allowedFormats = const [],
+  /// Restricts detection to specific [ScannerBarcodeFormat]s.
+  List<ScannerBarcodeFormat> allowedFormats = const [],
 
   /// How tall the scan window is. Geometry only — never widens detection.
   BarcodeWindowShape windowShape = BarcodeWindowShape.slim,
@@ -859,7 +859,7 @@ Future<void> scanBarcodeStream(
 ///
 /// Combines the real-time streaming behaviour of [scanCustomStream] with
 /// the QR-optimised square overlay and format lock of [scanQrCode].
-/// Detection is restricted to [BarcodeFormat.qrCode].
+/// Detection is restricted to [ScannerBarcodeFormat.qrCode].
 ///
 /// ### Parameters
 ///
@@ -1067,7 +1067,7 @@ Future<void> _pushPosScreen(
   BarcodeWindowShape windowShape = BarcodeWindowShape.slim,
   Offset? offsetFromCenter,
   ScannerOverlayStyle? overlayStyle,
-  List<BarcodeFormat> allowedFormats = const <BarcodeFormat>[],
+  List<ScannerBarcodeFormat> allowedFormats = const <ScannerBarcodeFormat>[],
   int detectionTimeoutMs = 250,
   int sameItemCooldownMs = 1500,
   bool enableSoundAndVibration = true,
@@ -1127,7 +1127,7 @@ Future<void> _pushPosScreen(
 /// * [context] — A [BuildContext] with a valid [Navigator] ancestor.
 /// * [onScan] — **Required.** Called with `(String barcode, int quantity)`
 ///   on every accepted scan.
-/// * [allowedFormats] — Restricts detection to specific [BarcodeFormat]s.
+/// * [allowedFormats] — Restricts detection to specific [ScannerBarcodeFormat]s.
 ///   Empty list (default) accepts the standard 1D set.
 /// * [detectionTimeoutMs] — Minimum ms between decode callbacks. Defaults
 ///   to `250`.
@@ -1162,7 +1162,7 @@ Future<void> _pushPosScreen(
 ///   onScan: (barcode, quantity) {
 ///     print('Added $quantity × $barcode to cart');
 ///   },
-///   allowedFormats: [BarcodeFormat.ean13, BarcodeFormat.upcA],
+///   allowedFormats: [ScannerBarcodeFormat.ean13, ScannerBarcodeFormat.upcA],
 ///   successPulseColor: Colors.greenAccent,
 /// );
 /// ```
@@ -1176,8 +1176,8 @@ void showPosBarcodeScanner(
   /// Called with `(String barcode, int quantity)` on every accepted scan.
   required void Function(String barcode, int quantity) onScan,
 
-  /// Restricts detection to specific [BarcodeFormat]s.
-  List<BarcodeFormat> allowedFormats = const <BarcodeFormat>[],
+  /// Restricts detection to specific [ScannerBarcodeFormat]s.
+  List<ScannerBarcodeFormat> allowedFormats = const <ScannerBarcodeFormat>[],
 
   /// Minimum milliseconds between decode callbacks.
   int detectionTimeoutMs = 250,

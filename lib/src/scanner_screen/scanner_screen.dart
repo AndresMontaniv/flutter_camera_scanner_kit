@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart'
     show
-        BarcodeFormat,
         MobileScannerController,
         MobileScannerState,
         TorchState,
@@ -13,6 +12,9 @@ import 'package:mobile_scanner/mobile_scanner.dart'
 import 'package:native_haptics_and_audio/native_haptics_and_audio.dart';
 
 import '../_constants.dart';
+import '../format_resolution.dart';
+import '../mobile_scanner_interop.dart';
+import '../scanner_barcode_format.dart';
 import '../scanner_lens_type.dart';
 import '../widgets/action_button.dart';
 import '../widgets/scanner_overlay.dart';
@@ -259,21 +261,14 @@ class _ScannerScreenState extends State<ScannerScreen>
 
   /// Resolves the effective barcode format list for the controller.
   ///
-  /// * **Barcode mode with empty allow-list:** returns [_horizontal1DFormats].
-  /// * **Barcode mode with a caller-supplied subset:** intersects the subset
-  ///   against [_horizontal1DFormats] to prevent accidental 2D inclusion.
-  /// * **All other modes:** passes the caller's list through unchanged.
-  List<BarcodeFormat> _getEffectiveFormats() {
-    final allowedFormats = widget.scannerViewConfig?.allowedFormats ?? [];
-    if (widget.scannerViewConfig?._mode == _OverlayMode.barcode) {
-      if (allowedFormats.isEmpty) {
-        return _horizontal1DFormats;
-      }
-      return allowedFormats
-          .where((f) => _horizontal1DFormats.contains(f))
-          .toList();
-    }
-    return allowedFormats;
+  /// Delegates to [resolveEffectiveFormats], which owns the rules; this
+  /// wrapper only translates the library-private [_OverlayMode] into the
+  /// `restrictTo1D` flag that keeps those rules unit-testable.
+  List<ScannerBarcodeFormat> _getEffectiveFormats() {
+    return resolveEffectiveFormats(
+      allowed: widget.scannerViewConfig?.allowedFormats ?? const [],
+      restrictTo1D: widget.scannerViewConfig?._mode == _OverlayMode.barcode,
+    );
   }
 
   /// Safely starts the camera hardware and lowers the [_isCameraReady]
@@ -315,7 +310,9 @@ class _ScannerScreenState extends State<ScannerScreen>
       facing: CameraFacing.back,
       detectionSpeed: DetectionSpeed.normal,
       detectionTimeoutMs: widget.detectionTimeoutMs,
-      formats: _getEffectiveFormats(),
+      // The one and only point where this package's format vocabulary is
+      // translated into `mobile_scanner`'s.
+      formats: _getEffectiveFormats().mobileScannerFormats,
       lensType: widget.lensType.mobileScannerLens,
       initialZoom: widget.initialZoom,
     );
