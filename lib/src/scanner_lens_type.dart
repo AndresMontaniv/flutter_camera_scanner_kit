@@ -1,5 +1,3 @@
-import 'package:mobile_scanner/mobile_scanner.dart';
-
 /// Defines the physical camera lens to be used for barcode scanning.
 ///
 /// Note on Hardware Fragmentation:
@@ -24,15 +22,5 @@ enum ScannerLensType {
   normal,
 
   /// The telephoto/zoom lens.
-  zoom;
-
-  /// Internal mapper to the underlying mobile_scanner package enum.
-  CameraLensType get mobileScannerLens {
-    return switch (this) {
-      ScannerLensType.any => CameraLensType.any,
-      ScannerLensType.wide => CameraLensType.wide,
-      ScannerLensType.normal => CameraLensType.normal,
-      ScannerLensType.zoom => CameraLensType.zoom,
-    };
-  }
+  zoom,
 }

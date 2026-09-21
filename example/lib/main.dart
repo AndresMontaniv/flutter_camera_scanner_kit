@@ -165,6 +165,32 @@ class _TestMatrixScreenState extends State<TestMatrixScreen> {
             },
           ),
           ListTile(
+            title: const Text('Single + Barcode (EAN-13 / Code 128 only)'),
+            subtitle: const Text('Other symbologies are ignored'),
+            trailing: const Icon(Icons.filter_alt),
+            onTap: () async {
+              // `ScannerBarcodeFormat` comes from camera_scanner_kit itself —
+              // this file imports nothing else, and the example's pubspec.yaml
+              // does not list `mobile_scanner`. That this compiles is the
+              // proof that restricting formats needs no extra dependency.
+              final result = await scanBarcode(
+                context,
+                windowShape: _windowShape,
+                useDarkModeButtonTheme: _useDarkModeButtonTheme,
+                allowedFormats: const [
+                  ScannerBarcodeFormat.ean13,
+                  ScannerBarcodeFormat.code128,
+                ],
+                overlayStyle: const ScannerOverlayStyle(
+                  borderColor: Colors.teal,
+                ),
+              );
+              debugPrint('[ScannerExample] Filtered Barcode Result: $result');
+              if (!context.mounted) return;
+              _showResult(context, 'EAN-13 / Code 128: $result');
+            },
+          ),
+          ListTile(
             title: const Text('Single + Custom'),
             trailing: const Icon(Icons.fullscreen),
             onTap: () async {

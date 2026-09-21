@@ -251,6 +251,66 @@ responsible for keeping it clear of the toolbar and any overlaid controls.
 
 ---
 
+## Barcode Formats
+
+Restricting a scanner to specific symbologies makes decoding faster and stops
+the camera locking onto the wrong code when several are in frame. Pass an
+`allowedFormats` list:
+
+```dart
+import 'package:camera_scanner_kit/camera_scanner_kit.dart';
+
+final code = await scanBarcode(
+  context,
+  allowedFormats: const [
+    ScannerBarcodeFormat.ean13,
+    ScannerBarcodeFormat.code128,
+  ],
+);
+```
+
+That import is the only one you need. **`ScannerBarcodeFormat` is owned by this
+package**, so filtering formats never requires adding `mobile_scanner` to your
+own `pubspec.yaml` — the enum you write is ours, and the translation to the
+underlying engine happens internally.
+
+`allowedFormats` is accepted by `scanBarcode()`, `scanBarcodeBatch()`,
+`scanBarcodeStream()`, `showPosBarcodeScanner()`, `PosBarcodeScannerScreen` and
+`ScannerViewConfig`.
+
+**An empty list — the default — means "accept every format the device
+supports."** That is the only way to express *all*: there is deliberately no
+`ScannerBarcodeFormat.all`, because a list containing it alongside other entries
+has no coherent meaning. There is likewise no `unknown` value, since that
+identifies a decode result rather than something you can ask the camera to look
+for.
+
+Two rules worth knowing:
+
+- The **1D presets** (`scanBarcode`, `ScannerViewConfig.barcode` and the POS
+  screens) intersect whatever you pass against their built-in retail set, so a
+  2D format supplied there is dropped rather than honoured. This is what
+  guarantees a `square` window never starts reading QR codes. Use `scanQrCode()`
+  or `ScannerViewConfig.qrCode` for 2D.
+- `ScannerViewConfig.qrCode` locks the list to `ScannerBarcodeFormat.qrCode` and
+  ignores anything you pass.
+
+<details>
+<summary>All supported formats</summary>
+
+**1D:** `code128`, `code39`, `code93`, `codabar`, `ean13`, `ean8`, `upcA`,
+`upcE`, `itf14`, `itf2of5`, `itf2of5WithChecksum`, `dataBar`,
+`dataBarExpanded`, `dataBarLimited`
+
+**2D:** `qrCode`, `microQrCode`, `dataMatrix`, `aztec`, `pdf417`, `maxiCode`
+
+The 1D retail set used by the barcode presets is `code128`, `code39`, `code93`,
+`ean13`, `ean8`, `upcA`, `upcE`, `itf14` and `codabar`.
+
+</details>
+
+---
+
 ## Orientation
 
 **The full-screen scanners are designed for portrait.** Every default in this
