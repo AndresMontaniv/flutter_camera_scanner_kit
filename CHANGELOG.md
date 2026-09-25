@@ -1,3 +1,12 @@
+## Unreleased
+
+### Docs & tests
+
+* **Real-image verification of `scanImageFile` / `scanImageFileAll`.** Their only tests used a fake platform and dummy paths, so nothing had decoded an actual image. The example app now bundles seven test images (`example/assets/test_images/`: Code 128, EAN-13, EAN-8, QR, JSON-in-QR, on plain and blue backgrounds, plus two multi-code images).
+  `example/integration_test/image_scan_test.dart` runs 20 on-device assertions covering every image through both methods, `allowedFormats` filtering, the JSON payload round-trip, a missing file, and concurrent calls. Run it with `flutter test integration_test -d <deviceId>` from `example/` (Android or a physical iOS device; the native decoders do not exist on the host VM, and the iOS Simulator cannot analyze image files).
+  All 20 pass on Android and on a physical iPhone. Apple's Vision framework, used as a second decoder on macOS, returns the same values for every image. No change to the library code was needed.
+* The images moved from an untracked top-level `assets/` into `example/`, so they are never part of the published package.
+
 ## 2.0.0
 
 ### Breaking
